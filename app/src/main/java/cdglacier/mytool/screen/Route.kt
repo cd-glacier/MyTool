@@ -1,5 +1,10 @@
 package cdglacier.mytool.screen
 
-data object HomeRoute
+import androidx.navigation3.runtime.NavKey
+import kotlinx.serialization.Serializable
 
-data object CopyObsidianJournalRoute
+@Serializable
+data object HomeRoute : NavKey
+
+@Serializable
+data object CopyObsidianJournalRoute : NavKey
