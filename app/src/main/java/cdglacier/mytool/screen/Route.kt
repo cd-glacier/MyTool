@@ -8,3 +8,6 @@ data object HomeRoute : NavKey
 
 @Serializable
 data object CopyObsidianJournalRoute : NavKey
+
+@Serializable
+data object SettingsRoute : NavKey

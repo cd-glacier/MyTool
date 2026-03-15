@@ -19,10 +19,12 @@ private data class NavItem(val label: String, val onClick: () -> Unit)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    onNavigateToCopyObsidianJournal: () -> Unit
+    onNavigateToCopyObsidianJournal: () -> Unit,
+    onNavigateToSettings: () -> Unit
 ) {
     val items = listOf(
-        NavItem(label = "CopyObsidianJournal", onClick = onNavigateToCopyObsidianJournal)
+        NavItem(label = "CopyObsidianJournal", onClick = onNavigateToCopyObsidianJournal),
+        NavItem(label = "Settings", onClick = onNavigateToSettings)
     )
 
     Scaffold(
