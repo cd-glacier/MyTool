@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
@@ -63,6 +64,7 @@ class JournalTodoWidgetConfigActivity : ComponentActivity() {
                     var vaultDirUri by remember { mutableStateOf<Uri?>(null) }
                     var journalDirUri by remember { mutableStateOf<Uri?>(null) }
                     var filenameFormat by remember { mutableStateOf(WidgetPreferences.DEFAULT_FILENAME_FORMAT) }
+                    var backgroundOpacity by remember { mutableStateOf(80f) }
 
                     // Load existing settings
                     val widgetId = appWidgetId
@@ -77,6 +79,10 @@ class JournalTodoWidgetConfigActivity : ComponentActivity() {
                     androidx.compose.runtime.LaunchedEffect(widgetId) {
                         WidgetPreferences.getFilenameFormatFlow(this@JournalTodoWidgetConfigActivity, widgetId)
                             .collect { format -> filenameFormat = format }
+                    }
+                    androidx.compose.runtime.LaunchedEffect(widgetId) {
+                        WidgetPreferences.getBackgroundOpacityFlow(this@JournalTodoWidgetConfigActivity, widgetId)
+                            .collect { opacity -> backgroundOpacity = opacity.toFloat() }
                     }
 
                     val vaultDirPicker = rememberLauncherForActivityResult(
@@ -153,6 +159,16 @@ class JournalTodoWidgetConfigActivity : ComponentActivity() {
                             modifier = Modifier.fillMaxWidth()
                         )
 
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Text(text = "背景の不透明度: ${backgroundOpacity.toInt()}%")
+                        Slider(
+                            value = backgroundOpacity,
+                            onValueChange = { backgroundOpacity = it },
+                            valueRange = 0f..100f,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Button(
@@ -160,6 +176,8 @@ class JournalTodoWidgetConfigActivity : ComponentActivity() {
                                 val vUri = vaultDirUri
                                 val jUri = journalDirUri
                                 if (vUri == null || jUri == null) return@Button
+                                val currentFilenameFormat = filenameFormat
+                                val currentOpacity = backgroundOpacity.toInt()
 
                                 scope.launch {
                                     WidgetPreferences.setVaultDirUri(
@@ -175,7 +193,12 @@ class JournalTodoWidgetConfigActivity : ComponentActivity() {
                                     WidgetPreferences.setFilenameFormat(
                                         this@JournalTodoWidgetConfigActivity,
                                         widgetId,
-                                        filenameFormat
+                                        currentFilenameFormat
+                                    )
+                                    WidgetPreferences.setBackgroundOpacity(
+                                        this@JournalTodoWidgetConfigActivity,
+                                        widgetId,
+                                        currentOpacity
                                     )
 
                                     val glanceId = GlanceAppWidgetManager(this@JournalTodoWidgetConfigActivity)

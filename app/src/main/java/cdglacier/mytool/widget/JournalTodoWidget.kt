@@ -2,9 +2,12 @@ package cdglacier.mytool.widget
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.net.Uri
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import cdglacier.mytool.R
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
@@ -18,6 +21,7 @@ import androidx.glance.appwidget.lazy.LazyColumn
 import androidx.glance.appwidget.lazy.items
 import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.state.updateAppWidgetState
+import androidx.glance.LocalContext
 import androidx.glance.background
 import androidx.glance.currentState
 import androidx.glance.layout.Alignment
@@ -40,6 +44,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 val TODO_ITEMS_KEY = stringPreferencesKey("todo_items_json")
+val BACKGROUND_OPACITY_KEY = intPreferencesKey("background_opacity")
 
 class JournalTodoWidget : GlanceAppWidget() {
     override val stateDefinition: GlanceStateDefinition<*> = PreferencesGlanceStateDefinition
@@ -48,6 +53,7 @@ class JournalTodoWidget : GlanceAppWidget() {
         provideContent {
             val prefs = currentState<androidx.datastore.preferences.core.Preferences>()
             val todosJson = prefs[TODO_ITEMS_KEY]
+            val opacity = prefs[BACKGROUND_OPACITY_KEY] ?: 80
 
             val todos: List<TodoItem> = if (todosJson != null) {
                 try {
@@ -59,11 +65,17 @@ class JournalTodoWidget : GlanceAppWidget() {
                 emptyList()
             }
 
+            val isNightMode = LocalContext.current.resources.configuration.uiMode and
+                Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+            val alpha = opacity / 100f
+            val bgColor = if (isNightMode) Color(0xFF1C1C1FL).copy(alpha = alpha)
+                          else Color.White.copy(alpha = alpha)
+
             Box(
                 modifier = GlanceModifier
                     .fillMaxSize()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .background(ColorProvider(R.color.widget_background))
+                    .background(bgColor)
                     .clickable(actionRunCallback<OpenObsidianCallback>()),
                 contentAlignment = Alignment.TopStart
             ) {
@@ -109,6 +121,7 @@ suspend fun updateWidgetContent(context: Context, glanceId: GlanceId) {
     val appWidgetId = GlanceAppWidgetManager(context).getAppWidgetId(glanceId)
     val journalDirUri = WidgetPreferences.getJournalDirUriFlow(context, appWidgetId).first()
     val format = WidgetPreferences.getFilenameFormatFlow(context, appWidgetId).first()
+    val opacity = WidgetPreferences.getBackgroundOpacityFlow(context, appWidgetId).first()
 
     val markdown = if (journalDirUri != null)
         JournalReader.readTodayJournal(context, journalDirUri, format) else null
@@ -117,6 +130,7 @@ suspend fun updateWidgetContent(context: Context, glanceId: GlanceId) {
     updateAppWidgetState(context, PreferencesGlanceStateDefinition, glanceId) { prefs ->
         prefs.toMutablePreferences().apply {
             this[TODO_ITEMS_KEY] = Json.encodeToString(todos)
+            this[BACKGROUND_OPACITY_KEY] = opacity
         }
     }
     JournalTodoWidget().update(context, glanceId)
