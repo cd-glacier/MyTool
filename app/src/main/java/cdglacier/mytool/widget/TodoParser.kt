@@ -25,7 +25,8 @@ object TodoParser {
                         val match = TODO_ITEM_REGEX.matchEntire(lines[i].trim())
                         if (match != null) {
                             val isDone = match.groupValues[1] == "x"
-                            val text = match.groupValues[2]
+                            val rawText = match.groupValues[2]
+                            val text = rawText.replace(Regex("""\[\[([^\]]+)]]"""), "$1")
                             result.add(TodoItem(text, isDone))
                         }
                         i++
