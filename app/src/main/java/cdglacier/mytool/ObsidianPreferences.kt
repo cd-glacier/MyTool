@@ -14,6 +14,10 @@ val Context.obsidianDataStore: DataStore<Preferences> by preferencesDataStore(na
 
 object ObsidianPreferences {
     private val VAULT_URI_KEY = stringPreferencesKey("vault_uri")
+    private val JOURNAL_DIR_URI_KEY = stringPreferencesKey("journal_dir_uri")
+    private val JOURNAL_FILENAME_FORMAT_KEY = stringPreferencesKey("journal_filename_format")
+
+    const val DEFAULT_FILENAME_FORMAT = "yyyy-MM-dd"
 
     fun getVaultUriFlow(context: Context): Flow<Uri?> =
         context.obsidianDataStore.data.map { prefs ->
@@ -23,6 +27,28 @@ object ObsidianPreferences {
     suspend fun setVaultUri(context: Context, uri: Uri) {
         context.obsidianDataStore.edit { prefs ->
             prefs[VAULT_URI_KEY] = uri.toString()
+        }
+    }
+
+    fun getJournalDirUriFlow(context: Context): Flow<Uri?> =
+        context.obsidianDataStore.data.map { prefs ->
+            prefs[JOURNAL_DIR_URI_KEY]?.let { Uri.parse(it) }
+        }
+
+    suspend fun setJournalDirUri(context: Context, uri: Uri) {
+        context.obsidianDataStore.edit { prefs ->
+            prefs[JOURNAL_DIR_URI_KEY] = uri.toString()
+        }
+    }
+
+    fun getFilenameFormatFlow(context: Context): Flow<String> =
+        context.obsidianDataStore.data.map { prefs ->
+            prefs[JOURNAL_FILENAME_FORMAT_KEY] ?: DEFAULT_FILENAME_FORMAT
+        }
+
+    suspend fun setFilenameFormat(context: Context, format: String) {
+        context.obsidianDataStore.edit { prefs ->
+            prefs[JOURNAL_FILENAME_FORMAT_KEY] = format
         }
     }
 }

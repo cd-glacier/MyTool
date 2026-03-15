@@ -30,6 +30,8 @@ import kotlinx.coroutines.launch
 class MainActivity : ComponentActivity() {
 
     private var vaultUri by mutableStateOf<Uri?>(null)
+    private var journalDirUri by mutableStateOf<Uri?>(null)
+    private var filenameFormat by mutableStateOf(ObsidianPreferences.DEFAULT_FILENAME_FORMAT)
 
     private val folderPickerLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocumentTree()
@@ -46,6 +48,21 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private val journalDirPickerLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
+            lifecycleScope.launch {
+                ObsidianPreferences.setJournalDirUri(this@MainActivity, uri)
+            }
+            journalDirUri = uri
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -53,6 +70,14 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             ObsidianPreferences.getVaultUriFlow(this@MainActivity)
                 .collect { uri -> vaultUri = uri }
+        }
+        lifecycleScope.launch {
+            ObsidianPreferences.getJournalDirUriFlow(this@MainActivity)
+                .collect { uri -> journalDirUri = uri }
+        }
+        lifecycleScope.launch {
+            ObsidianPreferences.getFilenameFormatFlow(this@MainActivity)
+                .collect { fmt -> filenameFormat = fmt }
         }
 
         setContent {
@@ -75,6 +100,15 @@ class MainActivity : ComponentActivity() {
                             }
                             entry<CopyObsidianJournalRoute> {
                                 CopyObsidianJournalScreen(
+                                    journalDirUri = journalDirUri,
+                                    filenameFormat = filenameFormat,
+                                    onPickJournalDir = { journalDirPickerLauncher.launch(journalDirUri) },
+                                    onFilenameFormatChange = { fmt ->
+                                        filenameFormat = fmt
+                                        lifecycleScope.launch {
+                                            ObsidianPreferences.setFilenameFormat(this@MainActivity, fmt)
+                                        }
+                                    },
                                     onBack = { backStack.removeLastOrNull() }
                                 )
                             }
