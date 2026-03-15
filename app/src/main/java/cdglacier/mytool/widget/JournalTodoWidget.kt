@@ -87,6 +87,7 @@ class JournalTodoWidget : GlanceAppWidget() {
                                     )
                                     Text(
                                         text = todo.text,
+                                        maxLines = 1,
                                         style = if (todo.isDone) {
                                             TextStyle(color = textColor, textDecoration = TextDecoration.LineThrough)
                                         } else {
