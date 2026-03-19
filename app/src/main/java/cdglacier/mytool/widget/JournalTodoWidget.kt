@@ -7,6 +7,7 @@ import android.net.Uri
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import cdglacier.mytool.R
+import cdglacier.mytool.di.WidgetEntryPoint
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.glance.GlanceId
@@ -37,6 +38,7 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextDecoration
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -118,10 +120,14 @@ class JournalTodoWidget : GlanceAppWidget() {
 }
 
 suspend fun updateWidgetContent(context: Context, glanceId: GlanceId) {
+    val widgetPreferences = EntryPointAccessors
+        .fromApplication(context.applicationContext, WidgetEntryPoint::class.java)
+        .widgetPreferences()
+
     val appWidgetId = GlanceAppWidgetManager(context).getAppWidgetId(glanceId)
-    val journalDirUri = WidgetPreferences.getJournalDirUriFlow(context, appWidgetId).first()
-    val format = WidgetPreferences.getFilenameFormatFlow(context, appWidgetId).first()
-    val opacity = WidgetPreferences.getBackgroundOpacityFlow(context, appWidgetId).first()
+    val journalDirUri = widgetPreferences.getJournalDirUriFlow(appWidgetId).first()
+    val format = widgetPreferences.getFilenameFormatFlow(appWidgetId).first()
+    val opacity = widgetPreferences.getBackgroundOpacityFlow(appWidgetId).first()
 
     val markdown = if (journalDirUri != null)
         JournalReader.readTodayJournal(context, journalDirUri, format) else null
@@ -142,10 +148,14 @@ class OpenObsidianCallback : ActionCallback {
         glanceId: GlanceId,
         parameters: ActionParameters
     ) {
+        val widgetPreferences = EntryPointAccessors
+            .fromApplication(context.applicationContext, WidgetEntryPoint::class.java)
+            .widgetPreferences()
+
         val appWidgetId = GlanceAppWidgetManager(context).getAppWidgetId(glanceId)
-        val vaultDirUri = WidgetPreferences.getVaultDirUriFlow(context, appWidgetId).first()
-        val vaultName = vaultDirUri?.let { WidgetPreferences.getVaultName(context, it) } ?: ""
-        val format = WidgetPreferences.getFilenameFormatFlow(context, appWidgetId).first()
+        val vaultDirUri = widgetPreferences.getVaultDirUriFlow(appWidgetId).first()
+        val vaultName = vaultDirUri?.let { widgetPreferences.getVaultName(it) } ?: ""
+        val format = widgetPreferences.getFilenameFormatFlow(appWidgetId).first()
         val filename = LocalDate.now().format(DateTimeFormatter.ofPattern(format))
 
         val obsidianUri = Uri.parse(
