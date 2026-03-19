@@ -25,9 +25,15 @@ import cdglacier.mytool.screen.HomeScreen
 import cdglacier.mytool.screen.SettingsRoute
 import cdglacier.mytool.screen.SettingsScreen
 import cdglacier.mytool.ui.theme.MyToolTheme
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var obsidianPreferences: ObsidianPreferences
 
     private var vaultUri by mutableStateOf<Uri?>(null)
     private var journalDirUri by mutableStateOf<Uri?>(null)
@@ -42,7 +48,7 @@ class MainActivity : ComponentActivity() {
                 Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             )
             lifecycleScope.launch {
-                ObsidianPreferences.setVaultUri(this@MainActivity, uri)
+                obsidianPreferences.setVaultUri(uri)
             }
             vaultUri = uri
         }
@@ -57,7 +63,7 @@ class MainActivity : ComponentActivity() {
                 Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             )
             lifecycleScope.launch {
-                ObsidianPreferences.setJournalDirUri(this@MainActivity, uri)
+                obsidianPreferences.setJournalDirUri(uri)
             }
             journalDirUri = uri
         }
@@ -68,15 +74,15 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         lifecycleScope.launch {
-            ObsidianPreferences.getVaultUriFlow(this@MainActivity)
+            obsidianPreferences.getVaultUriFlow()
                 .collect { uri -> vaultUri = uri }
         }
         lifecycleScope.launch {
-            ObsidianPreferences.getJournalDirUriFlow(this@MainActivity)
+            obsidianPreferences.getJournalDirUriFlow()
                 .collect { uri -> journalDirUri = uri }
         }
         lifecycleScope.launch {
-            ObsidianPreferences.getFilenameFormatFlow(this@MainActivity)
+            obsidianPreferences.getFilenameFormatFlow()
                 .collect { fmt -> filenameFormat = fmt }
         }
 
@@ -106,7 +112,7 @@ class MainActivity : ComponentActivity() {
                                     onFilenameFormatChange = { fmt ->
                                         filenameFormat = fmt
                                         lifecycleScope.launch {
-                                            ObsidianPreferences.setFilenameFormat(this@MainActivity, fmt)
+                                            obsidianPreferences.setFilenameFormat(fmt)
                                         }
                                     },
                                     onBack = { backStack.removeLastOrNull() }

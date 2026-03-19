@@ -29,11 +29,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.glance.appwidget.GlanceAppWidgetManager
-import androidx.lifecycle.lifecycleScope
 import cdglacier.mytool.ui.theme.MyToolTheme
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class JournalTodoWidgetConfigActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var widgetPreferences: WidgetPreferences
 
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
 
@@ -69,19 +74,19 @@ class JournalTodoWidgetConfigActivity : ComponentActivity() {
                     // Load existing settings
                     val widgetId = appWidgetId
                     androidx.compose.runtime.LaunchedEffect(widgetId) {
-                        WidgetPreferences.getVaultDirUriFlow(this@JournalTodoWidgetConfigActivity, widgetId)
+                        widgetPreferences.getVaultDirUriFlow(widgetId)
                             .collect { uri -> if (uri != null) vaultDirUri = uri }
                     }
                     androidx.compose.runtime.LaunchedEffect(widgetId) {
-                        WidgetPreferences.getJournalDirUriFlow(this@JournalTodoWidgetConfigActivity, widgetId)
+                        widgetPreferences.getJournalDirUriFlow(widgetId)
                             .collect { uri -> if (uri != null) journalDirUri = uri }
                     }
                     androidx.compose.runtime.LaunchedEffect(widgetId) {
-                        WidgetPreferences.getFilenameFormatFlow(this@JournalTodoWidgetConfigActivity, widgetId)
+                        widgetPreferences.getFilenameFormatFlow(widgetId)
                             .collect { format -> filenameFormat = format }
                     }
                     androidx.compose.runtime.LaunchedEffect(widgetId) {
-                        WidgetPreferences.getBackgroundOpacityFlow(this@JournalTodoWidgetConfigActivity, widgetId)
+                        widgetPreferences.getBackgroundOpacityFlow(widgetId)
                             .collect { opacity -> backgroundOpacity = opacity.toFloat() }
                     }
 
@@ -128,7 +133,7 @@ class JournalTodoWidgetConfigActivity : ComponentActivity() {
                         ) {
                             Text(
                                 text = if (vaultDirUri != null)
-                                    WidgetPreferences.getVaultName(this@JournalTodoWidgetConfigActivity, vaultDirUri!!) ?: vaultDirUri.toString()
+                                    widgetPreferences.getVaultName(vaultDirUri!!) ?: vaultDirUri.toString()
                                 else
                                     "フォルダを選択"
                             )
@@ -180,26 +185,10 @@ class JournalTodoWidgetConfigActivity : ComponentActivity() {
                                 val currentOpacity = backgroundOpacity.toInt()
 
                                 scope.launch {
-                                    WidgetPreferences.setVaultDirUri(
-                                        this@JournalTodoWidgetConfigActivity,
-                                        widgetId,
-                                        vUri
-                                    )
-                                    WidgetPreferences.setJournalDirUri(
-                                        this@JournalTodoWidgetConfigActivity,
-                                        widgetId,
-                                        jUri
-                                    )
-                                    WidgetPreferences.setFilenameFormat(
-                                        this@JournalTodoWidgetConfigActivity,
-                                        widgetId,
-                                        currentFilenameFormat
-                                    )
-                                    WidgetPreferences.setBackgroundOpacity(
-                                        this@JournalTodoWidgetConfigActivity,
-                                        widgetId,
-                                        currentOpacity
-                                    )
+                                    widgetPreferences.setVaultDirUri(widgetId, vUri)
+                                    widgetPreferences.setJournalDirUri(widgetId, jUri)
+                                    widgetPreferences.setFilenameFormat(widgetId, currentFilenameFormat)
+                                    widgetPreferences.setBackgroundOpacity(widgetId, currentOpacity)
 
                                     val glanceId = GlanceAppWidgetManager(this@JournalTodoWidgetConfigActivity)
                                         .getGlanceIdBy(widgetId)
