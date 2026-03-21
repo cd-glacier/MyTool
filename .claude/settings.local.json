@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(~/obsidian/ai_journals/2026-03-16.md:*)",
+      "Read(//Users/glacier/obsidian/ai_journals/**)"
+    ]
+  }
+}

@@ -48,9 +48,7 @@
       "Bash(rm -rf /bin*)",
       "Bash(rm -rf /System*)",
       "Bash(rm -rf /Applications*)",
-      "Bash(rm -rf /Library*)",
-      "WebFetch",
-      "WebSearch"
+      "Bash(rm -rf /Library*)"
     ]
   }
 }
