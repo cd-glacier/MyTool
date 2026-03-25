@@ -1,6 +1,9 @@
-package cdglacier.mytool.screen
+package cdglacier.mytool.ui.screen.settings
 
+import android.content.Intent
 import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,14 +19,45 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+
+@Composable
+fun SettingsScreen(
+    viewModel: SettingsViewModel = viewModel(),
+    onBack: () -> Unit,
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    val folderPickerLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            context.contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
+            viewModel.onVaultUriPicked(uri)
+        }
+    }
+
+    SettingsContent(
+        uiState = uiState,
+        onPickFolder = { folderPickerLauncher.launch(uiState.vaultUri) },
+        onBack = onBack,
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(
-    vaultUri: Uri?,
+private fun SettingsContent(
+    uiState: SettingsUiState,
     onPickFolder: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
 ) {
     Scaffold(
         topBar = {
@@ -47,7 +81,7 @@ fun SettingsScreen(
             item {
                 ListItem(
                     headlineContent = { Text("Obsidian フォルダ") },
-                    supportingContent = { Text(vaultUri.toDisplayString()) },
+                    supportingContent = { Text(uiState.vaultUri.toDisplayString()) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable { onPickFolder() }

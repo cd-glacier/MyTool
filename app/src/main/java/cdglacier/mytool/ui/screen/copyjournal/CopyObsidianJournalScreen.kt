@@ -1,8 +1,9 @@
-package cdglacier.mytool.screen
+package cdglacier.mytool.ui.screen.copyjournal
 
-import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,55 +34,88 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.documentfile.provider.DocumentFile
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
+
+@Composable
+fun CopyObsidianJournalScreen(
+    viewModel: CopyObsidianJournalViewModel = viewModel(),
+    onBack: () -> Unit,
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    val journalDirPickerLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            context.contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
+            viewModel.onJournalDirPicked(uri)
+        }
+    }
+
+    LaunchedEffect(uiState.snackbarMessage) {
+        uiState.snackbarMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            viewModel.onSnackbarShown()
+        }
+    }
+
+    CopyObsidianJournalContent(
+        uiState = uiState,
+        snackbarHostState = snackbarHostState,
+        onPickJournalDir = { journalDirPickerLauncher.launch(uiState.journalDirUri) },
+        onFilenameFormatChange = viewModel::onFilenameFormatChange,
+        onSourceDateChange = viewModel::onSourceDateChange,
+        onTargetDateChange = viewModel::onTargetDateChange,
+        onCopy = viewModel::onCopy,
+        onBack = onBack,
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CopyObsidianJournalScreen(
-    journalDirUri: Uri?,
-    filenameFormat: String,
+private fun CopyObsidianJournalContent(
+    uiState: CopyObsidianJournalUiState,
+    snackbarHostState: SnackbarHostState,
     onPickJournalDir: () -> Unit,
     onFilenameFormatChange: (String) -> Unit,
-    onBack: () -> Unit
+    onSourceDateChange: (LocalDate) -> Unit,
+    onTargetDateChange: (LocalDate) -> Unit,
+    onCopy: () -> Unit,
+    onBack: () -> Unit,
 ) {
-    val context = LocalContext.current
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
-
-    var sourceDate by remember { mutableStateOf(LocalDate.now().minusDays(1)) }
-    var targetDate by remember { mutableStateOf(LocalDate.now()) }
-
     var showSourceDatePicker by remember { mutableStateOf(false) }
     var showTargetDatePicker by remember { mutableStateOf(false) }
-    var isCopying by remember { mutableStateOf(false) }
 
     val displayFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd")
-    val helperText = remember(filenameFormat) {
+    val helperText = remember(uiState.filenameFormat) {
         try {
-            val fmt = DateTimeFormatter.ofPattern(filenameFormat)
+            val fmt = DateTimeFormatter.ofPattern(uiState.filenameFormat)
             "${LocalDate.now().format(fmt)}.md"
         } catch (e: Exception) {
             "無効なフォーマット"
         }
     }
 
-    val dirDisplayName = journalDirUri?.lastPathSegment
+    val dirDisplayName = uiState.journalDirUri?.lastPathSegment
         ?.replace("primary:", "/storage/emulated/0/")
         ?: "未選択"
 
@@ -120,11 +154,9 @@ fun CopyObsidianJournalScreen(
                 ListItem(
                     headlineContent = { Text("Journal フォルダ") },
                     supportingContent = { Text(dirDisplayName) },
-                    modifier = Modifier.fillMaxWidth()
-                        .padding(0.dp)
-                        .run {
-                            this
-                        },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(0.dp),
                     trailingContent = {
                         TextButton(onClick = onPickJournalDir) {
                             Text("選択")
@@ -135,7 +167,7 @@ fun CopyObsidianJournalScreen(
 
             item {
                 OutlinedTextField(
-                    value = filenameFormat,
+                    value = uiState.filenameFormat,
                     onValueChange = onFilenameFormatChange,
                     label = { Text("ファイル名フォーマット") },
                     supportingText = { Text("例: $helperText") },
@@ -161,7 +193,7 @@ fun CopyObsidianJournalScreen(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text("コピー元", style = MaterialTheme.typography.labelMedium)
-                        Text(sourceDate.format(displayFormatter))
+                        Text(uiState.sourceDate.format(displayFormatter))
                     }
                     IconButton(onClick = { showSourceDatePicker = true }) {
                         Icon(Icons.Default.DateRange, contentDescription = "コピー元の日付を選択")
@@ -177,7 +209,7 @@ fun CopyObsidianJournalScreen(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text("コピー先", style = MaterialTheme.typography.labelMedium)
-                        Text(targetDate.format(displayFormatter))
+                        Text(uiState.targetDate.format(displayFormatter))
                     }
                     IconButton(onClick = { showTargetDatePicker = true }) {
                         Icon(Icons.Default.DateRange, contentDescription = "コピー先の日付を選択")
@@ -187,33 +219,13 @@ fun CopyObsidianJournalScreen(
 
             item {
                 Button(
-                    onClick = {
-                        val dirUri = journalDirUri ?: return@Button
-                        scope.launch {
-                            isCopying = true
-                            val startTime = System.currentTimeMillis()
-                            val result = copyJournalFile(
-                                context = context,
-                                journalDirUri = dirUri,
-                                sourceDate = sourceDate,
-                                targetDate = targetDate,
-                                filenameFormat = filenameFormat
-                            )
-                            val elapsed = System.currentTimeMillis() - startTime
-                            if (elapsed < 2000) delay(2000- elapsed)
-                            isCopying = false
-                            result.fold(
-                                onSuccess = { snackbarHostState.showSnackbar("コピーしました") },
-                                onFailure = { e -> snackbarHostState.showSnackbar("エラー: ${e.message}") }
-                            )
-                        }
-                    },
-                    enabled = journalDirUri != null && !isCopying,
+                    onClick = onCopy,
+                    enabled = uiState.journalDirUri != null && !uiState.isCopying,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 8.dp)
                 ) {
-                    if (isCopying) {
+                    if (uiState.isCopying) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(20.dp),
                             strokeWidth = 2.dp,
@@ -229,14 +241,14 @@ fun CopyObsidianJournalScreen(
 
     if (showSourceDatePicker) {
         val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = sourceDate.atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli()
+            initialSelectedDateMillis = uiState.sourceDate.atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli()
         )
         DatePickerDialog(
             onDismissRequest = { showSourceDatePicker = false },
             confirmButton = {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
-                        sourceDate = Instant.ofEpochMilli(millis).atZone(ZoneId.of("UTC")).toLocalDate()
+                        onSourceDateChange(Instant.ofEpochMilli(millis).atZone(ZoneId.of("UTC")).toLocalDate())
                     }
                     showSourceDatePicker = false
                 }) { Text("OK") }
@@ -251,14 +263,14 @@ fun CopyObsidianJournalScreen(
 
     if (showTargetDatePicker) {
         val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = targetDate.atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli()
+            initialSelectedDateMillis = uiState.targetDate.atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli()
         )
         DatePickerDialog(
             onDismissRequest = { showTargetDatePicker = false },
             confirmButton = {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
-                        targetDate = Instant.ofEpochMilli(millis).atZone(ZoneId.of("UTC")).toLocalDate()
+                        onTargetDateChange(Instant.ofEpochMilli(millis).atZone(ZoneId.of("UTC")).toLocalDate())
                     }
                     showTargetDatePicker = false
                 }) { Text("OK") }
@@ -270,34 +282,4 @@ fun CopyObsidianJournalScreen(
             DatePicker(state = datePickerState)
         }
     }
-}
-
-private suspend fun copyJournalFile(
-    context: Context,
-    journalDirUri: Uri,
-    sourceDate: LocalDate,
-    targetDate: LocalDate,
-    filenameFormat: String
-): Result<Unit> = runCatching {
-    val formatter = DateTimeFormatter.ofPattern(filenameFormat)
-    val srcName = "${sourceDate.format(formatter)}.md"
-    val dstName = "${targetDate.format(formatter)}.md"
-
-    val dir = DocumentFile.fromTreeUri(context, journalDirUri)
-        ?: error("フォルダを開けません")
-
-    val srcFile = dir.findFile(srcName)
-        ?: error("コピー元ファイルが見つかりません: $srcName")
-
-    val srcBytes = context.contentResolver.openInputStream(srcFile.uri)
-        ?.use { it.readBytes() }
-        ?: error("コピー元ファイルを読み込めません")
-
-    val dstFile = dir.findFile(dstName)
-        ?: dir.createFile("text/markdown", dstName)
-        ?: error("コピー先ファイルを作成できません")
-
-    context.contentResolver.openOutputStream(dstFile.uri, "wt")
-        ?.use { it.write(srcBytes) }
-        ?: error("コピー先ファイルに書き込めません")
 }
