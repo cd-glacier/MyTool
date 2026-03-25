@@ -18,6 +18,7 @@ import androidx.navigation3.runtime.entry
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import cdglacier.mytool.data.repository.ObsidianRepository
 import cdglacier.mytool.screen.CopyObsidianJournalRoute
 import cdglacier.mytool.screen.CopyObsidianJournalScreen
 import cdglacier.mytool.screen.HomeRoute
@@ -25,9 +26,14 @@ import cdglacier.mytool.screen.HomeScreen
 import cdglacier.mytool.screen.SettingsRoute
 import cdglacier.mytool.screen.SettingsScreen
 import cdglacier.mytool.ui.theme.MyToolTheme
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject lateinit var obsidianRepository: ObsidianRepository
 
     private var vaultUri by mutableStateOf<Uri?>(null)
     private var journalDirUri by mutableStateOf<Uri?>(null)
@@ -42,7 +48,7 @@ class MainActivity : ComponentActivity() {
                 Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             )
             lifecycleScope.launch {
-                ObsidianPreferences.setVaultUri(this@MainActivity, uri)
+                obsidianRepository.setVaultUri(uri)
             }
             vaultUri = uri
         }
@@ -57,7 +63,7 @@ class MainActivity : ComponentActivity() {
                 Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
             )
             lifecycleScope.launch {
-                ObsidianPreferences.setJournalDirUri(this@MainActivity, uri)
+                obsidianRepository.setJournalDirUri(uri)
             }
             journalDirUri = uri
         }
@@ -68,16 +74,13 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         lifecycleScope.launch {
-            ObsidianPreferences.getVaultUriFlow(this@MainActivity)
-                .collect { uri -> vaultUri = uri }
+            obsidianRepository.vaultUri.collect { uri -> vaultUri = uri }
         }
         lifecycleScope.launch {
-            ObsidianPreferences.getJournalDirUriFlow(this@MainActivity)
-                .collect { uri -> journalDirUri = uri }
+            obsidianRepository.journalDirUri.collect { uri -> journalDirUri = uri }
         }
         lifecycleScope.launch {
-            ObsidianPreferences.getFilenameFormatFlow(this@MainActivity)
-                .collect { fmt -> filenameFormat = fmt }
+            obsidianRepository.filenameFormat.collect { fmt -> filenameFormat = fmt }
         }
 
         setContent {
@@ -106,7 +109,7 @@ class MainActivity : ComponentActivity() {
                                     onFilenameFormatChange = { fmt ->
                                         filenameFormat = fmt
                                         lifecycleScope.launch {
-                                            ObsidianPreferences.setFilenameFormat(this@MainActivity, fmt)
+                                            obsidianRepository.setFilenameFormat(fmt)
                                         }
                                     },
                                     onBack = { backStack.removeLastOrNull() }
