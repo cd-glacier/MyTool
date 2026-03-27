@@ -19,6 +19,6 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("cdglacier.mytool", appContext.packageName)
+        assertEquals("com.cdglacier.mytool", appContext.packageName)
     }
 }

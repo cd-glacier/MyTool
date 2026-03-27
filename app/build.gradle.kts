@@ -15,7 +15,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "cdglacier.mytool"
+        applicationId = "com.cdglacier.mytool"
         minSdk = 35
         targetSdk = 36
         versionCode = 1
