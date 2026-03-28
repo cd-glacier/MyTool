@@ -2,14 +2,11 @@ package cdglacier.mytool.ui.screen.iconpack
 
 import androidx.lifecycle.ViewModel
 import cdglacier.mytool.R
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import javax.inject.Inject
 
-@HiltViewModel
-class IconPackViewModel @Inject constructor() : ViewModel() {
+class IconPackViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(
         IconPackUiState(
