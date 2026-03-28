@@ -4,51 +4,77 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Terminal window frame -->
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="5"
-        android:pathData="M14,20 L94,20 Q100,20 100,26 L100,88 Q100,94 94,94 L14,94 Q8,94 8,88 L8,26 Q8,20 14,20 Z" />
-    <!-- Title bar separator line -->
-    <path
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="3"
-        android:pathData="M8,36 L100,36" />
-    <!-- Traffic light dots -->
+    <!--
+        Anthropic / Claude Code logo:
+        12 chamfered rays radiating from center (starburst / asterisk shape).
+        Each ray: chamfered-tip pentagon, 8dp wide, pointing upward.
+        Rotated 12 times at 30° increments via <group>.
+        Center hub circle covers ray bases.
+    -->
+
+    <!-- Ray at   0° -->
+    <group android:pivotX="54" android:pivotY="54" android:rotation="0">
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M50,11 L54,6 L58,11 L58,54 L50,54 Z" />
+    </group>
+    <!-- Ray at  30° -->
+    <group android:pivotX="54" android:pivotY="54" android:rotation="30">
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M50,11 L54,6 L58,11 L58,54 L50,54 Z" />
+    </group>
+    <!-- Ray at  60° -->
+    <group android:pivotX="54" android:pivotY="54" android:rotation="60">
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M50,11 L54,6 L58,11 L58,54 L50,54 Z" />
+    </group>
+    <!-- Ray at  90° -->
+    <group android:pivotX="54" android:pivotY="54" android:rotation="90">
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M50,11 L54,6 L58,11 L58,54 L50,54 Z" />
+    </group>
+    <!-- Ray at 120° -->
+    <group android:pivotX="54" android:pivotY="54" android:rotation="120">
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M50,11 L54,6 L58,11 L58,54 L50,54 Z" />
+    </group>
+    <!-- Ray at 150° -->
+    <group android:pivotX="54" android:pivotY="54" android:rotation="150">
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M50,11 L54,6 L58,11 L58,54 L50,54 Z" />
+    </group>
+    <!-- Ray at 180° -->
+    <group android:pivotX="54" android:pivotY="54" android:rotation="180">
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M50,11 L54,6 L58,11 L58,54 L50,54 Z" />
+    </group>
+    <!-- Ray at 210° -->
+    <group android:pivotX="54" android:pivotY="54" android:rotation="210">
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M50,11 L54,6 L58,11 L58,54 L50,54 Z" />
+    </group>
+    <!-- Ray at 240° -->
+    <group android:pivotX="54" android:pivotY="54" android:rotation="240">
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M50,11 L54,6 L58,11 L58,54 L50,54 Z" />
+    </group>
+    <!-- Ray at 270° -->
+    <group android:pivotX="54" android:pivotY="54" android:rotation="270">
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M50,11 L54,6 L58,11 L58,54 L50,54 Z" />
+    </group>
+    <!-- Ray at 300° -->
+    <group android:pivotX="54" android:pivotY="54" android:rotation="300">
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M50,11 L54,6 L58,11 L58,54 L50,54 Z" />
+    </group>
+    <!-- Ray at 330° -->
+    <group android:pivotX="54" android:pivotY="54" android:rotation="330">
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M50,11 L54,6 L58,11 L58,54 L50,54 Z" />
+    </group>
+
+    <!-- Center hub: covers ray bases, radius 18 -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M20,28 A4,4 0 1,0 20,27.99 Z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M32,28 A4,4 0 1,0 32,27.99 Z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M44,28 A4,4 0 1,0 44,27.99 Z" />
-    <!-- Left angle bracket < -->
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="5"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:pathData="M38,52 L28,62 L38,72" />
-    <!-- Forward slash / -->
-    <path
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="5"
-        android:strokeLineCap="round"
-        android:pathData="M48,74 L58,50" />
-    <!-- Right angle bracket > -->
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="5"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:pathData="M68,52 L78,62 L68,72" />
-    <!-- Cursor block -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M84,56 L92,56 L92,68 L84,68 Z" />
+        android:pathData="M36,54 A18,18 0 1,0 72,54 A18,18 0 1,0 36,54 Z" />
 </vector>

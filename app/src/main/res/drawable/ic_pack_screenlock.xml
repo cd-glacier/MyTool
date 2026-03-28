@@ -4,16 +4,23 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Padlock shackle (U-shaped arc on top) -->
+    <!--
+        Screen lock / padlock icon:
+        - Shackle: U-shaped arc on top
+        - Body: rounded rectangle with prominent keyhole cutout (evenOdd)
+    -->
+
+    <!-- Shackle (U-arc) -->
     <path
         android:fillColor="#00000000"
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="7"
+        android:strokeWidth="8"
         android:strokeLineCap="round"
-        android:pathData="M36,54 L36,38 A18,18 0 0,1 72,38 L72,54" />
-    <!-- Padlock body with keyhole cutout (even-odd fill) -->
+        android:pathData="M34,52 L34,34 A20,20 0 0,1 74,34 L74,52" />
+
+    <!-- Lock body with keyhole circle + slot cutout (evenOdd) -->
     <path
         android:fillColor="#FFFFFF"
         android:fillType="evenOdd"
-        android:pathData="M28,54 L80,54 Q86,54 86,60 L86,88 Q86,94 80,94 L28,94 Q22,94 22,88 L22,60 Q22,54 28,54 Z M54,69 A7,7 0 1,0 54,68.99 Z M51,74 L57,74 L57,84 L51,84 Z" />
+        android:pathData="M24,52 L84,52 Q90,52 90,58 L90,90 Q90,96 84,96 L24,96 Q18,96 18,90 L18,58 Q18,52 24,52 Z M54,66 A9,9 0 1,0 54,65.99 Z M50,73 L58,73 L58,86 L50,86 Z" />
 </vector>

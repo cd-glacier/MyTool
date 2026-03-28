@@ -4,29 +4,16 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Outer arc (largest) -->
+    <!--
+        Arc Browser logo:
+        A single large, thick arch (inverted-U arc) — the defining visual of Arc.
+        strokeWidth=16 gives a bold, unmistakable arc shape.
+        Rounded line caps match the smooth Arc brand aesthetic.
+    -->
     <path
         android:fillColor="#00000000"
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="8"
+        android:strokeWidth="16"
         android:strokeLineCap="round"
-        android:pathData="M14,76 A40,40 0 0,1 94,76" />
-    <!-- Middle arc -->
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="7"
-        android:strokeLineCap="round"
-        android:pathData="M26,76 A28,28 0 0,1 82,76" />
-    <!-- Inner arc (smallest) -->
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="6"
-        android:strokeLineCap="round"
-        android:pathData="M38,76 A16,16 0 0,1 70,76" />
-    <!-- Center dot at base -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M54,76 A5,5 0 1,0 54,75.99 Z" />
+        android:pathData="M16,82 A42,42 0 0,1 92,82" />
 </vector>

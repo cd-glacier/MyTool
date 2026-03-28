@@ -34,9 +34,14 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- Icon pack discovery intent filter for launchers -->
+            <!-- Icon pack discovery: ADW / Apex launcher -->
             <intent-filter>
                 <action android:name="org.adw.launcher.icons.ACTION_PICK_ICON" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <!-- Icon pack discovery: OPPO ColorOS / most launchers (primary intent) -->
+            <intent-filter>
+                <action android:name="org.adw.launcher.THEMES" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
