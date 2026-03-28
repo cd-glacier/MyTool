@@ -13,9 +13,11 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import cdglacier.mytool.navigation.CopyObsidianJournalRoute
 import cdglacier.mytool.navigation.HomeRoute
+import cdglacier.mytool.navigation.IconPackRoute
 import cdglacier.mytool.navigation.SettingsRoute
 import cdglacier.mytool.ui.screen.copyjournal.CopyObsidianJournalScreen
 import cdglacier.mytool.ui.screen.home.HomeScreen
+import cdglacier.mytool.ui.screen.iconpack.IconPackScreen
 import cdglacier.mytool.ui.screen.settings.SettingsScreen
 import cdglacier.mytool.ui.theme.MyToolTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -38,6 +40,7 @@ class MainActivity : ComponentActivity() {
                                 HomeScreen(
                                     onNavigateToCopyObsidianJournal = { backStack.add(CopyObsidianJournalRoute) },
                                     onNavigateToSettings = { backStack.add(SettingsRoute) },
+                                    onNavigateToIconPack = { backStack.add(IconPackRoute) },
                                 )
                             }
                             entry<CopyObsidianJournalRoute> {
@@ -45,6 +48,9 @@ class MainActivity : ComponentActivity() {
                             }
                             entry<SettingsRoute> {
                                 SettingsScreen(onBack = { backStack.removeLastOrNull() })
+                            }
+                            entry<IconPackRoute> {
+                                IconPackScreen(onBack = { backStack.removeLastOrNull() })
                             }
                         }
                     )

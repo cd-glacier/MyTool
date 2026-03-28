@@ -11,3 +11,6 @@ data object CopyObsidianJournalRoute : NavKey
 
 @Serializable
 data object SettingsRoute : NavKey
+
+@Serializable
+data object IconPackRoute : NavKey

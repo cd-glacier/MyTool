@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Terminal window frame -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5"
+        android:pathData="M14,20 L94,20 Q100,20 100,26 L100,88 Q100,94 94,94 L14,94 Q8,94 8,88 L8,26 Q8,20 14,20 Z" />
+    <!-- Title bar separator line -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3"
+        android:pathData="M8,36 L100,36" />
+    <!-- Traffic light dots -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M20,28 A4,4 0 1,0 20,27.99 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M32,28 A4,4 0 1,0 32,27.99 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M44,28 A4,4 0 1,0 44,27.99 Z" />
+    <!-- Left angle bracket < -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M38,52 L28,62 L38,72" />
+    <!-- Forward slash / -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:pathData="M48,74 L58,50" />
+    <!-- Right angle bracket > -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M68,52 L78,62 L68,72" />
+    <!-- Cursor block -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M84,56 L92,56 L92,68 L84,68 Z" />
+</vector>
