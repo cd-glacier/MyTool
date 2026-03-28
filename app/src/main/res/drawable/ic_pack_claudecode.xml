@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!--
+        Anthropic / Claude Code logo:
+        12 chamfered rays radiating from center (starburst / asterisk shape).
+        Each ray: chamfered-tip pentagon, 8dp wide, pointing upward.
+        Rotated 12 times at 30° increments via <group>.
+        Center hub circle covers ray bases.
+    -->
+
+    <!-- Ray at   0° -->
+    <group android:pivotX="54" android:pivotY="54" android:rotation="0">
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M50,11 L54,6 L58,11 L58,54 L50,54 Z" />
+    </group>
+    <!-- Ray at  30° -->
+    <group android:pivotX="54" android:pivotY="54" android:rotation="30">
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M50,11 L54,6 L58,11 L58,54 L50,54 Z" />
+    </group>
+    <!-- Ray at  60° -->
+    <group android:pivotX="54" android:pivotY="54" android:rotation="60">
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M50,11 L54,6 L58,11 L58,54 L50,54 Z" />
+    </group>
+    <!-- Ray at  90° -->
+    <group android:pivotX="54" android:pivotY="54" android:rotation="90">
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M50,11 L54,6 L58,11 L58,54 L50,54 Z" />
+    </group>
+    <!-- Ray at 120° -->
+    <group android:pivotX="54" android:pivotY="54" android:rotation="120">
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M50,11 L54,6 L58,11 L58,54 L50,54 Z" />
+    </group>
+    <!-- Ray at 150° -->
+    <group android:pivotX="54" android:pivotY="54" android:rotation="150">
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M50,11 L54,6 L58,11 L58,54 L50,54 Z" />
+    </group>
+    <!-- Ray at 180° -->
+    <group android:pivotX="54" android:pivotY="54" android:rotation="180">
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M50,11 L54,6 L58,11 L58,54 L50,54 Z" />
+    </group>
+    <!-- Ray at 210° -->
+    <group android:pivotX="54" android:pivotY="54" android:rotation="210">
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M50,11 L54,6 L58,11 L58,54 L50,54 Z" />
+    </group>
+    <!-- Ray at 240° -->
+    <group android:pivotX="54" android:pivotY="54" android:rotation="240">
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M50,11 L54,6 L58,11 L58,54 L50,54 Z" />
+    </group>
+    <!-- Ray at 270° -->
+    <group android:pivotX="54" android:pivotY="54" android:rotation="270">
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M50,11 L54,6 L58,11 L58,54 L50,54 Z" />
+    </group>
+    <!-- Ray at 300° -->
+    <group android:pivotX="54" android:pivotY="54" android:rotation="300">
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M50,11 L54,6 L58,11 L58,54 L50,54 Z" />
+    </group>
+    <!-- Ray at 330° -->
+    <group android:pivotX="54" android:pivotY="54" android:rotation="330">
+        <path android:fillColor="#FFFFFF"
+            android:pathData="M50,11 L54,6 L58,11 L58,54 L50,54 Z" />
+    </group>
+
+    <!-- Center hub: covers ray bases, radius 18 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M36,54 A18,18 0 1,0 72,54 A18,18 0 1,0 36,54 Z" />
+</vector>

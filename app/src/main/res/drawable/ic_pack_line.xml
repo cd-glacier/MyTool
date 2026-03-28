@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!--
+        LINE brand speech bubble:
+        - Wide rounded rectangle body
+        - Tail at bottom-right (LINE logo characteristic)
+        - Filled white silhouette
+    -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M20,16 L88,16 Q98,16 98,26 L98,66 Q98,76 88,76 L64,76 L68,92 L54,76 L20,76 Q10,76 10,66 L10,26 Q10,16 20,16 Z" />
+</vector>

@@ -51,6 +51,7 @@ import cdglacier.mytool.ui.theme.SpaceGroteskFamily
 fun HomeScreen(
     onNavigateToCopyObsidianJournal: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToIconPack: () -> Unit,
 ) {
     Scaffold(
         topBar = { TerminalTopBar() },
@@ -65,7 +66,10 @@ fun HomeScreen(
         ) {
             SystemTelemetryCard()
             Spacer(modifier = Modifier.height(32.dp))
-            ExecCommandsSection(onNavigateToCopyObsidianJournal = onNavigateToCopyObsidianJournal)
+            ExecCommandsSection(
+                onNavigateToCopyObsidianJournal = onNavigateToCopyObsidianJournal,
+                onNavigateToIconPack = onNavigateToIconPack,
+            )
         }
     }
 }
@@ -215,7 +219,10 @@ private fun TerminalCursorText() {
 }
 
 @Composable
-private fun ExecCommandsSection(onNavigateToCopyObsidianJournal: () -> Unit) {
+private fun ExecCommandsSection(
+    onNavigateToCopyObsidianJournal: () -> Unit,
+    onNavigateToIconPack: () -> Unit,
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.padding(bottom = 16.dp),
@@ -241,6 +248,12 @@ private fun ExecCommandsSection(onNavigateToCopyObsidianJournal: () -> Unit) {
         number = "01.",
         label = "COPY_JOURNAL",
         onClick = onNavigateToCopyObsidianJournal,
+    )
+    Spacer(modifier = Modifier.height(4.dp))
+    CommandMenuItem(
+        number = "02.",
+        label = "ICON_PACK",
+        onClick = onNavigateToIconPack,
     )
 }
 

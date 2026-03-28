@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- LINE Messaging -->
+    <item
+        component="ComponentInfo{jp.naver.line.android/jp.naver.line.android.activity.SplashActivity}"
+        drawable="ic_pack_line" />
+
+    <!-- Claude Code (Anthropic) -->
+    <item
+        component="ComponentInfo{com.anthropic.claudecode/com.anthropic.claudecode.MainActivity}"
+        drawable="ic_pack_claudecode" />
+
+    <!-- Arc Browser -->
+    <item
+        component="ComponentInfo{company.thebrowser.browser/company.thebrowser.browser.activities.BrowserActivity}"
+        drawable="ic_pack_arc" />
+
+    <!-- Screen Lock – Nova Launcher / Teslacoil shortcut -->
+    <item
+        component="ComponentInfo{com.teslacoilsw.launcher/com.teslacoilsw.launcher.ScreenLockShortcut}"
+        drawable="ic_pack_screenlock" />
+
+    <!-- Screen Lock – Niagara / Apex Launcher shortcut -->
+    <item
+        component="ComponentInfo{bitpit.launcher/bitpit.launcher.shortcut.ScreenLockShortcut}"
+        drawable="ic_pack_screenlock" />
+
+</resources>

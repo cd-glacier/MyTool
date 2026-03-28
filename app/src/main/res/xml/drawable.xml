@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <version>1</version>
+
+    <category title="Communication" />
+    <item drawable="ic_pack_line" />
+
+    <category title="AI Tools" />
+    <item drawable="ic_pack_claudecode" />
+
+    <category title="Browsers" />
+    <item drawable="ic_pack_arc" />
+
+    <category title="System" />
+    <item drawable="ic_pack_screenlock" />
+
+</resources>
