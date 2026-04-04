@@ -29,11 +29,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.glance.appwidget.GlanceAppWidgetManager
-import androidx.lifecycle.lifecycleScope
+import cdglacier.mytool.data.repository.ObsidianRepository
 import cdglacier.mytool.ui.theme.MyToolTheme
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class JournalTodoWidgetConfigActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var obsidianRepository: ObsidianRepository
 
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
 
@@ -66,19 +73,21 @@ class JournalTodoWidgetConfigActivity : ComponentActivity() {
                     var filenameFormat by remember { mutableStateOf(WidgetPreferences.DEFAULT_FILENAME_FORMAT) }
                     var backgroundOpacity by remember { mutableStateOf(80f) }
 
-                    // Load existing settings
+                    // Load existing widget settings, fall back to ObsidianRepository for new widgets
                     val widgetId = appWidgetId
                     androidx.compose.runtime.LaunchedEffect(widgetId) {
-                        WidgetPreferences.getVaultDirUriFlow(this@JournalTodoWidgetConfigActivity, widgetId)
-                            .collect { uri -> if (uri != null) vaultDirUri = uri }
+                        val widgetVal = WidgetPreferences.getVaultDirUriFlow(this@JournalTodoWidgetConfigActivity, widgetId).first()
+                        vaultDirUri = widgetVal ?: obsidianRepository.vaultUri.first()
                     }
                     androidx.compose.runtime.LaunchedEffect(widgetId) {
-                        WidgetPreferences.getJournalDirUriFlow(this@JournalTodoWidgetConfigActivity, widgetId)
-                            .collect { uri -> if (uri != null) journalDirUri = uri }
+                        val widgetVal = WidgetPreferences.getJournalDirUriFlow(this@JournalTodoWidgetConfigActivity, widgetId).first()
+                        journalDirUri = widgetVal ?: obsidianRepository.journalDirUri.first()
                     }
                     androidx.compose.runtime.LaunchedEffect(widgetId) {
-                        WidgetPreferences.getFilenameFormatFlow(this@JournalTodoWidgetConfigActivity, widgetId)
-                            .collect { format -> filenameFormat = format }
+                        val widgetVal = WidgetPreferences.getFilenameFormatFlow(this@JournalTodoWidgetConfigActivity, widgetId).first()
+                        val repoVal = obsidianRepository.filenameFormat.first()
+                        // Use widget value only if it differs from the default (i.e. was explicitly set)
+                        filenameFormat = if (widgetVal != WidgetPreferences.DEFAULT_FILENAME_FORMAT) widgetVal else repoVal
                     }
                     androidx.compose.runtime.LaunchedEffect(widgetId) {
                         WidgetPreferences.getBackgroundOpacityFlow(this@JournalTodoWidgetConfigActivity, widgetId)

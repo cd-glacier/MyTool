@@ -1,6 +1,5 @@
 package cdglacier.mytool.ui.screen.copyjournal
 
-import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cdglacier.mytool.data.repository.ObsidianRepository
@@ -35,14 +34,6 @@ class CopyObsidianJournalViewModel @Inject constructor(
                 _uiState.update { it.copy(filenameFormat = fmt) }
             }
         }
-    }
-
-    fun onJournalDirPicked(uri: Uri) {
-        viewModelScope.launch { obsidianRepository.setJournalDirUri(uri) }
-    }
-
-    fun onFilenameFormatChange(format: String) {
-        viewModelScope.launch { obsidianRepository.setFilenameFormat(format) }
     }
 
     fun onSourceDateChange(date: LocalDate) {

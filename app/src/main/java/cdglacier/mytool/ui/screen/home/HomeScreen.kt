@@ -65,7 +65,10 @@ fun HomeScreen(
         ) {
             SystemTelemetryCard()
             Spacer(modifier = Modifier.height(32.dp))
-            ExecCommandsSection(onNavigateToCopyObsidianJournal = onNavigateToCopyObsidianJournal)
+            ExecCommandsSection(
+                onNavigateToCopyObsidianJournal = onNavigateToCopyObsidianJournal,
+                onNavigateToSettings = onNavigateToSettings,
+            )
         }
     }
 }
@@ -215,7 +218,10 @@ private fun TerminalCursorText() {
 }
 
 @Composable
-private fun ExecCommandsSection(onNavigateToCopyObsidianJournal: () -> Unit) {
+private fun ExecCommandsSection(
+    onNavigateToCopyObsidianJournal: () -> Unit,
+    onNavigateToSettings: () -> Unit,
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.padding(bottom = 16.dp),
@@ -241,6 +247,12 @@ private fun ExecCommandsSection(onNavigateToCopyObsidianJournal: () -> Unit) {
         number = "01.",
         label = "COPY_JOURNAL",
         onClick = onNavigateToCopyObsidianJournal,
+    )
+    Spacer(modifier = Modifier.height(2.dp))
+    CommandMenuItem(
+        number = "02.",
+        label = "SYS_SETTINGS",
+        onClick = onNavigateToSettings,
     )
 }
 
