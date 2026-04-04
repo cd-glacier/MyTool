@@ -6,6 +6,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -232,9 +233,9 @@ private fun lineCountToColor(count: Int, isLoading: Boolean): Color {
     val alpha = if (isLoading) 0.3f else 1f
     return when {
         count == 0 -> GruvboxSurface.copy(alpha = alpha)
-        count <= 10 -> GruvboxGreen.copy(alpha = 0.25f * alpha)
-        count <= 30 -> GruvboxGreen.copy(alpha = 0.5f * alpha)
-        count <= 60 -> GruvboxGreen.copy(alpha = 0.75f * alpha)
+        count <= 25 -> GruvboxGreen.copy(alpha = 0.25f * alpha)
+        count <= 50 -> GruvboxGreen.copy(alpha = 0.5f * alpha)
+        count <= 100 -> GruvboxGreen.copy(alpha = 0.75f * alpha)
         else -> GruvboxGreen.copy(alpha = alpha)
     }
 }
@@ -244,36 +245,36 @@ private fun JournalContributionGraph(
     lineCounts: Map<LocalDate, Int>,
     isLoading: Boolean,
 ) {
-    // Build a 16-week grid: columns = weeks (oldest→newest), rows = Mon–Sun
     val today = LocalDate.now()
-    // Start from the Monday of the week 15 weeks ago
-    val startMonday = today
-        .minusWeeks(15)
-        .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-
     val cellSize = 12.dp
     val cellGap = 2.dp
 
-    Column(verticalArrangement = Arrangement.spacedBy(cellGap)) {
-        for (dayOfWeekIndex in 0 until 7) {
-            val dow = DayOfWeek.of(dayOfWeekIndex + 1) // MON=1 .. SUN=7
-            Row(horizontalArrangement = Arrangement.spacedBy(cellGap)) {
-                for (weekIndex in 0 until 16) {
-                    val date = startMonday
-                        .plusWeeks(weekIndex.toLong())
-                        .plusDays(dayOfWeekIndex.toLong())
-                    val count = if (date.isAfter(today)) -1 else lineCounts[date] ?: 0
-                    val color = if (count < 0) {
-                        // Future dates — invisible
-                        Color.Transparent
-                    } else {
-                        lineCountToColor(count, isLoading)
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        // 利用可能な幅からセルがいくつ並ぶか（= 週数）を計算
+        val weekCount = ((maxWidth + cellGap) / (cellSize + cellGap)).toInt()
+        val startMonday = today
+            .minusWeeks((weekCount - 1).toLong())
+            .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+
+        Column(verticalArrangement = Arrangement.spacedBy(cellGap)) {
+            for (dayOfWeekIndex in 0 until 7) {
+                Row(horizontalArrangement = Arrangement.spacedBy(cellGap)) {
+                    for (weekIndex in 0 until weekCount) {
+                        val date = startMonday
+                            .plusWeeks(weekIndex.toLong())
+                            .plusDays(dayOfWeekIndex.toLong())
+                        val count = if (date.isAfter(today)) -1 else lineCounts[date] ?: 0
+                        val color = if (count < 0) {
+                            Color.Transparent
+                        } else {
+                            lineCountToColor(count, isLoading)
+                        }
+                        Box(
+                            modifier = Modifier
+                                .size(cellSize)
+                                .background(color)
+                        )
                     }
-                    Box(
-                        modifier = Modifier
-                            .size(cellSize)
-                            .background(color)
-                    )
                 }
             }
         }

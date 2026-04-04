@@ -33,7 +33,7 @@ class HomeViewModel @Inject constructor(
                     _uiState.update { it.copy(journalDirUri = uri, isLoading = uri != null) }
                     if (uri != null) {
                         val today = LocalDate.now()
-                        val dates = (0 until 112).map { daysAgo -> today.minusDays(daysAgo.toLong()) }
+                        val dates = (0 until 182).map { daysAgo -> today.minusDays(daysAgo.toLong()) }
                         val counts = runCatching {
                             getJournalLineCountsUseCase(uri, format, dates)
                         }.getOrDefault(emptyMap())
