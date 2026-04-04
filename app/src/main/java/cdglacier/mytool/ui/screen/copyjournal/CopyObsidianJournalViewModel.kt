@@ -3,6 +3,7 @@ package cdglacier.mytool.ui.screen.copyjournal
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cdglacier.mytool.data.repository.ObsidianRepository
+import cdglacier.mytool.domain.usecase.CheckJournalTargetUseCase
 import cdglacier.mytool.domain.usecase.CopyJournalUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -18,6 +19,7 @@ import javax.inject.Inject
 class CopyObsidianJournalViewModel @Inject constructor(
     private val obsidianRepository: ObsidianRepository,
     private val copyJournalUseCase: CopyJournalUseCase,
+    private val checkJournalTargetUseCase: CheckJournalTargetUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CopyObsidianJournalUiState())
@@ -45,6 +47,28 @@ class CopyObsidianJournalViewModel @Inject constructor(
     }
 
     fun onCopy() {
+        val state = _uiState.value
+        val dirUri = state.journalDirUri ?: return
+        viewModelScope.launch {
+            val hasContent = checkJournalTargetUseCase(dirUri, state.targetDate, state.filenameFormat)
+            if (hasContent) {
+                _uiState.update { it.copy(showOverwriteConfirmation = true) }
+            } else {
+                executeCopy()
+            }
+        }
+    }
+
+    fun onOverwriteConfirmed() {
+        _uiState.update { it.copy(showOverwriteConfirmation = false) }
+        executeCopy()
+    }
+
+    fun onOverwriteCancelled() {
+        _uiState.update { it.copy(showOverwriteConfirmation = false) }
+    }
+
+    private fun executeCopy() {
         val state = _uiState.value
         val dirUri = state.journalDirUri ?: return
         viewModelScope.launch {
