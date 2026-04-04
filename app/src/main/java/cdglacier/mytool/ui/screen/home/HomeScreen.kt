@@ -1,15 +1,12 @@
 package cdglacier.mytool.ui.screen.home
 
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -34,8 +32,11 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import cdglacier.mytool.ui.theme.GruvboxBg
 import cdglacier.mytool.ui.theme.GruvboxGreen
 import cdglacier.mytool.ui.theme.GruvboxMuted
@@ -46,12 +47,18 @@ import cdglacier.mytool.ui.theme.GruvboxSurface
 import cdglacier.mytool.ui.theme.GruvboxSurfaceLow
 import cdglacier.mytool.ui.theme.GruvboxYellow
 import cdglacier.mytool.ui.theme.SpaceGroteskFamily
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.temporal.TemporalAdjusters
 
 @Composable
 fun HomeScreen(
+    viewModel: HomeViewModel = viewModel(),
     onNavigateToCopyObsidianJournal: () -> Unit,
     onNavigateToSettings: () -> Unit,
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     Scaffold(
         topBar = { TerminalTopBar() },
         containerColor = GruvboxBg,
@@ -63,7 +70,7 @@ fun HomeScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 24.dp)
         ) {
-            SystemTelemetryCard()
+            ObsidianStatusCard(uiState = uiState)
             Spacer(modifier = Modifier.height(32.dp))
             ExecCommandsSection(
                 onNavigateToCopyObsidianJournal = onNavigateToCopyObsidianJournal,
@@ -100,7 +107,7 @@ private fun TerminalTopBar() {
         }
         Spacer(modifier = Modifier.width(12.dp))
         Text(
-            text = "SYSTEM_OPERATOR_V1.0",
+            text = "MY_TOOL",
             color = GruvboxRed,
             fontFamily = SpaceGroteskFamily,
             fontWeight = FontWeight.Black,
@@ -111,7 +118,7 @@ private fun TerminalTopBar() {
 }
 
 @Composable
-private fun SystemTelemetryCard() {
+private fun ObsidianStatusCard(uiState: HomeUiState) {
     val yellowBorderWidth = 4.dp
     Column(
         modifier = Modifier
@@ -126,12 +133,13 @@ private fun SystemTelemetryCard() {
             }
             .padding(start = 20.dp, end = 16.dp, top = 16.dp, bottom = 16.dp)
     ) {
+        // Section header
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "SYSTEM_TELEMETRY",
+                text = "JOURNAL_ACTIVITY",
                 color = GruvboxMuted,
                 fontFamily = SpaceGroteskFamily,
                 fontWeight = FontWeight.Bold,
@@ -139,81 +147,137 @@ private fun SystemTelemetryCard() {
                 letterSpacing = 2.sp,
                 modifier = Modifier.weight(1f),
             )
+            val statusText = if (uiState.journalDirUri != null) "CONFIGURED" else "NOT_SET"
+            val statusColor = if (uiState.journalDirUri != null) GruvboxGreen else GruvboxRed
             Text(
-                text = "ACTIVE_STABLE",
-                color = GruvboxYellow,
+                text = statusText,
+                color = statusColor,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 10.sp,
             )
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        TelemetryRow(label = "CPU_USAGE:", value = "0.42%", valueColor = GruvboxYellow)
-        Spacer(modifier = Modifier.height(4.dp))
-        TelemetryRow(label = "UPTIME:", value = "742:12:09", valueColor = GruvboxGreen)
-        Spacer(modifier = Modifier.height(4.dp))
-        TelemetryRow(label = "MEM_ALLOC:", value = "12.4GB / 64GB", valueColor = GruvboxGreen)
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(GruvboxSurface)
-        )
-
         Spacer(modifier = Modifier.height(12.dp))
 
-        TerminalCursorText()
-    }
-}
+        // Directory status row
+        ObsidianDirStatusRow(uiState = uiState)
 
-@Composable
-private fun TelemetryRow(label: String, value: String, valueColor: Color) {
-    Row(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = label,
-            color = GruvboxMuted,
-            fontFamily = FontFamily.Monospace,
-            fontSize = 13.sp,
-            modifier = Modifier.weight(1f),
-        )
-        Text(
-            text = value,
-            color = valueColor,
-            fontFamily = FontFamily.Monospace,
-            fontSize = 13.sp,
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Contribution graph
+        JournalContributionGraph(
+            lineCounts = uiState.journalLineCounts,
+            isLoading = uiState.isLoading,
         )
     }
 }
 
 @Composable
-private fun TerminalCursorText() {
-    val infiniteTransition = rememberInfiniteTransition(label = "cursor")
-    val alpha by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 500),
-            repeatMode = RepeatMode.Reverse,
-        ),
-        label = "cursorAlpha",
-    )
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            text = "guest@localhost:~ $ ",
-            color = GruvboxGreen,
-            fontFamily = FontFamily.Monospace,
-            fontSize = 13.sp,
-        )
-        Text(
-            text = "█",
-            color = GruvboxGreen.copy(alpha = alpha),
-            fontFamily = FontFamily.Monospace,
-            fontSize = 13.sp,
-        )
+private fun ObsidianDirStatusRow(uiState: HomeUiState) {
+    if (uiState.journalDirUri == null) {
+        Row(verticalAlignment = Alignment.Top) {
+            Text(
+                text = "! ",
+                color = GruvboxRed,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+            )
+            Column {
+                Text(
+                    text = "OBSIDIAN_DIR: NOT_SET",
+                    color = GruvboxRed,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 13.sp,
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "設定が必要です。SYS_SETTINGS から設定してください。",
+                    color = GruvboxMuted,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 11.sp,
+                )
+            }
+        }
+    } else {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = "✓ ",
+                color = GruvboxGreen,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+            )
+            Column {
+                Text(
+                    text = "OBSIDIAN_DIR: CONFIGURED",
+                    color = GruvboxGreen,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 13.sp,
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = uiState.journalDirUri.lastPathSegment ?: uiState.journalDirUri.toString(),
+                    color = GruvboxMuted,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 11.sp,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+private fun lineCountToColor(count: Int, isLoading: Boolean): Color {
+    val alpha = if (isLoading) 0.3f else 1f
+    return when {
+        count == 0 -> GruvboxSurface.copy(alpha = alpha)
+        count <= 25 -> GruvboxGreen.copy(alpha = 0.25f * alpha)
+        count <= 50 -> GruvboxGreen.copy(alpha = 0.5f * alpha)
+        count <= 100 -> GruvboxGreen.copy(alpha = 0.75f * alpha)
+        else -> GruvboxGreen.copy(alpha = alpha)
+    }
+}
+
+@Composable
+private fun JournalContributionGraph(
+    lineCounts: Map<LocalDate, Int>,
+    isLoading: Boolean,
+) {
+    val today = LocalDate.now()
+    val cellSize = 12.dp
+    val cellGap = 2.dp
+
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        // 利用可能な幅からセルがいくつ並ぶか（= 週数）を計算
+        val weekCount = ((maxWidth + cellGap) / (cellSize + cellGap)).toInt()
+        val startMonday = today
+            .minusWeeks((weekCount - 1).toLong())
+            .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+
+        Column(verticalArrangement = Arrangement.spacedBy(cellGap)) {
+            for (dayOfWeekIndex in 0 until 7) {
+                Row(horizontalArrangement = Arrangement.spacedBy(cellGap)) {
+                    for (weekIndex in 0 until weekCount) {
+                        val date = startMonday
+                            .plusWeeks(weekIndex.toLong())
+                            .plusDays(dayOfWeekIndex.toLong())
+                        val count = if (date.isAfter(today)) -1 else lineCounts[date] ?: 0
+                        val color = if (count < 0) {
+                            Color.Transparent
+                        } else {
+                            lineCountToColor(count, isLoading)
+                        }
+                        Box(
+                            modifier = Modifier
+                                .size(cellSize)
+                                .background(color)
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
