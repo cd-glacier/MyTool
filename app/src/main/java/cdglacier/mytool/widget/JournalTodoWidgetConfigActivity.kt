@@ -6,9 +6,8 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,6 +20,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,11 +29,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.glance.appwidget.GlanceAppWidgetManager
-import androidx.lifecycle.lifecycleScope
+import cdglacier.mytool.data.repository.ObsidianRepository
 import cdglacier.mytool.ui.theme.MyToolTheme
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class JournalTodoWidgetConfigActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var obsidianRepository: ObsidianRepository
 
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
 
@@ -66,48 +73,28 @@ class JournalTodoWidgetConfigActivity : ComponentActivity() {
                     var filenameFormat by remember { mutableStateOf(WidgetPreferences.DEFAULT_FILENAME_FORMAT) }
                     var backgroundOpacity by remember { mutableStateOf(80f) }
 
-                    // Load existing settings
                     val widgetId = appWidgetId
-                    androidx.compose.runtime.LaunchedEffect(widgetId) {
-                        WidgetPreferences.getVaultDirUriFlow(this@JournalTodoWidgetConfigActivity, widgetId)
-                            .collect { uri -> if (uri != null) vaultDirUri = uri }
+
+                    // Load vault/journal URIs from ObsidianRepository (managed in app Settings)
+                    LaunchedEffect(widgetId) {
+                        vaultDirUri = obsidianRepository.vaultUri.first()
+                        journalDirUri = obsidianRepository.journalDirUri.first()
                     }
-                    androidx.compose.runtime.LaunchedEffect(widgetId) {
-                        WidgetPreferences.getJournalDirUriFlow(this@JournalTodoWidgetConfigActivity, widgetId)
-                            .collect { uri -> if (uri != null) journalDirUri = uri }
+
+                    // Load filename format: prefer existing widget setting, fall back to repository
+                    LaunchedEffect(widgetId) {
+                        val widgetVal = WidgetPreferences.getFilenameFormatFlow(this@JournalTodoWidgetConfigActivity, widgetId).first()
+                        val repoVal = obsidianRepository.filenameFormat.first()
+                        filenameFormat = if (widgetVal != WidgetPreferences.DEFAULT_FILENAME_FORMAT) widgetVal else repoVal
                     }
-                    androidx.compose.runtime.LaunchedEffect(widgetId) {
-                        WidgetPreferences.getFilenameFormatFlow(this@JournalTodoWidgetConfigActivity, widgetId)
-                            .collect { format -> filenameFormat = format }
-                    }
-                    androidx.compose.runtime.LaunchedEffect(widgetId) {
+
+                    // Load background opacity from existing widget setting
+                    LaunchedEffect(widgetId) {
                         WidgetPreferences.getBackgroundOpacityFlow(this@JournalTodoWidgetConfigActivity, widgetId)
                             .collect { opacity -> backgroundOpacity = opacity.toFloat() }
                     }
 
-                    val vaultDirPicker = rememberLauncherForActivityResult(
-                        contract = ActivityResultContracts.OpenDocumentTree()
-                    ) { uri ->
-                        if (uri != null) {
-                            contentResolver.takePersistableUriPermission(
-                                uri,
-                                Intent.FLAG_GRANT_READ_URI_PERMISSION
-                            )
-                            vaultDirUri = uri
-                        }
-                    }
-
-                    val journalDirPicker = rememberLauncherForActivityResult(
-                        contract = ActivityResultContracts.OpenDocumentTree()
-                    ) { uri ->
-                        if (uri != null) {
-                            contentResolver.takePersistableUriPermission(
-                                uri,
-                                Intent.FLAG_GRANT_READ_URI_PERMISSION
-                            )
-                            journalDirUri = uri
-                        }
-                    }
+                    val directoriesConfigured = vaultDirUri != null && journalDirUri != null
 
                     Column(
                         modifier = Modifier
@@ -121,35 +108,18 @@ class JournalTodoWidgetConfigActivity : ComponentActivity() {
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        Text(text = "Obsidian Vault フォルダ")
-                        Button(
-                            onClick = { vaultDirPicker.launch(vaultDirUri) },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
+                        if (!directoriesConfigured) {
                             Text(
-                                text = if (vaultDirUri != null)
-                                    WidgetPreferences.getVaultName(this@JournalTodoWidgetConfigActivity, vaultDirUri!!) ?: vaultDirUri.toString()
-                                else
-                                    "フォルダを選択"
+                                text = "Obsidianフォルダが設定されていません。\nアプリのSettingsページでVaultとJournalフォルダを設定してください。",
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.errorContainer)
+                                    .padding(12.dp)
                             )
+                            Spacer(modifier = Modifier.height(12.dp))
                         }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Text(text = "ジャーナルフォルダ")
-                        Button(
-                            onClick = { journalDirPicker.launch(journalDirUri) },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = if (journalDirUri != null)
-                                    journalDirUri.toString()
-                                else
-                                    "フォルダを選択"
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
 
                         OutlinedTextField(
                             value = filenameFormat,
@@ -173,9 +143,8 @@ class JournalTodoWidgetConfigActivity : ComponentActivity() {
 
                         Button(
                             onClick = {
-                                val vUri = vaultDirUri
-                                val jUri = journalDirUri
-                                if (vUri == null || jUri == null) return@Button
+                                val vUri = vaultDirUri ?: return@Button
+                                val jUri = journalDirUri ?: return@Button
                                 val currentFilenameFormat = filenameFormat
                                 val currentOpacity = backgroundOpacity.toInt()
 
@@ -215,7 +184,7 @@ class JournalTodoWidgetConfigActivity : ComponentActivity() {
                                 }
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            enabled = vaultDirUri != null && journalDirUri != null
+                            enabled = directoriesConfigured
                         ) {
                             Text("保存")
                         }

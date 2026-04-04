@@ -26,9 +26,27 @@ class SettingsViewModel @Inject constructor(
                 _uiState.update { it.copy(vaultUri = uri) }
             }
         }
+        viewModelScope.launch {
+            obsidianRepository.journalDirUri.collect { uri ->
+                _uiState.update { it.copy(journalDirUri = uri) }
+            }
+        }
+        viewModelScope.launch {
+            obsidianRepository.filenameFormat.collect { fmt ->
+                _uiState.update { it.copy(filenameFormat = fmt) }
+            }
+        }
     }
 
     fun onVaultUriPicked(uri: Uri) {
         viewModelScope.launch { obsidianRepository.setVaultUri(uri) }
+    }
+
+    fun onJournalDirPicked(uri: Uri) {
+        viewModelScope.launch { obsidianRepository.setJournalDirUri(uri) }
+    }
+
+    fun onFilenameFormatChange(format: String) {
+        viewModelScope.launch { obsidianRepository.setFilenameFormat(format) }
     }
 }
