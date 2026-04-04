@@ -1,5 +1,6 @@
 package cdglacier.mytool.ui.screen.copyjournal
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -105,6 +106,20 @@ private fun CopyObsidianJournalContent(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            if (uiState.journalDirUri == null) {
+                item {
+                    Text(
+                        text = "Journalフォルダが設定されていません。\nSettingsページでJournalフォルダを設定してください。",
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.errorContainer)
+                            .padding(12.dp)
+                    )
+                }
+            }
+
             item {
                 Text(
                     text = "コピー操作",
