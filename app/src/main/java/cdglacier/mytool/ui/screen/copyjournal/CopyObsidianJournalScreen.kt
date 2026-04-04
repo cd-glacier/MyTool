@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -64,6 +65,8 @@ fun CopyObsidianJournalScreen(
         onSourceDateChange = viewModel::onSourceDateChange,
         onTargetDateChange = viewModel::onTargetDateChange,
         onCopy = viewModel::onCopy,
+        onOverwriteConfirmed = viewModel::onOverwriteConfirmed,
+        onOverwriteCancelled = viewModel::onOverwriteCancelled,
         onBack = onBack,
     )
 }
@@ -76,6 +79,8 @@ private fun CopyObsidianJournalContent(
     onSourceDateChange: (LocalDate) -> Unit,
     onTargetDateChange: (LocalDate) -> Unit,
     onCopy: () -> Unit,
+    onOverwriteConfirmed: () -> Unit,
+    onOverwriteCancelled: () -> Unit,
     onBack: () -> Unit,
 ) {
     var showSourceDatePicker by remember { mutableStateOf(false) }
@@ -180,6 +185,20 @@ private fun CopyObsidianJournalContent(
                 }
             }
         }
+    }
+
+    if (uiState.showOverwriteConfirmation) {
+        AlertDialog(
+            onDismissRequest = onOverwriteCancelled,
+            title = { Text("上書き確認") },
+            text = { Text("コピー先にすでに内容があります。上書きしますか？") },
+            confirmButton = {
+                TextButton(onClick = onOverwriteConfirmed) { Text("上書き") }
+            },
+            dismissButton = {
+                TextButton(onClick = onOverwriteCancelled) { Text("キャンセル") }
+            }
+        )
     }
 
     if (showSourceDatePicker) {

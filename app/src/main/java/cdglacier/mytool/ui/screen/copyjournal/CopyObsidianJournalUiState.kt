@@ -10,4 +10,5 @@ data class CopyObsidianJournalUiState(
     val targetDate: LocalDate = LocalDate.now(),
     val isCopying: Boolean = false,
     val snackbarMessage: String? = null,
+    val showOverwriteConfirmation: Boolean = false,
 )
