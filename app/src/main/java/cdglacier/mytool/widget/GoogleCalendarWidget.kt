@@ -12,9 +12,13 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
+import androidx.glance.action.ActionParameters
 import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.action.ActionCallback
+import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.state.updateAppWidgetState
+import androidx.glance.action.clickable
 import androidx.glance.background
 import androidx.glance.currentState
 import androidx.glance.layout.Alignment
@@ -63,8 +67,9 @@ class GoogleCalendarWidget : GlanceAppWidget() {
             Box(
                 modifier = GlanceModifier
                     .fillMaxSize()
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
-                    .background(Color.Transparent),
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                    .background(Color.Transparent)
+                    .clickable(actionRunCallback<UpdateCalendarWidgetCallback>()),
                 contentAlignment = Alignment.TopStart,
             ) {
                 when {
@@ -106,13 +111,13 @@ private fun EventRow(event: CalendarEvent) {
     Row(
         modifier = GlanceModifier
             .fillMaxWidth()
-            .padding(vertical = 2.dp),
+            .padding(vertical = 1.dp),
         verticalAlignment = Alignment.Vertical.CenterVertically,
     ) {
         Box(
             modifier = GlanceModifier
                 .width(4.dp)
-                .height(18.dp)
+                .height(14.dp)
                 .background(Color(event.calendarColor)),
         ) {}
         Text(
@@ -126,6 +131,17 @@ private fun EventRow(event: CalendarEvent) {
             style = TextStyle(color = textColor),
             modifier = GlanceModifier.defaultWeight(),
         )
+    }
+}
+
+class UpdateCalendarWidgetCallback : ActionCallback {
+    override suspend fun onAction(
+        context: Context,
+        glanceId: GlanceId,
+        parameters: ActionParameters,
+    ) {
+        CalendarWidgetUpdateWorker.runOnce(context)
+        updateCalendarWidgetContent(context, glanceId)
     }
 }
 
