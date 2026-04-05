@@ -98,7 +98,7 @@ class GoogleCalendarWidget : GlanceAppWidget() {
 @Composable
 private fun EventRow(event: CalendarEvent) {
     val textColor = ColorProvider(R.color.widget_text)
-    val timeColor = ColorProvider(Color(0xFFAC8983))
+    val timeColor = ColorProvider(R.color.widget_text)
     val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
     val zone = ZoneId.systemDefault()
 
