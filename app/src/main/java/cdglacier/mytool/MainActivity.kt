@@ -11,6 +11,7 @@ import androidx.navigation3.runtime.entry
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import cdglacier.mytool.widget.CalendarWidgetUpdateWorker
 import cdglacier.mytool.navigation.CopyObsidianJournalRoute
 import cdglacier.mytool.navigation.HomeRoute
 import cdglacier.mytool.navigation.SettingsRoute
@@ -22,6 +23,11 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    override fun onResume() {
+        super.onResume()
+        CalendarWidgetUpdateWorker.runOnce(this)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

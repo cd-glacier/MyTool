@@ -1,5 +1,6 @@
 package cdglacier.mytool.ui.screen.settings
 
+import android.Manifest
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -21,11 +22,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import java.time.LocalDate
@@ -63,11 +68,29 @@ fun SettingsScreen(
         }
     }
 
+    val calendarPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        viewModel.onCalendarPermissionResult(granted)
+    }
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) viewModel.refreshCalendarPermission()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     SettingsContent(
         uiState = uiState,
         onPickVaultFolder = { vaultFolderPickerLauncher.launch(uiState.vaultUri) },
         onPickJournalFolder = { journalFolderPickerLauncher.launch(uiState.journalDirUri) },
         onFilenameFormatChange = viewModel::onFilenameFormatChange,
+        onRequestCalendarPermission = {
+            calendarPermissionLauncher.launch(Manifest.permission.READ_CALENDAR)
+        },
         onBack = onBack,
     )
 }
@@ -79,6 +102,7 @@ private fun SettingsContent(
     onPickVaultFolder: () -> Unit,
     onPickJournalFolder: () -> Unit,
     onFilenameFormatChange: (String) -> Unit,
+    onRequestCalendarPermission: () -> Unit,
     onBack: () -> Unit,
 ) {
     val filenameHelperText = remember(uiState.filenameFormat) {
@@ -139,6 +163,19 @@ private fun SettingsContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+            }
+            item {
+                ListItem(
+                    headlineContent = { Text("カレンダーアクセス") },
+                    supportingContent = {
+                        Text(if (uiState.calendarPermissionGranted) "許可済み" else "未許可")
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(enabled = !uiState.calendarPermissionGranted) {
+                            onRequestCalendarPermission()
+                        }
                 )
             }
         }
