@@ -2,7 +2,9 @@ package cdglacier.mytool.widget
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -142,6 +144,12 @@ class UpdateCalendarWidgetCallback : ActionCallback {
     ) {
         CalendarWidgetUpdateWorker.runOnce(context)
         updateCalendarWidgetContent(context, glanceId)
+
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            data = Uri.parse("content://com.android.calendar/time")
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        context.startActivity(intent)
     }
 }
 
