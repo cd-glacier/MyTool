@@ -154,6 +154,6 @@ class OpenObsidianCallback : ActionCallback {
         context.startActivity(Intent(Intent.ACTION_VIEW, obsidianUri).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         })
-        WidgetUpdateWorker.runOnce(context)
+        updateWidgetContent(context, glanceId)
     }
 }

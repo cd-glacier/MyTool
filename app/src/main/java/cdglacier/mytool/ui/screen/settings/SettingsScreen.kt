@@ -106,8 +106,9 @@ private fun SettingsContent(
         }
     ) { innerPadding ->
         LazyColumn(
-            contentPadding = innerPadding,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
         ) {
             item {
                 ListItem(
