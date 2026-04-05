@@ -70,7 +70,7 @@ class GoogleCalendarWidget : GlanceAppWidget() {
                     .padding(horizontal = 8.dp, vertical = 4.dp)
                     .background(Color.Transparent)
                     .clickable(actionRunCallback<UpdateCalendarWidgetCallback>()),
-                contentAlignment = Alignment.TopStart,
+                contentAlignment = Alignment.Center,
             ) {
                 when {
                     !hasPermission -> Text(
@@ -79,7 +79,7 @@ class GoogleCalendarWidget : GlanceAppWidget() {
                     )
                     events.isEmpty() -> Text(
                         text = "今日の予定はありません",
-                        style = TextStyle(color = ColorProvider(Color(0xFFAC8983))),
+                        style = TextStyle(color = ColorProvider(R.color.widget_text)),
                     )
                     else -> Column(modifier = GlanceModifier.fillMaxSize()) {
                         events.forEach { event ->
