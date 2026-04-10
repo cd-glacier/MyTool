@@ -25,7 +25,8 @@ import androidx.glance.background
 import androidx.glance.currentState
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
-import androidx.glance.layout.Column
+import androidx.glance.appwidget.lazy.LazyColumn
+import androidx.glance.appwidget.lazy.items
 import androidx.glance.layout.Row
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
@@ -66,13 +67,14 @@ class GoogleCalendarWidget : GlanceAppWidget() {
                 }
             } ?: emptyList()
 
+            val hasEvents = hasPermission && events.isNotEmpty()
             Box(
                 modifier = GlanceModifier
                     .fillMaxSize()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .background(Color.Transparent)
                     .clickable(actionRunCallback<UpdateCalendarWidgetCallback>()),
-                contentAlignment = Alignment.Center,
+                contentAlignment = if (hasEvents) Alignment.TopStart else Alignment.Center,
             ) {
                 when {
                     !hasPermission -> Text(
@@ -83,8 +85,8 @@ class GoogleCalendarWidget : GlanceAppWidget() {
                         text = "今日の予定はありません",
                         style = TextStyle(color = ColorProvider(R.color.widget_text)),
                     )
-                    else -> Column(modifier = GlanceModifier.fillMaxSize()) {
-                        events.forEach { event ->
+                    else -> LazyColumn(modifier = GlanceModifier.fillMaxSize()) {
+                        items(events) { event ->
                             EventRow(event)
                         }
                     }
