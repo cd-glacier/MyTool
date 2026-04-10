@@ -14,7 +14,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 interface GoogleCalendarRepository {
-    suspend fun getTodayEvents(): List<CalendarEvent>
+    suspend fun getEventsForDate(date: LocalDate): List<CalendarEvent>
 }
 
 @Singleton
@@ -22,17 +22,20 @@ class GoogleCalendarRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
 ) : GoogleCalendarRepository {
 
-    override suspend fun getTodayEvents(): List<CalendarEvent> = withContext(Dispatchers.IO) {
+    override suspend fun getEventsForDate(date: LocalDate): List<CalendarEvent> = withContext(Dispatchers.IO) {
         val tz = TimeZone.getDefault()
-        val todayStart = Calendar.getInstance(tz).apply {
+        val dateStart = Calendar.getInstance(tz).apply {
+            set(Calendar.YEAR, date.year)
+            set(Calendar.MONTH, date.monthValue - 1)
+            set(Calendar.DAY_OF_MONTH, date.dayOfMonth)
             set(Calendar.HOUR_OF_DAY, 0)
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
         }.timeInMillis
-        val tomorrowStart = todayStart + TimeUnit.DAYS.toMillis(1)
+        val nextDayStart = dateStart + TimeUnit.DAYS.toMillis(1)
         // Extend range back 1 day to catch all-day events whose UTC DTSTART falls on the previous day
-        val queryStart = todayStart - TimeUnit.DAYS.toMillis(1)
+        val queryStart = dateStart - TimeUnit.DAYS.toMillis(1)
 
         val projection = arrayOf(
             CalendarContract.Events._ID,
@@ -44,10 +47,9 @@ class GoogleCalendarRepositoryImpl @Inject constructor(
             CalendarContract.Events.CALENDAR_COLOR,
         )
         val selection = "${CalendarContract.Events.DTSTART} >= ? AND ${CalendarContract.Events.DTSTART} < ?"
-        val selectionArgs = arrayOf(queryStart.toString(), tomorrowStart.toString())
+        val selectionArgs = arrayOf(queryStart.toString(), nextDayStart.toString())
         val sortOrder = "${CalendarContract.Events.DTSTART} ASC"
 
-        val today = LocalDate.now()
         val events = mutableListOf<CalendarEvent>()
 
         context.contentResolver.query(
@@ -72,7 +74,7 @@ class GoogleCalendarRepositoryImpl @Inject constructor(
                 val eventLocalDate = java.time.Instant.ofEpochMilli(dtStart)
                     .atZone(ZoneId.systemDefault())
                     .toLocalDate()
-                if (eventLocalDate != today) continue
+                if (eventLocalDate != date) continue
 
                 events += CalendarEvent(
                     id = cursor.getLong(idIdx),

@@ -8,6 +8,7 @@ import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.glance.GlanceComposable
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -18,6 +19,8 @@ import androidx.glance.action.ActionParameters
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.action.ActionCallback
 import androidx.glance.appwidget.action.actionRunCallback
+import androidx.glance.appwidget.lazy.LazyColumn
+import androidx.glance.appwidget.lazy.items
 import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.glance.action.clickable
@@ -25,8 +28,6 @@ import androidx.glance.background
 import androidx.glance.currentState
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
-import androidx.glance.appwidget.lazy.LazyColumn
-import androidx.glance.appwidget.lazy.items
 import androidx.glance.layout.Row
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
@@ -35,6 +36,7 @@ import androidx.glance.layout.padding
 import androidx.glance.layout.width
 import androidx.glance.state.GlanceStateDefinition
 import androidx.glance.state.PreferencesGlanceStateDefinition
+import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
@@ -44,10 +46,12 @@ import cdglacier.mytool.data.repository.GoogleCalendarRepositoryImpl
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 val CALENDAR_EVENTS_KEY = stringPreferencesKey("calendar_events_json")
+val CALENDAR_TOMORROW_EVENTS_KEY = stringPreferencesKey("calendar_tomorrow_events_json")
 val CALENDAR_PERMISSION_KEY = booleanPreferencesKey("calendar_permission_granted")
 
 class GoogleCalendarWidget : GlanceAppWidget() {
@@ -56,40 +60,31 @@ class GoogleCalendarWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         provideContent {
             val prefs = currentState<androidx.datastore.preferences.core.Preferences>()
-            val eventsJson = prefs[CALENDAR_EVENTS_KEY]
             val hasPermission = prefs[CALENDAR_PERMISSION_KEY] ?: true
 
-            val events: List<CalendarEvent> = eventsJson?.let {
-                try {
-                    Json.decodeFromString(it)
-                } catch (e: Exception) {
-                    emptyList()
-                }
+            val todayEvents: List<CalendarEvent> = prefs[CALENDAR_EVENTS_KEY]?.let {
+                try { Json.decodeFromString(it) } catch (e: Exception) { emptyList() }
             } ?: emptyList()
 
-            val hasEvents = hasPermission && events.isNotEmpty()
+            val tomorrowEvents: List<CalendarEvent> = prefs[CALENDAR_TOMORROW_EVENTS_KEY]?.let {
+                try { Json.decodeFromString(it) } catch (e: Exception) { emptyList() }
+            } ?: emptyList()
+
             Box(
                 modifier = GlanceModifier
                     .fillMaxSize()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .background(Color.Transparent)
                     .clickable(actionRunCallback<UpdateCalendarWidgetCallback>()),
-                contentAlignment = if (hasEvents) Alignment.TopStart else Alignment.Center,
+                contentAlignment = if (hasPermission) Alignment.TopStart else Alignment.Center,
             ) {
-                when {
-                    !hasPermission -> Text(
+                if (!hasPermission) {
+                    Text(
                         text = "カレンダーへのアクセスを許可してください",
                         style = TextStyle(color = ColorProvider(Color(0xFFFB4934))),
                     )
-                    events.isEmpty() -> Text(
-                        text = "今日の予定はありません",
-                        style = TextStyle(color = ColorProvider(R.color.widget_text)),
-                    )
-                    else -> LazyColumn(modifier = GlanceModifier.fillMaxSize()) {
-                        items(events) { event ->
-                            EventRow(event)
-                        }
-                    }
+                } else {
+                    CalendarSections(todayEvents, tomorrowEvents)
                 }
             }
         }
@@ -98,9 +93,56 @@ class GoogleCalendarWidget : GlanceAppWidget() {
 
 @GlanceComposable
 @Composable
+private fun CalendarSections(
+    todayEvents: List<CalendarEvent>,
+    tomorrowEvents: List<CalendarEvent>,
+) {
+    val textColor = ColorProvider(R.color.widget_text)
+    LazyColumn(modifier = GlanceModifier.fillMaxSize()) {
+        item {
+            Text(
+                text = "Today",
+                style = TextStyle(color = textColor, fontWeight = FontWeight.Bold, fontSize = 12.sp),
+                modifier = GlanceModifier.padding(bottom = 2.dp),
+            )
+        }
+        if (todayEvents.isEmpty()) {
+            item {
+                Text(
+                    text = "予定なし",
+                    style = TextStyle(color = textColor),
+                    modifier = GlanceModifier.padding(start = 4.dp, bottom = 4.dp),
+                )
+            }
+        } else {
+            items(todayEvents) { event -> EventRow(event) }
+        }
+
+        item {
+            Text(
+                text = "Tomorrow",
+                style = TextStyle(color = textColor, fontWeight = FontWeight.Bold, fontSize = 12.sp),
+                modifier = GlanceModifier.padding(top = 6.dp, bottom = 2.dp),
+            )
+        }
+        if (tomorrowEvents.isEmpty()) {
+            item {
+                Text(
+                    text = "予定なし",
+                    style = TextStyle(color = textColor),
+                    modifier = GlanceModifier.padding(start = 4.dp),
+                )
+            }
+        } else {
+            items(tomorrowEvents) { event -> EventRow(event) }
+        }
+    }
+}
+
+@GlanceComposable
+@Composable
 private fun EventRow(event: CalendarEvent) {
     val textColor = ColorProvider(R.color.widget_text)
-    val timeColor = ColorProvider(R.color.widget_text)
     val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
     val zone = ZoneId.systemDefault()
 
@@ -126,7 +168,7 @@ private fun EventRow(event: CalendarEvent) {
         ) {}
         Text(
             text = timeText,
-            style = TextStyle(color = timeColor),
+            style = TextStyle(color = textColor),
             modifier = GlanceModifier.padding(start = 6.dp, end = 4.dp),
         )
         Text(
@@ -160,19 +202,19 @@ suspend fun updateCalendarWidgetContent(context: Context, glanceId: GlanceId) {
         context, Manifest.permission.READ_CALENDAR
     ) == PackageManager.PERMISSION_GRANTED
 
-    val events = if (hasPermission) {
-        try {
-            GoogleCalendarRepositoryImpl(context).getTodayEvents()
-        } catch (e: Exception) {
-            emptyList()
-        }
+    val (todayEvents, tomorrowEvents) = if (!hasPermission) {
+        emptyList<CalendarEvent>() to emptyList()
     } else {
-        emptyList()
+        val repo = GoogleCalendarRepositoryImpl(context)
+        val today = try { repo.getEventsForDate(LocalDate.now()) } catch (e: Exception) { emptyList() }
+        val tomorrow = try { repo.getEventsForDate(LocalDate.now().plusDays(1)) } catch (e: Exception) { emptyList() }
+        today to tomorrow
     }
 
     updateAppWidgetState(context, PreferencesGlanceStateDefinition, glanceId) { prefs ->
         prefs.toMutablePreferences().apply {
-            this[CALENDAR_EVENTS_KEY] = Json.encodeToString(events)
+            this[CALENDAR_EVENTS_KEY] = Json.encodeToString(todayEvents)
+            this[CALENDAR_TOMORROW_EVENTS_KEY] = Json.encodeToString(tomorrowEvents)
             this[CALENDAR_PERMISSION_KEY] = hasPermission
         }
     }
