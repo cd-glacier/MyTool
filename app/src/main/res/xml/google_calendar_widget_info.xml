@@ -6,4 +6,5 @@
     android:targetCellHeight="1"
     android:updatePeriodMillis="0"
     android:resizeMode="horizontal|vertical"
+    android:configure="cdglacier.mytool.widget.GoogleCalendarWidgetConfigActivity"
     android:widgetCategory="home_screen" />

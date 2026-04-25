@@ -24,6 +24,7 @@ class GoogleCalendarWidgetReceiver : GlanceAppWidgetReceiver() {
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {
         super.onDeleted(context, appWidgetIds)
         CoroutineScope(Dispatchers.IO).launch {
+            appWidgetIds.forEach { WidgetPreferences.deleteWidgetPrefs(context, it) }
             val remaining = GlanceAppWidgetManager(context).getGlanceIds(GoogleCalendarWidget::class.java)
             if (remaining.isEmpty()) CalendarWidgetUpdateWorker.cancel(context)
         }

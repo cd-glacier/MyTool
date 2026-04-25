@@ -14,7 +14,12 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 interface GoogleCalendarRepository {
-    suspend fun getEventsForDate(date: LocalDate): List<CalendarEvent>
+    suspend fun getEventsForDate(
+        date: LocalDate,
+        calendarIds: Set<Long>? = null,
+    ): List<CalendarEvent>
+
+    suspend fun getCalendars(): List<CalendarAccount>
 }
 
 @Singleton
@@ -22,7 +27,12 @@ class GoogleCalendarRepositoryImpl @Inject constructor(
     @ApplicationContext private val context: Context,
 ) : GoogleCalendarRepository {
 
-    override suspend fun getEventsForDate(date: LocalDate): List<CalendarEvent> = withContext(Dispatchers.IO) {
+    override suspend fun getEventsForDate(
+        date: LocalDate,
+        calendarIds: Set<Long>?,
+    ): List<CalendarEvent> = withContext(Dispatchers.IO) {
+        if (calendarIds != null && calendarIds.isEmpty()) return@withContext emptyList()
+
         val tz = TimeZone.getDefault()
         val dateStart = Calendar.getInstance(tz).apply {
             set(Calendar.YEAR, date.year)
@@ -46,8 +56,19 @@ class GoogleCalendarRepositoryImpl @Inject constructor(
             CalendarContract.Events.CALENDAR_DISPLAY_NAME,
             CalendarContract.Events.CALENDAR_COLOR,
         )
-        val selection = "${CalendarContract.Events.DTSTART} >= ? AND ${CalendarContract.Events.DTSTART} < ?"
-        val selectionArgs = arrayOf(queryStart.toString(), nextDayStart.toString())
+
+        val baseSelection = "${CalendarContract.Events.DTSTART} >= ? AND ${CalendarContract.Events.DTSTART} < ?"
+        val baseArgs = arrayOf(queryStart.toString(), nextDayStart.toString())
+
+        val (selection, selectionArgs) = if (calendarIds.isNullOrEmpty()) {
+            baseSelection to baseArgs
+        } else {
+            val placeholders = calendarIds.joinToString(",") { "?" }
+            val sel = "$baseSelection AND ${CalendarContract.Events.CALENDAR_ID} IN ($placeholders)"
+            val args = baseArgs + calendarIds.map { it.toString() }.toTypedArray()
+            sel to args
+        }
+
         val sortOrder = "${CalendarContract.Events.DTSTART} ASC"
 
         val events = mutableListOf<CalendarEvent>()
@@ -88,5 +109,41 @@ class GoogleCalendarRepositoryImpl @Inject constructor(
             }
         }
         events
+    }
+
+    override suspend fun getCalendars(): List<CalendarAccount> = withContext(Dispatchers.IO) {
+        val projection = arrayOf(
+            CalendarContract.Calendars._ID,
+            CalendarContract.Calendars.CALENDAR_DISPLAY_NAME,
+            CalendarContract.Calendars.ACCOUNT_NAME,
+            CalendarContract.Calendars.CALENDAR_COLOR,
+        )
+        val selection = "${CalendarContract.Calendars.VISIBLE} = 1"
+        val sortOrder = "${CalendarContract.Calendars.ACCOUNT_NAME} ASC, ${CalendarContract.Calendars.CALENDAR_DISPLAY_NAME} ASC"
+
+        val accounts = mutableListOf<CalendarAccount>()
+
+        context.contentResolver.query(
+            CalendarContract.Calendars.CONTENT_URI,
+            projection,
+            selection,
+            null,
+            sortOrder,
+        )?.use { cursor ->
+            val idIdx       = cursor.getColumnIndexOrThrow(CalendarContract.Calendars._ID)
+            val nameIdx     = cursor.getColumnIndexOrThrow(CalendarContract.Calendars.CALENDAR_DISPLAY_NAME)
+            val accountIdx  = cursor.getColumnIndexOrThrow(CalendarContract.Calendars.ACCOUNT_NAME)
+            val colorIdx    = cursor.getColumnIndexOrThrow(CalendarContract.Calendars.CALENDAR_COLOR)
+
+            while (cursor.moveToNext()) {
+                accounts += CalendarAccount(
+                    id = cursor.getLong(idIdx),
+                    displayName = cursor.getString(nameIdx) ?: "",
+                    accountName = cursor.getString(accountIdx) ?: "",
+                    color = cursor.getInt(colorIdx),
+                )
+            }
+        }
+        accounts
     }
 }

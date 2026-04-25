@@ -17,6 +17,7 @@ import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.action.ActionParameters
 import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.action.ActionCallback
 import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.lazy.LazyColumn
@@ -43,6 +44,7 @@ import androidx.glance.unit.ColorProvider
 import cdglacier.mytool.R
 import cdglacier.mytool.data.repository.CalendarEvent
 import cdglacier.mytool.data.repository.GoogleCalendarRepositoryImpl
+import kotlinx.coroutines.flow.first
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.time.Instant
@@ -205,9 +207,21 @@ suspend fun updateCalendarWidgetContent(context: Context, glanceId: GlanceId) {
     val (todayEvents, tomorrowEvents) = if (!hasPermission) {
         emptyList<CalendarEvent>() to emptyList()
     } else {
+        val appWidgetId = try {
+            GlanceAppWidgetManager(context).getAppWidgetId(glanceId)
+        } catch (e: Exception) {
+            -1
+        }
+        // null = キー未存在 → 後方互換で全カレンダー表示
+        val selectedIds = if (appWidgetId != -1) {
+            WidgetPreferences.getSelectedCalendarIdsFlow(context, appWidgetId).first()
+        } else {
+            null
+        }
+
         val repo = GoogleCalendarRepositoryImpl(context)
-        val today = try { repo.getEventsForDate(LocalDate.now()) } catch (e: Exception) { emptyList() }
-        val tomorrow = try { repo.getEventsForDate(LocalDate.now().plusDays(1)) } catch (e: Exception) { emptyList() }
+        val today = try { repo.getEventsForDate(LocalDate.now(), selectedIds) } catch (e: Exception) { emptyList() }
+        val tomorrow = try { repo.getEventsForDate(LocalDate.now().plusDays(1), selectedIds) } catch (e: Exception) { emptyList() }
         today to tomorrow
     }
 
