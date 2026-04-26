@@ -1,12 +1,12 @@
 package cdglacier.mytool.data.repository
 
+import android.content.ContentUris
 import android.content.Context
 import android.provider.CalendarContract
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
-import java.time.ZoneId
 import java.util.Calendar
 import java.util.TimeZone
 import java.util.concurrent.TimeUnit
@@ -44,65 +44,59 @@ class GoogleCalendarRepositoryImpl @Inject constructor(
             set(Calendar.MILLISECOND, 0)
         }.timeInMillis
         val nextDayStart = dateStart + TimeUnit.DAYS.toMillis(1)
-        // Extend range back 1 day to catch all-day events whose UTC DTSTART falls on the previous day
-        val queryStart = dateStart - TimeUnit.DAYS.toMillis(1)
 
-        val projection = arrayOf(
-            CalendarContract.Events._ID,
-            CalendarContract.Events.TITLE,
-            CalendarContract.Events.DTSTART,
-            CalendarContract.Events.DTEND,
-            CalendarContract.Events.ALL_DAY,
-            CalendarContract.Events.CALENDAR_DISPLAY_NAME,
-            CalendarContract.Events.CALENDAR_COLOR,
-        )
-
-        val baseSelection = "${CalendarContract.Events.DTSTART} >= ? AND ${CalendarContract.Events.DTSTART} < ?"
-        val baseArgs = arrayOf(queryStart.toString(), nextDayStart.toString())
-
-        val (selection, selectionArgs) = if (calendarIds.isNullOrEmpty()) {
-            baseSelection to baseArgs
-        } else {
-            val placeholders = calendarIds.joinToString(",") { "?" }
-            val sel = "$baseSelection AND ${CalendarContract.Events.CALENDAR_ID} IN ($placeholders)"
-            val args = baseArgs + calendarIds.map { it.toString() }.toTypedArray()
-            sel to args
+        // Time range is encoded in the URI; Instances expands recurring events
+        // and surfaces multi-day events overlapping the range.
+        val uri = CalendarContract.Instances.CONTENT_URI.buildUpon().let { b ->
+            ContentUris.appendId(b, dateStart)
+            ContentUris.appendId(b, nextDayStart)
+            b.build()
         }
 
-        val sortOrder = "${CalendarContract.Events.DTSTART} ASC"
+        val projection = arrayOf(
+            CalendarContract.Instances.EVENT_ID,
+            CalendarContract.Instances.TITLE,
+            CalendarContract.Instances.BEGIN,
+            CalendarContract.Instances.END,
+            CalendarContract.Instances.ALL_DAY,
+            CalendarContract.Instances.CALENDAR_DISPLAY_NAME,
+            CalendarContract.Instances.CALENDAR_COLOR,
+        )
+
+        val (selection, selectionArgs) = if (calendarIds.isNullOrEmpty()) {
+            null to null
+        } else {
+            val placeholders = calendarIds.joinToString(",") { "?" }
+            "${CalendarContract.Instances.CALENDAR_ID} IN ($placeholders)" to
+                calendarIds.map { it.toString() }.toTypedArray()
+        }
+
+        val sortOrder = "${CalendarContract.Instances.BEGIN} ASC"
 
         val events = mutableListOf<CalendarEvent>()
 
         context.contentResolver.query(
-            CalendarContract.Events.CONTENT_URI,
+            uri,
             projection,
             selection,
             selectionArgs,
             sortOrder,
         )?.use { cursor ->
-            val idIdx      = cursor.getColumnIndexOrThrow(CalendarContract.Events._ID)
-            val titleIdx   = cursor.getColumnIndexOrThrow(CalendarContract.Events.TITLE)
-            val startIdx   = cursor.getColumnIndexOrThrow(CalendarContract.Events.DTSTART)
-            val endIdx     = cursor.getColumnIndexOrThrow(CalendarContract.Events.DTEND)
-            val allDayIdx  = cursor.getColumnIndexOrThrow(CalendarContract.Events.ALL_DAY)
-            val calNameIdx = cursor.getColumnIndexOrThrow(CalendarContract.Events.CALENDAR_DISPLAY_NAME)
-            val calColorIdx = cursor.getColumnIndexOrThrow(CalendarContract.Events.CALENDAR_COLOR)
+            val eventIdIdx  = cursor.getColumnIndexOrThrow(CalendarContract.Instances.EVENT_ID)
+            val titleIdx    = cursor.getColumnIndexOrThrow(CalendarContract.Instances.TITLE)
+            val beginIdx    = cursor.getColumnIndexOrThrow(CalendarContract.Instances.BEGIN)
+            val endIdx      = cursor.getColumnIndexOrThrow(CalendarContract.Instances.END)
+            val allDayIdx   = cursor.getColumnIndexOrThrow(CalendarContract.Instances.ALL_DAY)
+            val calNameIdx  = cursor.getColumnIndexOrThrow(CalendarContract.Instances.CALENDAR_DISPLAY_NAME)
+            val calColorIdx = cursor.getColumnIndexOrThrow(CalendarContract.Instances.CALENDAR_COLOR)
 
             while (cursor.moveToNext()) {
-                val dtStart = cursor.getLong(startIdx)
-                val isAllDay = cursor.getInt(allDayIdx) != 0
-
-                val eventLocalDate = java.time.Instant.ofEpochMilli(dtStart)
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDate()
-                if (eventLocalDate != date) continue
-
                 events += CalendarEvent(
-                    id = cursor.getLong(idIdx),
+                    id = cursor.getLong(eventIdIdx),
                     title = cursor.getString(titleIdx) ?: "",
-                    dtStart = dtStart,
+                    dtStart = cursor.getLong(beginIdx),
                     dtEnd = cursor.getLong(endIdx),
-                    isAllDay = isAllDay,
+                    isAllDay = cursor.getInt(allDayIdx) != 0,
                     calendarDisplayName = cursor.getString(calNameIdx) ?: "",
                     calendarColor = cursor.getInt(calColorIdx),
                 )
