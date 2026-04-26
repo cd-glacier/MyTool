@@ -20,8 +20,6 @@ import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.action.ActionCallback
 import androidx.glance.appwidget.action.actionRunCallback
-import androidx.glance.appwidget.lazy.LazyColumn
-import androidx.glance.appwidget.lazy.items
 import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.glance.action.clickable
@@ -29,6 +27,7 @@ import androidx.glance.background
 import androidx.glance.currentState
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
+import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
@@ -100,43 +99,35 @@ private fun CalendarSections(
     tomorrowEvents: List<CalendarEvent>,
 ) {
     val textColor = ColorProvider(R.color.widget_text)
-    LazyColumn(modifier = GlanceModifier.fillMaxSize()) {
-        item {
-            Text(
-                text = "Today",
-                style = TextStyle(color = textColor, fontWeight = FontWeight.Bold, fontSize = 12.sp),
-                modifier = GlanceModifier.padding(bottom = 2.dp),
-            )
-        }
+    Column(modifier = GlanceModifier.fillMaxSize()) {
+        Text(
+            text = "Today",
+            style = TextStyle(color = textColor, fontWeight = FontWeight.Bold, fontSize = 12.sp),
+            modifier = GlanceModifier.padding(bottom = 2.dp),
+        )
         if (todayEvents.isEmpty()) {
-            item {
-                Text(
-                    text = "予定なし",
-                    style = TextStyle(color = textColor),
-                    modifier = GlanceModifier.padding(start = 4.dp, bottom = 4.dp),
-                )
-            }
+            Text(
+                text = "予定なし",
+                style = TextStyle(color = textColor),
+                modifier = GlanceModifier.padding(start = 4.dp, bottom = 4.dp),
+            )
         } else {
-            items(todayEvents) { event -> EventRow(event) }
+            todayEvents.forEach { event -> EventRow(event) }
         }
 
-        item {
-            Text(
-                text = "Tomorrow",
-                style = TextStyle(color = textColor, fontWeight = FontWeight.Bold, fontSize = 12.sp),
-                modifier = GlanceModifier.padding(top = 6.dp, bottom = 2.dp),
-            )
-        }
+        Text(
+            text = "Tomorrow",
+            style = TextStyle(color = textColor, fontWeight = FontWeight.Bold, fontSize = 12.sp),
+            modifier = GlanceModifier.padding(top = 6.dp, bottom = 2.dp),
+        )
         if (tomorrowEvents.isEmpty()) {
-            item {
-                Text(
-                    text = "予定なし",
-                    style = TextStyle(color = textColor),
-                    modifier = GlanceModifier.padding(start = 4.dp),
-                )
-            }
+            Text(
+                text = "予定なし",
+                style = TextStyle(color = textColor),
+                modifier = GlanceModifier.padding(start = 4.dp),
+            )
         } else {
-            items(tomorrowEvents) { event -> EventRow(event) }
+            tomorrowEvents.forEach { event -> EventRow(event) }
         }
     }
 }
