@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.flow.Flow
@@ -22,6 +23,7 @@ object WidgetPreferences {
     fun filenameFormatKey(id: Int) = stringPreferencesKey("widget_${id}_filename_format")
     fun vaultDirUriKey(id: Int) = stringPreferencesKey("widget_${id}_vault_dir_uri")
     fun backgroundOpacityKey(id: Int) = intPreferencesKey("widget_${id}_background_opacity")
+    fun selectedCalendarIdsKey(id: Int) = stringSetPreferencesKey("widget_${id}_selected_calendar_ids")
 
     fun getJournalDirUriFlow(context: Context, widgetId: Int): Flow<Uri?> =
         context.widgetDataStore.data.map { prefs ->
@@ -71,12 +73,28 @@ object WidgetPreferences {
         return DocumentFile.fromTreeUri(context, vaultDirUri)?.name
     }
 
+    /**
+     * null = キー未存在（このウィジェットでは未設定。フォールバックで全カレンダー表示）。
+     * 空 set = ユーザーが明示的に 0 件を選択した状態（イベントは何も表示されない）。
+     */
+    fun getSelectedCalendarIdsFlow(context: Context, widgetId: Int): Flow<Set<Long>?> =
+        context.widgetDataStore.data.map { prefs ->
+            prefs[selectedCalendarIdsKey(widgetId)]?.mapNotNull { it.toLongOrNull() }?.toSet()
+        }
+
+    suspend fun setSelectedCalendarIds(context: Context, widgetId: Int, ids: Set<Long>) {
+        context.widgetDataStore.edit { prefs ->
+            prefs[selectedCalendarIdsKey(widgetId)] = ids.map { it.toString() }.toSet()
+        }
+    }
+
     suspend fun deleteWidgetPrefs(context: Context, widgetId: Int) {
         context.widgetDataStore.edit { prefs ->
             prefs.remove(journalDirUriKey(widgetId))
             prefs.remove(filenameFormatKey(widgetId))
             prefs.remove(vaultDirUriKey(widgetId))
             prefs.remove(backgroundOpacityKey(widgetId))
+            prefs.remove(selectedCalendarIdsKey(widgetId))
         }
     }
 }

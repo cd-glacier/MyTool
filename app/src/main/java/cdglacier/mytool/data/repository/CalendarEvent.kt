@@ -12,3 +12,11 @@ data class CalendarEvent(
     val calendarDisplayName: String,
     val calendarColor: Int,
 )
+
+@Serializable
+data class CalendarAccount(
+    val id: Long,
+    val displayName: String,
+    val accountName: String,
+    val color: Int,
+)
