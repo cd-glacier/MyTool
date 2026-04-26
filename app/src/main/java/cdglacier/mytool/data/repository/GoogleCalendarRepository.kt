@@ -61,6 +61,7 @@ class GoogleCalendarRepositoryImpl @Inject constructor(
             CalendarContract.Instances.ALL_DAY,
             CalendarContract.Instances.CALENDAR_DISPLAY_NAME,
             CalendarContract.Instances.CALENDAR_COLOR,
+            CalendarContract.Instances.EVENT_COLOR,
         )
 
         val (selection, selectionArgs) = if (calendarIds.isNullOrEmpty()) {
@@ -89,8 +90,13 @@ class GoogleCalendarRepositoryImpl @Inject constructor(
             val allDayIdx   = cursor.getColumnIndexOrThrow(CalendarContract.Instances.ALL_DAY)
             val calNameIdx  = cursor.getColumnIndexOrThrow(CalendarContract.Instances.CALENDAR_DISPLAY_NAME)
             val calColorIdx = cursor.getColumnIndexOrThrow(CalendarContract.Instances.CALENDAR_COLOR)
+            val eventColorIdx = cursor.getColumnIndexOrThrow(CalendarContract.Instances.EVENT_COLOR)
 
             while (cursor.moveToNext()) {
+                // EVENT_COLOR: 0 / null means "use the calendar's default color"
+                val eventColor = if (cursor.isNull(eventColorIdx)) 0 else cursor.getInt(eventColorIdx)
+                val effectiveColor = if (eventColor != 0) eventColor else cursor.getInt(calColorIdx)
+
                 events += CalendarEvent(
                     id = cursor.getLong(eventIdIdx),
                     title = cursor.getString(titleIdx) ?: "",
@@ -98,7 +104,7 @@ class GoogleCalendarRepositoryImpl @Inject constructor(
                     dtEnd = cursor.getLong(endIdx),
                     isAllDay = cursor.getInt(allDayIdx) != 0,
                     calendarDisplayName = cursor.getString(calNameIdx) ?: "",
-                    calendarColor = cursor.getInt(calColorIdx),
+                    calendarColor = effectiveColor,
                 )
             }
         }
