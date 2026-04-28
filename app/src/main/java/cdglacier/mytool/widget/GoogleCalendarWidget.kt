@@ -105,7 +105,10 @@ private fun CalendarSections(
             Text(
                 text = "Today",
                 style = TextStyle(color = textColor, fontWeight = FontWeight.Bold, fontSize = 12.sp),
-                modifier = GlanceModifier.padding(bottom = 2.dp),
+                modifier = GlanceModifier
+                    .fillMaxWidth()
+                    .padding(bottom = 2.dp)
+                    .clickable(actionRunCallback<UpdateCalendarWidgetCallback>()),
             )
         }
         if (todayEvents.isEmpty()) {
@@ -113,7 +116,10 @@ private fun CalendarSections(
                 Text(
                     text = "予定なし",
                     style = TextStyle(color = textColor),
-                    modifier = GlanceModifier.padding(start = 4.dp, bottom = 4.dp),
+                    modifier = GlanceModifier
+                        .fillMaxWidth()
+                        .padding(start = 4.dp, bottom = 4.dp)
+                        .clickable(actionRunCallback<UpdateCalendarWidgetCallback>()),
                 )
             }
         } else {
@@ -124,7 +130,10 @@ private fun CalendarSections(
             Text(
                 text = "Tomorrow",
                 style = TextStyle(color = textColor, fontWeight = FontWeight.Bold, fontSize = 12.sp),
-                modifier = GlanceModifier.padding(top = 6.dp, bottom = 2.dp),
+                modifier = GlanceModifier
+                    .fillMaxWidth()
+                    .padding(top = 6.dp, bottom = 2.dp)
+                    .clickable(actionRunCallback<UpdateCalendarWidgetCallback>()),
             )
         }
         if (tomorrowEvents.isEmpty()) {
@@ -132,7 +141,10 @@ private fun CalendarSections(
                 Text(
                     text = "予定なし",
                     style = TextStyle(color = textColor),
-                    modifier = GlanceModifier.padding(start = 4.dp),
+                    modifier = GlanceModifier
+                        .fillMaxWidth()
+                        .padding(start = 4.dp)
+                        .clickable(actionRunCallback<UpdateCalendarWidgetCallback>()),
                 )
             }
         } else {
@@ -159,7 +171,8 @@ private fun EventRow(event: CalendarEvent) {
     Row(
         modifier = GlanceModifier
             .fillMaxWidth()
-            .padding(vertical = 1.dp),
+            .padding(vertical = 1.dp)
+            .clickable(actionRunCallback<UpdateCalendarWidgetCallback>()),
         verticalAlignment = Alignment.Vertical.CenterVertically,
     ) {
         Box(
