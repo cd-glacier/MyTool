@@ -43,7 +43,7 @@ class GoogleCalendarRepositoryImpl @Inject constructor(
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
         }.timeInMillis
-        val nextDayStart = dateStart + TimeUnit.DAYS.toMillis(1)
+        val nextDayStart = dateStart + TimeUnit.DAYS.toMillis(1) - 1L
 
         // Time range is encoded in the URI; Instances expands recurring events
         // and surfaces multi-day events overlapping the range.
@@ -64,11 +64,14 @@ class GoogleCalendarRepositoryImpl @Inject constructor(
             CalendarContract.Instances.EVENT_COLOR,
         )
 
+        val statusFilter =
+            "${CalendarContract.Instances.STATUS} != ${CalendarContract.Events.STATUS_CANCELED}"
+
         val (selection, selectionArgs) = if (calendarIds.isNullOrEmpty()) {
-            null to null
+            statusFilter to null
         } else {
             val placeholders = calendarIds.joinToString(",") { "?" }
-            "${CalendarContract.Instances.CALENDAR_ID} IN ($placeholders)" to
+            "$statusFilter AND ${CalendarContract.Instances.CALENDAR_ID} IN ($placeholders)" to
                 calendarIds.map { it.toString() }.toTypedArray()
         }
 
