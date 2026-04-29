@@ -24,7 +24,20 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        getByName("debug") {
+            storeFile = System.getenv("DEBUG_KEYSTORE_PATH")?.let { file(it) }
+                ?: file("${System.getProperty("user.home")}/.android/debug.keystore")
+            storePassword = System.getenv("DEBUG_KEYSTORE_PASSWORD") ?: "android"
+            keyAlias = System.getenv("DEBUG_KEY_ALIAS") ?: "androiddebugkey"
+            keyPassword = System.getenv("DEBUG_KEY_PASSWORD") ?: "android"
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("debug")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
