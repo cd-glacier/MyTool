@@ -6,7 +6,9 @@ import android.provider.CalendarContract
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneOffset
 import java.util.Calendar
 import java.util.TimeZone
 import java.util.concurrent.TimeUnit
@@ -111,7 +113,14 @@ class GoogleCalendarRepositoryImpl @Inject constructor(
                 )
             }
         }
-        events
+
+        // All-day events are stored at UTC midnight; the overlap-based Instances query
+        // lets them bleed into adjacent days due to timezone offset. Filter by UTC date
+        // to ensure each all-day event appears only on its intended day.
+        events.filter { event ->
+            if (!event.isAllDay) return@filter true
+            Instant.ofEpochMilli(event.dtStart).atOffset(ZoneOffset.UTC).toLocalDate() == date
+        }
     }
 
     override suspend fun getCalendars(): List<CalendarAccount> = withContext(Dispatchers.IO) {
