@@ -12,22 +12,22 @@
 
     <group
         android:pivotX="54"
-        android:pivotY="59"
+        android:pivotY="54"
         android:rotation="20">
 
         <!-- 柄 -->
         <path
-            android:pathData="M53.5,37 Q52,37 52,38.5 L52,79.5 Q52,81 53.5,81 L54.5,81 Q56,81 56,79.5 L56,38.5 Q56,37 54.5,37 Z"
+            android:pathData="M53.5,32 Q52,32 52,33.5 L52,74.5 Q52,76 53.5,76 L54.5,76 Q56,76 56,74.5 L56,33.5 Q56,32 54.5,32 Z"
             android:fillColor="#FFFFFFFF"/>
 
         <!-- ヘッド -->
         <path
-            android:pathData="M38,37 Q52,33 68,41 L76,45 L74,49 L66,45 Q54,39 40,41 Z"
+            android:pathData="M38,32 Q52,28 68,36 L76,40 L74,44 L66,40 Q54,34 40,36 Z"
             android:fillColor="#FFFFFFFF"/>
 
         <!-- 石突き -->
         <path
-            android:pathData="M52,81 L56,81 L54,87 Z"
+            android:pathData="M52,76 L56,76 L54,82 Z"
             android:fillColor="#FFFFFFFF"/>
 
     </group>
