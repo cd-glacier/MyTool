@@ -33,12 +33,12 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Setup debug keystore
-        run: echo "${{ secrets.DEBUG_KEYSTORE }}" | base64 --decode > $HOME/debug.keystore
+        run: echo "${{ secrets.DEBUG_KEYSTORE }}" | base64 --decode > /tmp/debug.keystore
 
       - name: Build Debug APK
         run: ./gradlew assembleDebug --no-daemon
         env:
-          DEBUG_KEYSTORE_PATH: ${{ env.HOME }}/debug.keystore
+          DEBUG_KEYSTORE_PATH: /tmp/debug.keystore
           DEBUG_KEYSTORE_PASSWORD: ${{ secrets.DEBUG_KEYSTORE_PASSWORD }}
           DEBUG_KEY_ALIAS: ${{ secrets.DEBUG_KEY_ALIAS }}
           DEBUG_KEY_PASSWORD: ${{ secrets.DEBUG_KEY_PASSWORD }}
