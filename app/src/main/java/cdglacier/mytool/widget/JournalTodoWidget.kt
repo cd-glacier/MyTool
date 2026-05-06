@@ -7,6 +7,7 @@ import android.net.Uri
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import cdglacier.mytool.R
+import cdglacier.mytool.domain.usecase.CopyJournalUseCase
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.glance.GlanceId
@@ -123,8 +124,14 @@ suspend fun updateWidgetContent(context: Context, glanceId: GlanceId) {
     val format = WidgetPreferences.getFilenameFormatFlow(context, appWidgetId).first()
     val opacity = WidgetPreferences.getBackgroundOpacityFlow(context, appWidgetId).first()
 
-    val markdown = if (journalDirUri != null)
-        JournalReader.readTodayJournal(context, journalDirUri, format) else null
+    val markdown = if (journalDirUri != null) {
+        val today = LocalDate.now()
+        JournalReader.readTodayJournal(context, journalDirUri, format, today)
+            ?: run {
+                CopyJournalUseCase(context)(journalDirUri, today.minusDays(1), today, format)
+                JournalReader.readTodayJournal(context, journalDirUri, format, today)
+            }
+    } else null
     val todos = if (markdown != null) TodoParser.parse(markdown) else emptyList()
 
     updateAppWidgetState(context, PreferencesGlanceStateDefinition, glanceId) { prefs ->
