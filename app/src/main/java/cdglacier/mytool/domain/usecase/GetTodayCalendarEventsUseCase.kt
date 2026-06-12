@@ -1,7 +1,7 @@
 package cdglacier.mytool.domain.usecase
 
-import cdglacier.mytool.data.repository.CalendarEvent
 import cdglacier.mytool.data.repository.GoogleCalendarRepository
+import cdglacier.mytool.domain.model.CalendarEvent
 import java.time.LocalDate
 import javax.inject.Inject
 

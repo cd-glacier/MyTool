@@ -132,10 +132,11 @@ suspend fun updateWidgetContent(context: Context, glanceId: GlanceId) {
     val markdown = if (journalDirUri != null) {
         val journalRepository = entryPoint.journalRepository()
         val today = LocalDate.now()
-        journalRepository.readContent(journalDirUri, today, format)
+        val journalDirUriString = journalDirUri.toString()
+        journalRepository.readContent(journalDirUriString, today, format)
             ?: run {
-                entryPoint.copyJournalUseCase()(journalDirUri, today.minusDays(1), today, format)
-                journalRepository.readContent(journalDirUri, today, format)
+                entryPoint.copyJournalUseCase()(journalDirUriString, today.minusDays(1), today, format)
+                journalRepository.readContent(journalDirUriString, today, format)
             }
     } else null
     val todos = if (markdown != null) TodoParser.parse(markdown) else emptyList()

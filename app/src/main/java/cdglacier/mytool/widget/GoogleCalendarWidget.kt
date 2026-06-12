@@ -42,7 +42,7 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import cdglacier.mytool.R
-import cdglacier.mytool.data.repository.CalendarEvent
+import cdglacier.mytool.domain.model.CalendarEvent
 import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.encodeToString

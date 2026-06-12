@@ -12,17 +12,17 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 interface JournalRepository {
-    suspend fun exists(journalDirUri: Uri, date: LocalDate, filenameFormat: String): Boolean
-    suspend fun readContent(journalDirUri: Uri, date: LocalDate, filenameFormat: String): String?
+    suspend fun exists(journalDirUri: String, date: LocalDate, filenameFormat: String): Boolean
+    suspend fun readContent(journalDirUri: String, date: LocalDate, filenameFormat: String): String?
     suspend fun copy(
-        journalDirUri: Uri,
+        journalDirUri: String,
         sourceDate: LocalDate,
         targetDate: LocalDate,
         filenameFormat: String,
     ): Result<Unit>
 
     suspend fun getLineCounts(
-        journalDirUri: Uri,
+        journalDirUri: String,
         dates: List<LocalDate>,
         filenameFormat: String,
     ): Map<LocalDate, Int>
@@ -37,11 +37,11 @@ class JournalRepositoryImpl @Inject constructor(
         "${date.format(DateTimeFormatter.ofPattern(format))}.md"
 
     override suspend fun exists(
-        journalDirUri: Uri,
+        journalDirUri: String,
         date: LocalDate,
         filenameFormat: String,
     ): Boolean = withContext(Dispatchers.IO) {
-        val dir = DocumentFile.fromTreeUri(context, journalDirUri) ?: return@withContext false
+        val dir = DocumentFile.fromTreeUri(context, Uri.parse(journalDirUri)) ?: return@withContext false
         val file = dir.findFile(filenameOf(date, filenameFormat)) ?: return@withContext false
         val content = context.contentResolver.openInputStream(file.uri)
             ?.use { it.bufferedReader().readText() }
@@ -50,18 +50,18 @@ class JournalRepositoryImpl @Inject constructor(
     }
 
     override suspend fun readContent(
-        journalDirUri: Uri,
+        journalDirUri: String,
         date: LocalDate,
         filenameFormat: String,
     ): String? = withContext(Dispatchers.IO) {
-        val dir = DocumentFile.fromTreeUri(context, journalDirUri) ?: return@withContext null
+        val dir = DocumentFile.fromTreeUri(context, Uri.parse(journalDirUri)) ?: return@withContext null
         val file = dir.findFile(filenameOf(date, filenameFormat)) ?: return@withContext null
         context.contentResolver.openInputStream(file.uri)
             ?.use { it.bufferedReader().readText() }
     }
 
     override suspend fun copy(
-        journalDirUri: Uri,
+        journalDirUri: String,
         sourceDate: LocalDate,
         targetDate: LocalDate,
         filenameFormat: String,
@@ -70,7 +70,7 @@ class JournalRepositoryImpl @Inject constructor(
             val srcName = filenameOf(sourceDate, filenameFormat)
             val dstName = filenameOf(targetDate, filenameFormat)
 
-            val dir = DocumentFile.fromTreeUri(context, journalDirUri)
+            val dir = DocumentFile.fromTreeUri(context, Uri.parse(journalDirUri))
                 ?: error("フォルダを開けません")
 
             val srcFile = dir.findFile(srcName)
@@ -91,12 +91,12 @@ class JournalRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getLineCounts(
-        journalDirUri: Uri,
+        journalDirUri: String,
         dates: List<LocalDate>,
         filenameFormat: String,
     ): Map<LocalDate, Int> = withContext(Dispatchers.IO) {
         val formatter = DateTimeFormatter.ofPattern(filenameFormat)
-        val dir = DocumentFile.fromTreeUri(context, journalDirUri) ?: return@withContext emptyMap()
+        val dir = DocumentFile.fromTreeUri(context, Uri.parse(journalDirUri)) ?: return@withContext emptyMap()
 
         val filesByName = dir.listFiles().associateBy { it.name }
 

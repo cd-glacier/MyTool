@@ -1,4 +1,4 @@
-package cdglacier.mytool.data.repository
+package cdglacier.mytool.domain.model
 
 import kotlinx.serialization.Serializable
 

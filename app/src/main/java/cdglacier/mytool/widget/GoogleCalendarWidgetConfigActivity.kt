@@ -46,7 +46,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.glance.appwidget.GlanceAppWidgetManager
-import cdglacier.mytool.data.repository.CalendarAccount
+import cdglacier.mytool.domain.model.CalendarAccount
 import cdglacier.mytool.data.repository.GoogleCalendarRepository
 import cdglacier.mytool.data.repository.WidgetConfigRepository
 import cdglacier.mytool.ui.theme.MyToolTheme
