@@ -48,6 +48,7 @@ import androidx.core.content.ContextCompat
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import cdglacier.mytool.data.repository.CalendarAccount
 import cdglacier.mytool.data.repository.GoogleCalendarRepository
+import cdglacier.mytool.data.repository.WidgetConfigRepository
 import cdglacier.mytool.ui.theme.MyToolTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -58,6 +59,9 @@ class GoogleCalendarWidgetConfigActivity : ComponentActivity() {
 
     @Inject
     lateinit var calendarRepository: GoogleCalendarRepository
+
+    @Inject
+    lateinit var widgetConfigRepository: WidgetConfigRepository
 
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
 
@@ -85,6 +89,7 @@ class GoogleCalendarWidgetConfigActivity : ComponentActivity() {
                     CalendarWidgetConfigScreen(
                         widgetId = appWidgetId,
                         repository = calendarRepository,
+                        widgetConfigRepository = widgetConfigRepository,
                         onSaved = {
                             val resultValue = Intent().apply {
                                 putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
@@ -103,6 +108,7 @@ class GoogleCalendarWidgetConfigActivity : ComponentActivity() {
 private fun CalendarWidgetConfigScreen(
     widgetId: Int,
     repository: GoogleCalendarRepository,
+    widgetConfigRepository: WidgetConfigRepository,
     onSaved: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -244,7 +250,7 @@ private fun CalendarWidgetConfigScreen(
             onClick = {
                 val ids = checkedState.filterValues { it }.keys.toSet()
                 scope.launch {
-                    WidgetPreferences.setSelectedCalendarIds(context, widgetId, ids)
+                    widgetConfigRepository.setSelectedCalendarIds(widgetId, ids)
                     val glanceId = GlanceAppWidgetManager(context).getGlanceIdBy(widgetId)
                     updateCalendarWidgetContent(context, glanceId)
                     CalendarWidgetUpdateWorker.schedulePeriodicUpdate(context)

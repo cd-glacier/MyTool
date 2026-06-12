@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import cdglacier.mytool.data.repository.ObsidianRepository
+import cdglacier.mytool.data.repository.WidgetConfigRepository
 import cdglacier.mytool.ui.theme.MyToolTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
@@ -41,6 +42,9 @@ class JournalTodoWidgetConfigActivity : ComponentActivity() {
 
     @Inject
     lateinit var obsidianRepository: ObsidianRepository
+
+    @Inject
+    lateinit var widgetConfigRepository: WidgetConfigRepository
 
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
 
@@ -70,7 +74,7 @@ class JournalTodoWidgetConfigActivity : ComponentActivity() {
 
                     var vaultDirUri by remember { mutableStateOf<Uri?>(null) }
                     var journalDirUri by remember { mutableStateOf<Uri?>(null) }
-                    var filenameFormat by remember { mutableStateOf(WidgetPreferences.DEFAULT_FILENAME_FORMAT) }
+                    var filenameFormat by remember { mutableStateOf(WidgetConfigRepository.DEFAULT_FILENAME_FORMAT) }
                     var backgroundOpacity by remember { mutableStateOf(80f) }
 
                     val widgetId = appWidgetId
@@ -83,14 +87,14 @@ class JournalTodoWidgetConfigActivity : ComponentActivity() {
 
                     // Load filename format: prefer existing widget setting, fall back to repository
                     LaunchedEffect(widgetId) {
-                        val widgetVal = WidgetPreferences.getFilenameFormatFlow(this@JournalTodoWidgetConfigActivity, widgetId).first()
+                        val widgetVal = widgetConfigRepository.filenameFormat(widgetId).first()
                         val repoVal = obsidianRepository.filenameFormat.first()
-                        filenameFormat = if (widgetVal != WidgetPreferences.DEFAULT_FILENAME_FORMAT) widgetVal else repoVal
+                        filenameFormat = if (widgetVal != WidgetConfigRepository.DEFAULT_FILENAME_FORMAT) widgetVal else repoVal
                     }
 
                     // Load background opacity from existing widget setting
                     LaunchedEffect(widgetId) {
-                        WidgetPreferences.getBackgroundOpacityFlow(this@JournalTodoWidgetConfigActivity, widgetId)
+                        widgetConfigRepository.backgroundOpacity(widgetId)
                             .collect { opacity -> backgroundOpacity = opacity.toFloat() }
                     }
 
@@ -149,26 +153,10 @@ class JournalTodoWidgetConfigActivity : ComponentActivity() {
                                 val currentOpacity = backgroundOpacity.toInt()
 
                                 scope.launch {
-                                    WidgetPreferences.setVaultDirUri(
-                                        this@JournalTodoWidgetConfigActivity,
-                                        widgetId,
-                                        vUri
-                                    )
-                                    WidgetPreferences.setJournalDirUri(
-                                        this@JournalTodoWidgetConfigActivity,
-                                        widgetId,
-                                        jUri
-                                    )
-                                    WidgetPreferences.setFilenameFormat(
-                                        this@JournalTodoWidgetConfigActivity,
-                                        widgetId,
-                                        currentFilenameFormat
-                                    )
-                                    WidgetPreferences.setBackgroundOpacity(
-                                        this@JournalTodoWidgetConfigActivity,
-                                        widgetId,
-                                        currentOpacity
-                                    )
+                                    widgetConfigRepository.setVaultDirUri(widgetId, vUri)
+                                    widgetConfigRepository.setJournalDirUri(widgetId, jUri)
+                                    widgetConfigRepository.setFilenameFormat(widgetId, currentFilenameFormat)
+                                    widgetConfigRepository.setBackgroundOpacity(widgetId, currentOpacity)
 
                                     val glanceId = GlanceAppWidgetManager(this@JournalTodoWidgetConfigActivity)
                                         .getGlanceIdBy(widgetId)

@@ -120,15 +120,16 @@ class JournalTodoWidget : GlanceAppWidget() {
 
 suspend fun updateWidgetContent(context: Context, glanceId: GlanceId) {
     val appWidgetId = GlanceAppWidgetManager(context).getAppWidgetId(glanceId)
-    val journalDirUri = WidgetPreferences.getJournalDirUriFlow(context, appWidgetId).first()
-    val format = WidgetPreferences.getFilenameFormatFlow(context, appWidgetId).first()
-    val opacity = WidgetPreferences.getBackgroundOpacityFlow(context, appWidgetId).first()
+    val entryPoint = EntryPointAccessors.fromApplication(
+        context.applicationContext,
+        WidgetEntryPoint::class.java,
+    )
+    val widgetConfig = entryPoint.widgetConfigRepository()
+    val journalDirUri = widgetConfig.journalDirUri(appWidgetId).first()
+    val format = widgetConfig.filenameFormat(appWidgetId).first()
+    val opacity = widgetConfig.backgroundOpacity(appWidgetId).first()
 
     val markdown = if (journalDirUri != null) {
-        val entryPoint = EntryPointAccessors.fromApplication(
-            context.applicationContext,
-            WidgetEntryPoint::class.java,
-        )
         val journalRepository = entryPoint.journalRepository()
         val today = LocalDate.now()
         journalRepository.readContent(journalDirUri, today, format)
@@ -155,9 +156,13 @@ class OpenObsidianCallback : ActionCallback {
         parameters: ActionParameters
     ) {
         val appWidgetId = GlanceAppWidgetManager(context).getAppWidgetId(glanceId)
-        val vaultDirUri = WidgetPreferences.getVaultDirUriFlow(context, appWidgetId).first()
-        val vaultName = vaultDirUri?.let { WidgetPreferences.getVaultName(context, it) } ?: ""
-        val format = WidgetPreferences.getFilenameFormatFlow(context, appWidgetId).first()
+        val widgetConfig = EntryPointAccessors.fromApplication(
+            context.applicationContext,
+            WidgetEntryPoint::class.java,
+        ).widgetConfigRepository()
+        val vaultDirUri = widgetConfig.vaultDirUri(appWidgetId).first()
+        val vaultName = vaultDirUri?.let { widgetConfig.getVaultName(it) } ?: ""
+        val format = widgetConfig.filenameFormat(appWidgetId).first()
         val filename = LocalDate.now().format(DateTimeFormatter.ofPattern(format))
 
         val obsidianUri = Uri.parse(
