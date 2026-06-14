@@ -7,9 +7,8 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
-import cdglacier.mytool.data.repository.ObsidianRepositoryImpl
-import cdglacier.mytool.domain.usecase.CheckJournalTargetUseCase
-import cdglacier.mytool.domain.usecase.CopyJournalUseCase
+import cdglacier.mytool.widget.WidgetEntryPoint
+import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.flow.first
 import java.time.LocalDate
 import java.util.concurrent.TimeUnit
@@ -20,16 +19,21 @@ class AutoCopyJournalWorker(
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
-        val ctx = applicationContext
-        val repo = ObsidianRepositoryImpl(ctx)
-        val journalDirUri = repo.journalDirUri.first() ?: return Result.success()
-        val format = repo.filenameFormat.first()
+        val entryPoint = EntryPointAccessors.fromApplication(
+            applicationContext,
+            WidgetEntryPoint::class.java,
+        )
+        val obsidianRepository = entryPoint.obsidianRepository()
+        val journalDirUri = obsidianRepository.journalDirUri.first()?.toString()
+            ?: return Result.success()
+        val format = obsidianRepository.filenameFormat.first()
         val today = LocalDate.now()
 
-        val alreadyExists = CheckJournalTargetUseCase(ctx)(journalDirUri, today, format)
-        if (alreadyExists) return Result.success()
+        if (entryPoint.checkJournalTargetUseCase()(journalDirUri, today, format)) {
+            return Result.success()
+        }
 
-        val copyResult = CopyJournalUseCase(ctx)(
+        val copyResult = entryPoint.copyJournalUseCase()(
             journalDirUri = journalDirUri,
             sourceDate = today.minusDays(1),
             targetDate = today,
