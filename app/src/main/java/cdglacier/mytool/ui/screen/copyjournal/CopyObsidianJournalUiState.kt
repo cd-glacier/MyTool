@@ -11,4 +11,5 @@ data class CopyObsidianJournalUiState(
     val isCopying: Boolean = false,
     val snackbarMessage: String? = null,
     val showOverwriteConfirmation: Boolean = false,
+    val autoCopyEnabled: Boolean = false,
 )

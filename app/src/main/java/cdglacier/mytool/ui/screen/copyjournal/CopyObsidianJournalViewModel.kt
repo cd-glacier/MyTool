@@ -1,11 +1,14 @@
 package cdglacier.mytool.ui.screen.copyjournal
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cdglacier.mytool.data.repository.ObsidianRepository
 import cdglacier.mytool.domain.usecase.CheckJournalTargetUseCase
 import cdglacier.mytool.domain.usecase.CopyJournalUseCase
+import cdglacier.mytool.worker.AutoCopyJournalWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,6 +20,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CopyObsidianJournalViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val obsidianRepository: ObsidianRepository,
     private val copyJournalUseCase: CopyJournalUseCase,
     private val checkJournalTargetUseCase: CheckJournalTargetUseCase,
@@ -34,6 +38,23 @@ class CopyObsidianJournalViewModel @Inject constructor(
         viewModelScope.launch {
             obsidianRepository.filenameFormat.collect { fmt ->
                 _uiState.update { it.copy(filenameFormat = fmt) }
+            }
+        }
+        viewModelScope.launch {
+            obsidianRepository.autoCopyEnabled.collect { enabled ->
+                _uiState.update { it.copy(autoCopyEnabled = enabled) }
+            }
+        }
+    }
+
+    fun onAutoCopyToggle(enabled: Boolean) {
+        viewModelScope.launch {
+            obsidianRepository.setAutoCopyEnabled(enabled)
+            if (enabled) {
+                AutoCopyJournalWorker.schedule(context)
+                AutoCopyJournalWorker.runOnce(context)
+            } else {
+                AutoCopyJournalWorker.cancel(context)
             }
         }
     }
