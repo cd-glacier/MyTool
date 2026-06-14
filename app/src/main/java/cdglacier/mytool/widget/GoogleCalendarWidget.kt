@@ -42,8 +42,8 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import cdglacier.mytool.R
-import cdglacier.mytool.data.repository.CalendarEvent
-import cdglacier.mytool.data.repository.GoogleCalendarRepositoryImpl
+import cdglacier.mytool.domain.model.CalendarEvent
+import dagger.hilt.android.EntryPointAccessors
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -225,14 +225,18 @@ suspend fun updateCalendarWidgetContent(context: Context, glanceId: GlanceId) {
         } catch (e: Exception) {
             -1
         }
+        val entryPoint = EntryPointAccessors.fromApplication(
+            context.applicationContext,
+            WidgetEntryPoint::class.java,
+        )
         // null = キー未存在 → 後方互換で全カレンダー表示
         val selectedIds = if (appWidgetId != -1) {
-            WidgetPreferences.getSelectedCalendarIdsFlow(context, appWidgetId).first()
+            entryPoint.widgetConfigRepository().selectedCalendarIds(appWidgetId).first()
         } else {
             null
         }
 
-        val repo = GoogleCalendarRepositoryImpl(context)
+        val repo = entryPoint.googleCalendarRepository()
         val today = try { repo.getEventsForDate(LocalDate.now(), selectedIds) } catch (e: Exception) { emptyList() }
         val tomorrow = try { repo.getEventsForDate(LocalDate.now().plusDays(1), selectedIds) } catch (e: Exception) { emptyList() }
         today to tomorrow

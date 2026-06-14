@@ -50,7 +50,7 @@ class CopyObsidianJournalViewModel @Inject constructor(
         val state = _uiState.value
         val dirUri = state.journalDirUri ?: return
         viewModelScope.launch {
-            val hasContent = checkJournalTargetUseCase(dirUri, state.targetDate, state.filenameFormat)
+            val hasContent = checkJournalTargetUseCase(dirUri.toString(), state.targetDate, state.filenameFormat)
             if (hasContent) {
                 _uiState.update { it.copy(showOverwriteConfirmation = true) }
             } else {
@@ -75,7 +75,7 @@ class CopyObsidianJournalViewModel @Inject constructor(
             _uiState.update { it.copy(isCopying = true) }
             val startTime = System.currentTimeMillis()
             val result = copyJournalUseCase(
-                journalDirUri = dirUri,
+                journalDirUri = dirUri.toString(),
                 sourceDate = state.sourceDate,
                 targetDate = state.targetDate,
                 filenameFormat = state.filenameFormat,

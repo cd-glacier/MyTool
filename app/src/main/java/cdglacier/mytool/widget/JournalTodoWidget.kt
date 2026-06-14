@@ -7,8 +7,8 @@ import android.net.Uri
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import cdglacier.mytool.R
-import cdglacier.mytool.domain.usecase.CopyJournalUseCase
 import androidx.datastore.preferences.core.intPreferencesKey
+import dagger.hilt.android.EntryPointAccessors
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
@@ -120,16 +120,23 @@ class JournalTodoWidget : GlanceAppWidget() {
 
 suspend fun updateWidgetContent(context: Context, glanceId: GlanceId) {
     val appWidgetId = GlanceAppWidgetManager(context).getAppWidgetId(glanceId)
-    val journalDirUri = WidgetPreferences.getJournalDirUriFlow(context, appWidgetId).first()
-    val format = WidgetPreferences.getFilenameFormatFlow(context, appWidgetId).first()
-    val opacity = WidgetPreferences.getBackgroundOpacityFlow(context, appWidgetId).first()
+    val entryPoint = EntryPointAccessors.fromApplication(
+        context.applicationContext,
+        WidgetEntryPoint::class.java,
+    )
+    val widgetConfig = entryPoint.widgetConfigRepository()
+    val journalDirUri = widgetConfig.journalDirUri(appWidgetId).first()
+    val format = widgetConfig.filenameFormat(appWidgetId).first()
+    val opacity = widgetConfig.backgroundOpacity(appWidgetId).first()
 
     val markdown = if (journalDirUri != null) {
+        val journalRepository = entryPoint.journalRepository()
         val today = LocalDate.now()
-        JournalReader.readTodayJournal(context, journalDirUri, format, today)
+        val journalDirUriString = journalDirUri.toString()
+        journalRepository.readContent(journalDirUriString, today, format)
             ?: run {
-                CopyJournalUseCase(context)(journalDirUri, today.minusDays(1), today, format)
-                JournalReader.readTodayJournal(context, journalDirUri, format, today)
+                entryPoint.copyJournalUseCase()(journalDirUriString, today.minusDays(1), today, format)
+                journalRepository.readContent(journalDirUriString, today, format)
             }
     } else null
     val todos = if (markdown != null) TodoParser.parse(markdown) else emptyList()
@@ -150,9 +157,13 @@ class OpenObsidianCallback : ActionCallback {
         parameters: ActionParameters
     ) {
         val appWidgetId = GlanceAppWidgetManager(context).getAppWidgetId(glanceId)
-        val vaultDirUri = WidgetPreferences.getVaultDirUriFlow(context, appWidgetId).first()
-        val vaultName = vaultDirUri?.let { WidgetPreferences.getVaultName(context, it) } ?: ""
-        val format = WidgetPreferences.getFilenameFormatFlow(context, appWidgetId).first()
+        val widgetConfig = EntryPointAccessors.fromApplication(
+            context.applicationContext,
+            WidgetEntryPoint::class.java,
+        ).widgetConfigRepository()
+        val vaultDirUri = widgetConfig.vaultDirUri(appWidgetId).first()
+        val vaultName = vaultDirUri?.let { widgetConfig.getVaultName(it) } ?: ""
+        val format = widgetConfig.filenameFormat(appWidgetId).first()
         val filename = LocalDate.now().format(DateTimeFormatter.ofPattern(format))
 
         val obsidianUri = Uri.parse(

@@ -1,46 +1,31 @@
 package cdglacier.mytool.widget
 
 import android.content.Context
-import androidx.glance.appwidget.GlanceAppWidgetManager
-import androidx.work.CoroutineWorker
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
+import androidx.glance.GlanceId
+import androidx.glance.appwidget.GlanceAppWidget
 import androidx.work.WorkerParameters
-import java.util.concurrent.TimeUnit
 
 class WidgetUpdateWorker(
     context: Context,
-    params: WorkerParameters
-) : CoroutineWorker(context, params) {
+    params: WorkerParameters,
+) : BaseWidgetUpdateWorker(context, params) {
 
-    override suspend fun doWork(): Result {
-        GlanceAppWidgetManager(applicationContext)
-            .getGlanceIds(JournalTodoWidget::class.java)
-            .forEach { updateWidgetContent(applicationContext, it) }
-        return Result.success()
+    override val widgetClass: Class<out GlanceAppWidget> = JournalTodoWidget::class.java
+
+    override suspend fun updateContent(context: Context, glanceId: GlanceId) {
+        updateWidgetContent(context, glanceId)
     }
 
     companion object {
         private const val WORK_NAME = "JournalTodoWidgetUpdate"
 
-        fun schedulePeriodicUpdate(context: Context) {
-            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
-                WORK_NAME,
-                ExistingPeriodicWorkPolicy.KEEP,
-                PeriodicWorkRequestBuilder<WidgetUpdateWorker>(15, TimeUnit.MINUTES).build()
-            )
-        }
+        fun schedulePeriodicUpdate(context: Context) =
+            WidgetUpdateScheduler.schedulePeriodic<WidgetUpdateWorker>(context, WORK_NAME)
 
-        fun runOnce(context: Context) {
-            WorkManager.getInstance(context).enqueue(
-                OneTimeWorkRequestBuilder<WidgetUpdateWorker>().build()
-            )
-        }
+        fun runOnce(context: Context) =
+            WidgetUpdateScheduler.runOnce<WidgetUpdateWorker>(context)
 
-        fun cancel(context: Context) {
-            WorkManager.getInstance(context).cancelUniqueWork(WORK_NAME)
-        }
+        fun cancel(context: Context) =
+            WidgetUpdateScheduler.cancel(context, WORK_NAME)
     }
 }
