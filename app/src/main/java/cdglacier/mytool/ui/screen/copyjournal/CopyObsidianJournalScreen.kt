@@ -22,6 +22,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -67,6 +68,7 @@ fun CopyObsidianJournalScreen(
         onCopy = viewModel::onCopy,
         onOverwriteConfirmed = viewModel::onOverwriteConfirmed,
         onOverwriteCancelled = viewModel::onOverwriteCancelled,
+        onAutoCopyToggle = viewModel::onAutoCopyToggle,
         onBack = onBack,
     )
 }
@@ -81,6 +83,7 @@ private fun CopyObsidianJournalContent(
     onCopy: () -> Unit,
     onOverwriteConfirmed: () -> Unit,
     onOverwriteCancelled: () -> Unit,
+    onAutoCopyToggle: (Boolean) -> Unit,
     onBack: () -> Unit,
 ) {
     var showSourceDatePicker by remember { mutableStateOf(false) }
@@ -182,6 +185,36 @@ private fun CopyObsidianJournalContent(
                     } else {
                         Text("コピー")
                     }
+                }
+            }
+
+            item {
+                Text(
+                    text = "自動コピー",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(top = 24.dp, bottom = 4.dp)
+                )
+            }
+
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("今日のJournalを自動で作成")
+                        Text(
+                            text = "1時間ごとに前日のJournalから今日の分をコピーします",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    Switch(
+                        checked = uiState.autoCopyEnabled,
+                        onCheckedChange = onAutoCopyToggle,
+                        enabled = uiState.journalDirUri != null,
+                    )
                 }
             }
         }

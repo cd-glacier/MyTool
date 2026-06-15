@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -19,10 +20,12 @@ interface ObsidianRepository {
     val vaultUri: Flow<Uri?>
     val journalDirUri: Flow<Uri?>
     val filenameFormat: Flow<String>
+    val autoCopyEnabled: Flow<Boolean>
 
     suspend fun setVaultUri(uri: Uri)
     suspend fun setJournalDirUri(uri: Uri)
     suspend fun setFilenameFormat(format: String)
+    suspend fun setAutoCopyEnabled(enabled: Boolean)
 }
 
 @Singleton
@@ -33,6 +36,7 @@ class ObsidianRepositoryImpl @Inject constructor(
     private val VAULT_URI_KEY = stringPreferencesKey("vault_uri")
     private val JOURNAL_DIR_URI_KEY = stringPreferencesKey("journal_dir_uri")
     private val JOURNAL_FILENAME_FORMAT_KEY = stringPreferencesKey("journal_filename_format")
+    private val JOURNAL_AUTO_COPY_ENABLED_KEY = booleanPreferencesKey("journal_auto_copy_enabled")
 
     override val vaultUri: Flow<Uri?> =
         context.obsidianDataStore.data.map { prefs ->
@@ -64,6 +68,17 @@ class ObsidianRepositoryImpl @Inject constructor(
     override suspend fun setFilenameFormat(format: String) {
         context.obsidianDataStore.edit { prefs ->
             prefs[JOURNAL_FILENAME_FORMAT_KEY] = format
+        }
+    }
+
+    override val autoCopyEnabled: Flow<Boolean> =
+        context.obsidianDataStore.data.map { prefs ->
+            prefs[JOURNAL_AUTO_COPY_ENABLED_KEY] ?: false
+        }
+
+    override suspend fun setAutoCopyEnabled(enabled: Boolean) {
+        context.obsidianDataStore.edit { prefs ->
+            prefs[JOURNAL_AUTO_COPY_ENABLED_KEY] = enabled
         }
     }
 
