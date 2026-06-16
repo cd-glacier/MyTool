@@ -3,7 +3,7 @@ package cdglacier.mytool.ui.screen.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cdglacier.mytool.data.repository.ObsidianRepository
-import cdglacier.mytool.domain.usecase.GetJournalLineCountsUseCase
+import cdglacier.mytool.domain.usecase.GetHabitCompletionRatesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +17,7 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val obsidianRepository: ObsidianRepository,
-    private val getJournalLineCountsUseCase: GetJournalLineCountsUseCase,
+    private val getHabitCompletionRatesUseCase: GetHabitCompletionRatesUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -34,10 +34,10 @@ class HomeViewModel @Inject constructor(
                     if (uri != null) {
                         val today = LocalDate.now()
                         val dates = (0 until 182).map { daysAgo -> today.minusDays(daysAgo.toLong()) }
-                        val counts = runCatching {
-                            getJournalLineCountsUseCase(uri.toString(), format, dates)
+                        val rates = runCatching {
+                            getHabitCompletionRatesUseCase(uri.toString(), format, dates)
                         }.getOrDefault(emptyMap())
-                        _uiState.update { it.copy(journalLineCounts = counts, isLoading = false) }
+                        _uiState.update { it.copy(habitCompletionRates = rates, isLoading = false) }
                     }
                 }
         }

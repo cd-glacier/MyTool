@@ -13,9 +13,11 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import cdglacier.mytool.widget.CalendarWidgetUpdateWorker
 import cdglacier.mytool.navigation.CopyObsidianJournalRoute
+import cdglacier.mytool.navigation.HabitTrackingRoute
 import cdglacier.mytool.navigation.HomeRoute
 import cdglacier.mytool.navigation.SettingsRoute
 import cdglacier.mytool.ui.screen.copyjournal.CopyObsidianJournalScreen
+import cdglacier.mytool.ui.screen.habit.HabitTrackingScreen
 import cdglacier.mytool.ui.screen.home.HomeScreen
 import cdglacier.mytool.ui.screen.settings.SettingsScreen
 import cdglacier.mytool.ui.theme.MyToolTheme
@@ -43,11 +45,15 @@ class MainActivity : ComponentActivity() {
                             entry<HomeRoute> {
                                 HomeScreen(
                                     onNavigateToCopyObsidianJournal = { backStack.add(CopyObsidianJournalRoute) },
+                                    onNavigateToHabitTracking = { backStack.add(HabitTrackingRoute) },
                                     onNavigateToSettings = { backStack.add(SettingsRoute) },
                                 )
                             }
                             entry<CopyObsidianJournalRoute> {
                                 CopyObsidianJournalScreen(onBack = { backStack.removeLastOrNull() })
+                            }
+                            entry<HabitTrackingRoute> {
+                                HabitTrackingScreen(onBack = { backStack.removeLastOrNull() })
                             }
                             entry<SettingsRoute> {
                                 SettingsScreen(onBack = { backStack.removeLastOrNull() })

@@ -10,4 +10,7 @@ data object HomeRoute : NavKey
 data object CopyObsidianJournalRoute : NavKey
 
 @Serializable
+data object HabitTrackingRoute : NavKey
+
+@Serializable
 data object SettingsRoute : NavKey
