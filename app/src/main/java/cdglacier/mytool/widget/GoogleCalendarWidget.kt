@@ -83,7 +83,7 @@ class GoogleCalendarWidget : GlanceAppWidget() {
                 if (!hasPermission) {
                     Text(
                         text = "カレンダーへのアクセスを許可してください",
-                        style = TextStyle(color = ColorProvider(Color(0xFFFB4934))),
+                        style = TextStyle(color = ColorProvider(Color(0xFFD4A373))),
                     )
                 } else {
                     CalendarSections(todayEvents, tomorrowEvents)

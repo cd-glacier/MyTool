@@ -69,7 +69,7 @@ class JournalTodoWidget : GlanceAppWidget() {
             val isNightMode = LocalContext.current.resources.configuration.uiMode and
                 Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
             val alpha = opacity / 100f
-            val bgColor = if (isNightMode) Color(0xFF1C1C1FL).copy(alpha = alpha)
+            val bgColor = if (isNightMode) Color(0xFF0A1520L).copy(alpha = alpha)
                           else Color.White.copy(alpha = alpha)
 
             Box(

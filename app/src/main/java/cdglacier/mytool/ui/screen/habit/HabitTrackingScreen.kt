@@ -38,14 +38,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cdglacier.mytool.domain.model.Habit
 import cdglacier.mytool.domain.model.HabitFrequency
-import cdglacier.mytool.ui.theme.GruvboxBg
-import cdglacier.mytool.ui.theme.GruvboxGreen
-import cdglacier.mytool.ui.theme.GruvboxMuted
-import cdglacier.mytool.ui.theme.GruvboxOnSurface
-import cdglacier.mytool.ui.theme.GruvboxRed
-import cdglacier.mytool.ui.theme.GruvboxSurface
-import cdglacier.mytool.ui.theme.GruvboxSurfaceLow
-import cdglacier.mytool.ui.theme.GruvboxYellow
+import cdglacier.mytool.ui.theme.GlacierAmber
+import cdglacier.mytool.ui.theme.GlacierBg
+import cdglacier.mytool.ui.theme.GlacierMuted
+import cdglacier.mytool.ui.theme.GlacierOnSurface
+import cdglacier.mytool.ui.theme.GlacierSurface
+import cdglacier.mytool.ui.theme.GlacierSurfaceLow
+import cdglacier.mytool.ui.theme.GlacierTeal
 import cdglacier.mytool.ui.theme.SpaceGroteskFamily
 import java.time.Instant
 import java.time.ZoneId
@@ -74,7 +73,7 @@ fun HabitTrackingScreen(
     Scaffold(
         topBar = { HabitTopBar(onBack = onBack) },
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = GruvboxBg,
+        containerColor = GlacierBg,
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -119,12 +118,12 @@ private fun SyncHistorySection(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(GruvboxSurfaceLow)
+            .background(GlacierSurfaceLow)
             .padding(16.dp)
     ) {
         Text(
             text = "HISTORY_CACHE",
-            color = GruvboxMuted,
+            color = GlacierMuted,
             fontFamily = SpaceGroteskFamily,
             fontWeight = FontWeight.Bold,
             fontSize = 12.sp,
@@ -133,13 +132,13 @@ private fun SyncHistorySection(
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "LAST_SYNC: $syncedAtText",
-            color = GruvboxOnSurface,
+            color = GlacierOnSurface,
             fontFamily = FontFamily.Monospace,
             fontSize = 12.sp,
         )
         Text(
             text = "CACHED_DAYS: ${uiState.historyDayCount}",
-            color = GruvboxOnSurface,
+            color = GlacierOnSurface,
             fontFamily = FontFamily.Monospace,
             fontSize = 12.sp,
         )
@@ -148,7 +147,7 @@ private fun SyncHistorySection(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
-                    if (uiState.isSyncingHistory) GruvboxSurface else GruvboxYellow
+                    if (uiState.isSyncingHistory) GlacierSurface else GlacierAmber
                 )
                 .clickable(enabled = !uiState.isSyncingHistory && uiState.journalConfigured) {
                     onSync()
@@ -158,7 +157,7 @@ private fun SyncHistorySection(
         ) {
             Text(
                 text = if (uiState.isSyncingHistory) "SYNCING..." else "SYNC_HISTORY",
-                color = if (uiState.isSyncingHistory) GruvboxMuted else GruvboxBg,
+                color = if (uiState.isSyncingHistory) GlacierMuted else GlacierBg,
                 fontFamily = SpaceGroteskFamily,
                 fontWeight = FontWeight.Black,
                 fontSize = 14.sp,
@@ -173,7 +172,7 @@ private fun HabitTopBar(onBack: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(GruvboxBg)
+            .background(GlacierBg)
             .statusBarsPadding()
             .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -181,13 +180,13 @@ private fun HabitTopBar(onBack: () -> Unit) {
         Box(
             modifier = Modifier
                 .size(32.dp)
-                .background(GruvboxSurface)
+                .background(GlacierSurface)
                 .clickable { onBack() },
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = "<",
-                color = GruvboxYellow,
+                color = GlacierAmber,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
@@ -196,7 +195,7 @@ private fun HabitTopBar(onBack: () -> Unit) {
         Spacer(modifier = Modifier.width(12.dp))
         Text(
             text = "HABIT_TRACKING",
-            color = GruvboxOnSurface,
+            color = GlacierOnSurface,
             fontFamily = SpaceGroteskFamily,
             fontWeight = FontWeight.Black,
             fontSize = 18.sp,
@@ -213,10 +212,10 @@ private fun DateHeader(uiState: HabitTrackingUiState) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(GruvboxSurfaceLow)
+            .background(GlacierSurfaceLow)
             .drawBehind {
                 drawRect(
-                    color = GruvboxYellow,
+                    color = GlacierAmber,
                     topLeft = Offset.Zero,
                     size = Size(width = 4.dp.toPx(), height = size.height),
                 )
@@ -225,7 +224,7 @@ private fun DateHeader(uiState: HabitTrackingUiState) {
     ) {
         Text(
             text = "TODAY",
-            color = GruvboxMuted,
+            color = GlacierMuted,
             fontFamily = SpaceGroteskFamily,
             fontWeight = FontWeight.Bold,
             fontSize = 12.sp,
@@ -234,7 +233,7 @@ private fun DateHeader(uiState: HabitTrackingUiState) {
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = uiState.date.format(displayFormatter),
-            color = GruvboxOnSurface,
+            color = GlacierOnSurface,
             fontFamily = FontFamily.Monospace,
             fontSize = 16.sp,
         )
@@ -242,7 +241,7 @@ private fun DateHeader(uiState: HabitTrackingUiState) {
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "$done / $total COMPLETED",
-                color = GruvboxGreen,
+                color = GlacierTeal,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 12.sp,
             )
@@ -255,12 +254,12 @@ private fun NoticeCard(title: String, body: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(GruvboxSurface)
+            .background(GlacierSurface)
             .padding(16.dp)
     ) {
         Text(
             text = title,
-            color = GruvboxRed,
+            color = GlacierAmber,
             fontFamily = FontFamily.Monospace,
             fontSize = 13.sp,
             fontWeight = FontWeight.Bold,
@@ -268,7 +267,7 @@ private fun NoticeCard(title: String, body: String) {
         Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = body,
-            color = GruvboxMuted,
+            color = GlacierMuted,
             fontFamily = FontFamily.Monospace,
             fontSize = 12.sp,
         )
@@ -289,7 +288,7 @@ private fun HabitRow(habit: Habit, onToggle: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(GruvboxSurface)
+            .background(GlacierSurface)
             .clickable { onToggle() }
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -297,13 +296,13 @@ private fun HabitRow(habit: Habit, onToggle: () -> Unit) {
         Box(
             modifier = Modifier
                 .size(20.dp)
-                .background(if (habit.isCompleted) GruvboxGreen else GruvboxBg),
+                .background(if (habit.isCompleted) GlacierTeal else GlacierBg),
             contentAlignment = Alignment.Center,
         ) {
             if (habit.isCompleted) {
                 Text(
                     text = "x",
-                    color = GruvboxBg,
+                    color = GlacierBg,
                     fontFamily = FontFamily.Monospace,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
@@ -314,14 +313,14 @@ private fun HabitRow(habit: Habit, onToggle: () -> Unit) {
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = habit.name,
-                color = GruvboxOnSurface,
+                color = GlacierOnSurface,
                 fontFamily = SpaceGroteskFamily,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
             )
             Text(
                 text = habit.frequency.label(),
-                color = GruvboxMuted,
+                color = GlacierMuted,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 10.sp,
             )
