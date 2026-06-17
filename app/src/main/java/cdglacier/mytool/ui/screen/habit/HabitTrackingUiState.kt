@@ -10,4 +10,7 @@ data class HabitTrackingUiState(
     val journalConfigured: Boolean = true,
     val journalExists: Boolean = true,
     val errorMessage: String? = null,
+    val isSyncingHistory: Boolean = false,
+    val lastSyncedAtEpochMillis: Long? = null,
+    val historyDayCount: Int = 0,
 )

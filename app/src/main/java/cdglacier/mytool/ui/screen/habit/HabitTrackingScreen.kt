@@ -47,6 +47,8 @@ import cdglacier.mytool.ui.theme.GruvboxSurface
 import cdglacier.mytool.ui.theme.GruvboxSurfaceLow
 import cdglacier.mytool.ui.theme.GruvboxYellow
 import cdglacier.mytool.ui.theme.SpaceGroteskFamily
+import java.time.Instant
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -95,6 +97,73 @@ fun HabitTrackingScreen(
                 )
                 else -> HabitList(uiState.habits, viewModel::onHabitToggle)
             }
+            Spacer(modifier = Modifier.height(24.dp))
+            SyncHistorySection(
+                uiState = uiState,
+                onSync = viewModel::onSyncHistory,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SyncHistorySection(
+    uiState: HabitTrackingUiState,
+    onSync: () -> Unit,
+) {
+    val syncedAtText = uiState.lastSyncedAtEpochMillis?.let { millis ->
+        val fmt = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm")
+        Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDateTime().format(fmt)
+    } ?: "NEVER"
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(GruvboxSurfaceLow)
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "HISTORY_CACHE",
+            color = GruvboxMuted,
+            fontFamily = SpaceGroteskFamily,
+            fontWeight = FontWeight.Bold,
+            fontSize = 12.sp,
+            letterSpacing = 2.sp,
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "LAST_SYNC: $syncedAtText",
+            color = GruvboxOnSurface,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 12.sp,
+        )
+        Text(
+            text = "CACHED_DAYS: ${uiState.historyDayCount}",
+            color = GruvboxOnSurface,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 12.sp,
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    if (uiState.isSyncingHistory) GruvboxSurface else GruvboxYellow
+                )
+                .clickable(enabled = !uiState.isSyncingHistory && uiState.journalConfigured) {
+                    onSync()
+                }
+                .padding(vertical = 14.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = if (uiState.isSyncingHistory) "SYNCING..." else "SYNC_HISTORY",
+                color = if (uiState.isSyncingHistory) GruvboxMuted else GruvboxBg,
+                fontFamily = SpaceGroteskFamily,
+                fontWeight = FontWeight.Black,
+                fontSize = 14.sp,
+                letterSpacing = 1.sp,
+            )
         }
     }
 }
