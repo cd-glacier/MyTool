@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   ic_launcher_foreground.xml
-  アイスアックス (登山用ピッケル) 前景レイヤー
+  鉱山ピッケル (シンプル・対称型) の前景レイヤー
   - 木製の柄 (brown)
-  - 鉄製ヘッド: 左にアズ(平刃), 右にカーブしたピック
-  - 柄底に石突き(spike)
+  - 鉄製の対称ヘッド: 両端が尖った湾曲バー
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
@@ -19,32 +18,12 @@
 
         <!-- 柄 (handle) -->
         <path
-            android:pathData="M51,32 L57,32 L57,82 Q57,84 54,84 Q51,84 51,82 Z"
+            android:pathData="M51,30 L57,30 L57,84 Q57,87 54,87 Q51,87 51,84 Z"
             android:fillColor="#FF5D4037"/>
 
-        <!-- アズ (adze, 左の平刃) -->
+        <!-- 頭部 (symmetric pickaxe head) -->
         <path
-            android:pathData="M48,26 L32,28 L30,34 L48,34 Z"
-            android:fillColor="#FF455A64"/>
-
-        <!-- 頭部本体 (head body / 柄を抱える金属部) -->
-        <path
-            android:pathData="M46,26 L62,26 L62,38 L46,38 Z"
-            android:fillColor="#FF37474F"/>
-
-        <!-- ピック (right curved tooth) -->
-        <path
-            android:pathData="M58,26 C74,28 84,36 84,46 L80,46 C80,38 70,32 58,34 Z"
-            android:fillColor="#FF455A64"/>
-
-        <!-- ピック先端ハイライト -->
-        <path
-            android:pathData="M80,46 L84,46 L82,50 Z"
-            android:fillColor="#FF78909C"/>
-
-        <!-- 石突き (spike) -->
-        <path
-            android:pathData="M51,82 L57,82 L54,90 Z"
+            android:pathData="M22,36 Q54,24 86,36 Q54,32 22,36 Z"
             android:fillColor="#FF37474F"/>
 
     </group>
