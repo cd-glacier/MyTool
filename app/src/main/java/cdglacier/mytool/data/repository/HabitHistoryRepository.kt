@@ -7,6 +7,8 @@ import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.builtins.MapSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import java.time.LocalDate
 import javax.inject.Inject
@@ -26,12 +28,13 @@ class HabitHistoryRepositoryImpl @Inject constructor(
 
     private val HISTORY_KEY = stringPreferencesKey("habit_history_json")
     private val SYNCED_AT_KEY = longPreferencesKey("habit_history_synced_at")
+    private val mapSerializer = MapSerializer(String.serializer(), Float.serializer())
 
     override val history: Flow<Map<LocalDate, Float>> =
         context.obsidianDataStore.data.map { prefs ->
             val json = prefs[HISTORY_KEY] ?: return@map emptyMap()
             runCatching {
-                Json.decodeFromString<Map<String, Float>>(json)
+                Json.decodeFromString(mapSerializer, json)
                     .mapKeys { LocalDate.parse(it.key) }
             }.getOrDefault(emptyMap())
         }
@@ -41,7 +44,7 @@ class HabitHistoryRepositoryImpl @Inject constructor(
 
     override suspend fun save(rates: Map<LocalDate, Float>, syncedAtEpochMillis: Long) {
         val serializable = rates.mapKeys { it.key.toString() }
-        val json = Json.encodeToString<Map<String, Float>>(serializable)
+        val json = Json.encodeToString(mapSerializer, serializable)
         context.obsidianDataStore.edit { prefs ->
             prefs[HISTORY_KEY] = json
             prefs[SYNCED_AT_KEY] = syncedAtEpochMillis
