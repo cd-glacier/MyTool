@@ -17,12 +17,12 @@
 
         <!-- 柄 -->
         <path
-            android:pathData="M51,30 L57,30 L57,84 Q57,87 54,87 Q51,87 51,84 Z"
+            android:pathData="M51,34 L57,34 L57,74 Q57,77 54,77 Q51,77 51,74 Z"
             android:fillColor="#FFFFFFFF"/>
 
         <!-- 頭部 -->
         <path
-            android:pathData="M22,36 Q54,24 86,36 Q54,32 22,36 Z"
+            android:pathData="M30,40 Q54,8 78,40 Q54,30 30,40 Z"
             android:fillColor="#FFFFFFFF"/>
 
     </group>
