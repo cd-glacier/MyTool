@@ -8,7 +8,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -23,18 +22,6 @@ class HomeViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
-
-    init {
-        viewModelScope.launch {
-            combine(
-                obsidianRepository.journalDirUri,
-                obsidianRepository.filenameFormat,
-            ) { uri, format -> Pair(uri, format) }
-                .collect { (uri, format) ->
-                    loadRates(uri?.toString(), format)
-                }
-        }
-    }
 
     fun refresh() {
         viewModelScope.launch {
