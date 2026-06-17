@@ -2,7 +2,7 @@
 <!--
   ic_launcher_monochrome.xml
   Android 13+ Themed Icon 用
-  ピッケルのシルエットを単色で
+  アイスアックスのシルエットを単色で
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
@@ -17,17 +17,27 @@
 
         <!-- 柄 -->
         <path
-            android:pathData="M53.5,36 Q52,36 52,37.5 L52,78.5 Q52,80 53.5,80 L54.5,80 Q56,80 56,78.5 L56,37.5 Q56,36 54.5,36 Z"
+            android:pathData="M51,32 L57,32 L57,82 Q57,84 54,84 Q51,84 51,82 Z"
             android:fillColor="#FFFFFFFF"/>
 
-        <!-- ヘッド -->
+        <!-- アズ -->
         <path
-            android:pathData="M38,36 Q52,32 68,40 L76,44 L74,48 L66,44 Q54,38 40,40 Z"
+            android:pathData="M48,26 L32,28 L30,34 L48,34 Z"
+            android:fillColor="#FFFFFFFF"/>
+
+        <!-- 頭部本体 -->
+        <path
+            android:pathData="M46,26 L62,26 L62,38 L46,38 Z"
+            android:fillColor="#FFFFFFFF"/>
+
+        <!-- ピック -->
+        <path
+            android:pathData="M58,26 C74,28 84,36 84,46 L80,46 C80,38 70,32 58,34 Z"
             android:fillColor="#FFFFFFFF"/>
 
         <!-- 石突き -->
         <path
-            android:pathData="M52,80 L56,80 L54,86 Z"
+            android:pathData="M51,82 L57,82 L54,90 Z"
             android:fillColor="#FFFFFFFF"/>
 
     </group>
