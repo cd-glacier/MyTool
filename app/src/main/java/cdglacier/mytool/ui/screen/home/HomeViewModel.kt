@@ -23,19 +23,26 @@ class HomeViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
+    private var hasLoadedOnce = false
+
     fun refresh() {
         viewModelScope.launch {
             val uri = obsidianRepository.journalDirUri.first()?.toString()
             val format = obsidianRepository.filenameFormat.first()
-            loadRates(uri, format)
+            loadRates(uri, format, showLoading = !hasLoadedOnce)
+            hasLoadedOnce = true
         }
     }
 
-    private suspend fun loadRates(journalDirUri: String?, filenameFormat: String) {
+    private suspend fun loadRates(
+        journalDirUri: String?,
+        filenameFormat: String,
+        showLoading: Boolean,
+    ) {
         _uiState.update {
             it.copy(
                 journalDirUri = journalDirUri?.let(android.net.Uri::parse),
-                isLoading = journalDirUri != null,
+                isLoading = showLoading && journalDirUri != null,
             )
         }
         if (journalDirUri == null) return

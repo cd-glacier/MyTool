@@ -26,11 +26,14 @@ class HabitTrackingViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(HabitTrackingUiState())
     val uiState: StateFlow<HabitTrackingUiState> = _uiState.asStateFlow()
 
+    private var hasLoadedOnce = false
+
     fun refresh() {
         viewModelScope.launch {
             val uri = obsidianRepository.journalDirUri.first()?.toString()
             val format = obsidianRepository.filenameFormat.first()
-            loadHabits(uri, format)
+            loadHabits(uri, format, showLoading = !hasLoadedOnce)
+            hasLoadedOnce = true
         }
     }
 
@@ -52,7 +55,7 @@ class HabitTrackingViewModel @Inject constructor(
             val result = toggleHabitUseCase(uri, format, date, habit)
             if (result.isFailure) {
                 _uiState.update { it.copy(errorMessage = result.exceptionOrNull()?.message) }
-                loadHabits(uri, format)
+                loadHabits(uri, format, showLoading = false)
             }
         }
     }
@@ -61,7 +64,11 @@ class HabitTrackingViewModel @Inject constructor(
         _uiState.update { it.copy(errorMessage = null) }
     }
 
-    private suspend fun loadHabits(journalDirUri: String?, filenameFormat: String) {
+    private suspend fun loadHabits(
+        journalDirUri: String?,
+        filenameFormat: String,
+        showLoading: Boolean,
+    ) {
         if (journalDirUri == null) {
             _uiState.update {
                 it.copy(
@@ -72,7 +79,9 @@ class HabitTrackingViewModel @Inject constructor(
             }
             return
         }
-        _uiState.update { it.copy(isLoading = true, journalConfigured = true) }
+        if (showLoading) {
+            _uiState.update { it.copy(isLoading = true, journalConfigured = true) }
+        }
         val date = LocalDate.now()
         val habits = runCatching {
             getTodayHabitsUseCase(journalDirUri, filenameFormat, date)
@@ -82,6 +91,7 @@ class HabitTrackingViewModel @Inject constructor(
                 date = date,
                 habits = habits,
                 isLoading = false,
+                journalConfigured = true,
                 journalExists = true,
             )
         }
