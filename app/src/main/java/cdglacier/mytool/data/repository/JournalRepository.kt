@@ -14,6 +14,12 @@ import javax.inject.Singleton
 interface JournalRepository {
     suspend fun exists(journalDirUri: String, date: LocalDate, filenameFormat: String): Boolean
     suspend fun readContent(journalDirUri: String, date: LocalDate, filenameFormat: String): String?
+    suspend fun writeContent(
+        journalDirUri: String,
+        date: LocalDate,
+        filenameFormat: String,
+        content: String,
+    ): Result<Unit>
     suspend fun copy(
         journalDirUri: String,
         sourceDate: LocalDate,
@@ -58,6 +64,25 @@ class JournalRepositoryImpl @Inject constructor(
         val file = dir.findFile(filenameOf(date, filenameFormat)) ?: return@withContext null
         context.contentResolver.openInputStream(file.uri)
             ?.use { it.bufferedReader().readText() }
+    }
+
+    override suspend fun writeContent(
+        journalDirUri: String,
+        date: LocalDate,
+        filenameFormat: String,
+        content: String,
+    ): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val dir = DocumentFile.fromTreeUri(context, Uri.parse(journalDirUri))
+                ?: error("フォルダを開けません")
+            val name = filenameOf(date, filenameFormat)
+            val file = dir.findFile(name)
+                ?: dir.createFile("text/markdown", name)
+                ?: error("ファイルを作成できません: $name")
+            context.contentResolver.openOutputStream(file.uri, "wt")
+                ?.use { it.write(content.toByteArray()) }
+                ?: error("書き込めません")
+        }
     }
 
     override suspend fun copy(

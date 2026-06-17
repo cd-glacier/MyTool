@@ -35,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cdglacier.mytool.ui.theme.GruvboxBg
@@ -55,9 +56,15 @@ import java.time.temporal.TemporalAdjusters
 fun HomeScreen(
     viewModel: HomeViewModel = viewModel(),
     onNavigateToCopyObsidianJournal: () -> Unit,
+    onNavigateToHabitTracking: () -> Unit,
     onNavigateToSettings: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LifecycleResumeEffect(Unit) {
+        viewModel.refresh()
+        onPauseOrDispose { }
+    }
 
     Scaffold(
         topBar = { TerminalTopBar() },
@@ -74,6 +81,7 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(32.dp))
             ExecCommandsSection(
                 onNavigateToCopyObsidianJournal = onNavigateToCopyObsidianJournal,
+                onNavigateToHabitTracking = onNavigateToHabitTracking,
                 onNavigateToSettings = onNavigateToSettings,
             )
         }
@@ -139,7 +147,7 @@ private fun ObsidianStatusCard(uiState: HomeUiState) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "JOURNAL_ACTIVITY",
+                text = "HABIT_COMPLETION",
                 color = GruvboxMuted,
                 fontFamily = SpaceGroteskFamily,
                 fontWeight = FontWeight.Bold,
@@ -164,9 +172,9 @@ private fun ObsidianStatusCard(uiState: HomeUiState) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Contribution graph
-        JournalContributionGraph(
-            lineCounts = uiState.journalLineCounts,
+        // Habit completion graph
+        HabitCompletionGraph(
+            completionRates = uiState.habitCompletionRates,
             isLoading = uiState.isLoading,
         )
     }
@@ -229,20 +237,20 @@ private fun ObsidianDirStatusRow(uiState: HomeUiState) {
     }
 }
 
-private fun lineCountToColor(count: Int, isLoading: Boolean): Color {
+private fun completionRateToColor(rate: Float?, isLoading: Boolean): Color {
     val alpha = if (isLoading) 0.3f else 1f
+    if (rate == null) return GruvboxSurface.copy(alpha = alpha)
     return when {
-        count == 0 -> GruvboxSurface.copy(alpha = alpha)
-        count <= 25 -> GruvboxGreen.copy(alpha = 0.25f * alpha)
-        count <= 50 -> GruvboxGreen.copy(alpha = 0.5f * alpha)
-        count <= 100 -> GruvboxGreen.copy(alpha = 0.75f * alpha)
+        rate <= 0f -> GruvboxGreen.copy(alpha = 0.15f * alpha)
+        rate < 0.5f -> GruvboxGreen.copy(alpha = 0.4f * alpha)
+        rate < 1f -> GruvboxGreen.copy(alpha = 0.7f * alpha)
         else -> GruvboxGreen.copy(alpha = alpha)
     }
 }
 
 @Composable
-private fun JournalContributionGraph(
-    lineCounts: Map<LocalDate, Int>,
+private fun HabitCompletionGraph(
+    completionRates: Map<LocalDate, Float?>,
     isLoading: Boolean,
 ) {
     val today = LocalDate.now()
@@ -250,24 +258,22 @@ private fun JournalContributionGraph(
     val cellGap = 2.dp
 
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-        // 利用可能な幅からセルがいくつ並ぶか（= 週数）を計算
         val weekCount = ((maxWidth + cellGap) / (cellSize + cellGap)).toInt()
-        val startMonday = today
-            .minusWeeks((weekCount - 1).toLong())
-            .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+        // 今週の日曜日を起点に、過去 weekCount 週分を表示する（日曜始まり）
+        val thisSunday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
+        val startSunday = thisSunday.minusWeeks((weekCount - 1).toLong())
 
         Column(verticalArrangement = Arrangement.spacedBy(cellGap)) {
             for (dayOfWeekIndex in 0 until 7) {
                 Row(horizontalArrangement = Arrangement.spacedBy(cellGap)) {
                     for (weekIndex in 0 until weekCount) {
-                        val date = startMonday
+                        val date = startSunday
                             .plusWeeks(weekIndex.toLong())
                             .plusDays(dayOfWeekIndex.toLong())
-                        val count = if (date.isAfter(today)) -1 else lineCounts[date] ?: 0
-                        val color = if (count < 0) {
+                        val color = if (date.isAfter(today)) {
                             Color.Transparent
                         } else {
-                            lineCountToColor(count, isLoading)
+                            completionRateToColor(completionRates[date], isLoading)
                         }
                         Box(
                             modifier = Modifier
@@ -284,6 +290,7 @@ private fun JournalContributionGraph(
 @Composable
 private fun ExecCommandsSection(
     onNavigateToCopyObsidianJournal: () -> Unit,
+    onNavigateToHabitTracking: () -> Unit,
     onNavigateToSettings: () -> Unit,
 ) {
     Row(
@@ -315,6 +322,12 @@ private fun ExecCommandsSection(
     Spacer(modifier = Modifier.height(2.dp))
     CommandMenuItem(
         number = "02.",
+        label = "HABIT_TRACKING",
+        onClick = onNavigateToHabitTracking,
+    )
+    Spacer(modifier = Modifier.height(2.dp))
+    CommandMenuItem(
+        number = "03.",
         label = "SYS_SETTINGS",
         onClick = onNavigateToSettings,
     )

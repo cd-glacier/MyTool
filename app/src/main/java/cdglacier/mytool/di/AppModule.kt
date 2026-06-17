@@ -2,6 +2,8 @@ package cdglacier.mytool.di
 
 import cdglacier.mytool.data.repository.GoogleCalendarRepository
 import cdglacier.mytool.data.repository.GoogleCalendarRepositoryImpl
+import cdglacier.mytool.data.repository.HabitHistoryRepository
+import cdglacier.mytool.data.repository.HabitHistoryRepositoryImpl
 import cdglacier.mytool.data.repository.JournalRepository
 import cdglacier.mytool.data.repository.JournalRepositoryImpl
 import cdglacier.mytool.data.repository.ObsidianRepository
@@ -33,4 +35,8 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindWidgetConfigRepository(impl: WidgetConfigRepositoryImpl): WidgetConfigRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindHabitHistoryRepository(impl: HabitHistoryRepositoryImpl): HabitHistoryRepository
 }
