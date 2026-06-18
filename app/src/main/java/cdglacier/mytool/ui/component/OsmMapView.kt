@@ -6,8 +6,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import android.view.ViewGroup
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -33,9 +35,12 @@ fun OsmMapView(
         )
         Configuration.getInstance().userAgentValue = context.packageName
         MapView(context).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+            )
             setTileSource(TileSourceFactory.MAPNIK)
             setMultiTouchControls(true)
-            controller.setZoom(15.0)
         }
     }
 
@@ -55,9 +60,12 @@ fun OsmMapView(
     }
 
     AndroidView(
-        modifier = modifier,
+        modifier = modifier.clipToBounds(),
         factory = { mapView },
         update = { map ->
+            if (map.zoomLevelDouble < 1.0) {
+                map.post { map.controller.setZoom(15.0) }
+            }
             map.overlays.clear()
             if (points.isNotEmpty()) {
                 val geo = points.map { GeoPoint(it.latitude, it.longitude) }
