@@ -4,7 +4,9 @@ import android.graphics.Color as AndroidColor
 import android.preference.PreferenceManager
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import org.osmdroid.util.BoundingBox
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalContext
@@ -59,13 +61,13 @@ fun OsmMapView(
         }
     }
 
+    val pointsKey = points.hashCode()
+    val appliedCameraKey = remember { mutableStateOf<Int?>(null) }
+
     AndroidView(
         modifier = modifier.clipToBounds(),
         factory = { mapView },
         update = { map ->
-            if (map.zoomLevelDouble < 1.0) {
-                map.post { map.controller.setZoom(15.0) }
-            }
             map.overlays.clear()
             if (points.isNotEmpty()) {
                 val geo = points.map { GeoPoint(it.latitude, it.longitude) }
@@ -81,7 +83,20 @@ fun OsmMapView(
                         title = "acc=${p.accuracy.toInt()}m bat=${p.batteryLevel}% stay=${p.sameLocationCount}"
                     })
                 }
-                map.controller.setCenter(geo.last())
+                // points が変わった時だけカメラを軌跡にフィット。
+                // View が未measure な可能性に備えて post で次レイアウト後に実行。
+                if (appliedCameraKey.value != pointsKey) {
+                    appliedCameraKey.value = pointsKey
+                    map.post {
+                        if (geo.size == 1) {
+                            map.controller.setZoom(16.0)
+                            map.controller.setCenter(geo.first())
+                        } else {
+                            val box = BoundingBox.fromGeoPointsSafe(geo)
+                            map.zoomToBoundingBox(box, false, 64)
+                        }
+                    }
+                }
             }
             map.invalidate()
         },
