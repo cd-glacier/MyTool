@@ -38,15 +38,15 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import cdglacier.mytool.ui.theme.GruvboxBg
-import cdglacier.mytool.ui.theme.GruvboxGreen
-import cdglacier.mytool.ui.theme.GruvboxMuted
-import cdglacier.mytool.ui.theme.GruvboxOnPrimary
-import cdglacier.mytool.ui.theme.GruvboxOnSurface
-import cdglacier.mytool.ui.theme.GruvboxRed
-import cdglacier.mytool.ui.theme.GruvboxSurface
-import cdglacier.mytool.ui.theme.GruvboxSurfaceLow
-import cdglacier.mytool.ui.theme.GruvboxYellow
+import cdglacier.mytool.ui.theme.GlacierAmber
+import cdglacier.mytool.ui.theme.GlacierBg
+import cdglacier.mytool.ui.theme.GlacierCyan
+import cdglacier.mytool.ui.theme.GlacierMuted
+import cdglacier.mytool.ui.theme.GlacierOnPrimary
+import cdglacier.mytool.ui.theme.GlacierOnSurface
+import cdglacier.mytool.ui.theme.GlacierSurface
+import cdglacier.mytool.ui.theme.GlacierSurfaceLow
+import cdglacier.mytool.ui.theme.GlacierTeal
 import cdglacier.mytool.ui.theme.SpaceGroteskFamily
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -68,7 +68,7 @@ fun HomeScreen(
 
     Scaffold(
         topBar = { TerminalTopBar() },
-        containerColor = GruvboxBg,
+        containerColor = GlacierBg,
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -93,7 +93,7 @@ private fun TerminalTopBar() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(GruvboxBg)
+            .background(GlacierBg)
             .statusBarsPadding()
             .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -102,12 +102,12 @@ private fun TerminalTopBar() {
             modifier = Modifier
                 .width(32.dp)
                 .height(32.dp)
-                .background(GruvboxRed),
+                .background(GlacierCyan),
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = ">_",
-                color = GruvboxOnPrimary,
+                color = GlacierOnPrimary,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
@@ -116,7 +116,7 @@ private fun TerminalTopBar() {
         Spacer(modifier = Modifier.width(12.dp))
         Text(
             text = "MY_TOOL",
-            color = GruvboxRed,
+            color = GlacierCyan,
             fontFamily = SpaceGroteskFamily,
             fontWeight = FontWeight.Black,
             fontSize = 18.sp,
@@ -131,10 +131,10 @@ private fun ObsidianStatusCard(uiState: HomeUiState) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(GruvboxSurfaceLow)
+            .background(GlacierSurfaceLow)
             .drawBehind {
                 drawRect(
-                    color = GruvboxYellow,
+                    color = GlacierAmber,
                     topLeft = Offset.Zero,
                     size = Size(width = yellowBorderWidth.toPx(), height = size.height),
                 )
@@ -148,7 +148,7 @@ private fun ObsidianStatusCard(uiState: HomeUiState) {
         ) {
             Text(
                 text = "HABIT_COMPLETION",
-                color = GruvboxMuted,
+                color = GlacierMuted,
                 fontFamily = SpaceGroteskFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = 12.sp,
@@ -156,7 +156,7 @@ private fun ObsidianStatusCard(uiState: HomeUiState) {
                 modifier = Modifier.weight(1f),
             )
             val statusText = if (uiState.journalDirUri != null) "CONFIGURED" else "NOT_SET"
-            val statusColor = if (uiState.journalDirUri != null) GruvboxGreen else GruvboxRed
+            val statusColor = if (uiState.journalDirUri != null) GlacierTeal else GlacierAmber
             Text(
                 text = statusText,
                 color = statusColor,
@@ -186,7 +186,7 @@ private fun ObsidianDirStatusRow(uiState: HomeUiState) {
         Row(verticalAlignment = Alignment.Top) {
             Text(
                 text = "! ",
-                color = GruvboxRed,
+                color = GlacierAmber,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
@@ -194,14 +194,14 @@ private fun ObsidianDirStatusRow(uiState: HomeUiState) {
             Column {
                 Text(
                     text = "OBSIDIAN_DIR: NOT_SET",
-                    color = GruvboxRed,
+                    color = GlacierAmber,
                     fontFamily = FontFamily.Monospace,
                     fontSize = 13.sp,
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = "設定が必要です。SYS_SETTINGS から設定してください。",
-                    color = GruvboxMuted,
+                    color = GlacierMuted,
                     fontFamily = FontFamily.Monospace,
                     fontSize = 11.sp,
                 )
@@ -211,7 +211,7 @@ private fun ObsidianDirStatusRow(uiState: HomeUiState) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = "✓ ",
-                color = GruvboxGreen,
+                color = GlacierTeal,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Bold,
@@ -219,14 +219,14 @@ private fun ObsidianDirStatusRow(uiState: HomeUiState) {
             Column {
                 Text(
                     text = "OBSIDIAN_DIR: CONFIGURED",
-                    color = GruvboxGreen,
+                    color = GlacierTeal,
                     fontFamily = FontFamily.Monospace,
                     fontSize = 13.sp,
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = uiState.journalDirUri.lastPathSegment ?: uiState.journalDirUri.toString(),
-                    color = GruvboxMuted,
+                    color = GlacierMuted,
                     fontFamily = FontFamily.Monospace,
                     fontSize = 11.sp,
                     maxLines = 1,
@@ -239,12 +239,12 @@ private fun ObsidianDirStatusRow(uiState: HomeUiState) {
 
 private fun completionRateToColor(rate: Float?, isLoading: Boolean): Color {
     val alpha = if (isLoading) 0.3f else 1f
-    if (rate == null) return GruvboxSurface.copy(alpha = alpha)
+    if (rate == null) return GlacierSurface.copy(alpha = alpha)
     return when {
-        rate <= 0f -> GruvboxGreen.copy(alpha = 0.15f * alpha)
-        rate < 0.5f -> GruvboxGreen.copy(alpha = 0.4f * alpha)
-        rate < 1f -> GruvboxGreen.copy(alpha = 0.7f * alpha)
-        else -> GruvboxGreen.copy(alpha = alpha)
+        rate <= 0f -> GlacierTeal.copy(alpha = 0.15f * alpha)
+        rate < 0.5f -> GlacierTeal.copy(alpha = 0.4f * alpha)
+        rate < 1f -> GlacierTeal.copy(alpha = 0.7f * alpha)
+        else -> GlacierTeal.copy(alpha = alpha)
     }
 }
 
@@ -301,12 +301,12 @@ private fun ExecCommandsSection(
             modifier = Modifier
                 .width(32.dp)
                 .height(1.dp)
-                .background(GruvboxSurface)
+                .background(GlacierSurface)
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(
             text = "EXEC_COMMANDS",
-            color = GruvboxMuted,
+            color = GlacierMuted,
             fontFamily = SpaceGroteskFamily,
             fontWeight = FontWeight.Bold,
             fontSize = 12.sp,
@@ -345,7 +345,7 @@ private fun CommandMenuItem(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(if (isPressed) GruvboxYellow else GruvboxSurface)
+            .background(if (isPressed) GlacierAmber else GlacierSurface)
             .clickable(interactionSource = interactionSource, indication = null) { onClick() }
     ) {
         Box(
@@ -353,7 +353,7 @@ private fun CommandMenuItem(
                 .width(4.dp)
                 .height(56.dp)
                 .align(Alignment.CenterStart)
-                .background(GruvboxYellow.copy(alpha = if (isPressed) 1f else 0f))
+                .background(GlacierAmber.copy(alpha = if (isPressed) 1f else 0f))
         )
 
         Row(
@@ -364,7 +364,7 @@ private fun CommandMenuItem(
         ) {
             Text(
                 text = number,
-                color = if (isPressed) GruvboxOnPrimary else GruvboxYellow,
+                color = if (isPressed) GlacierOnPrimary else GlacierAmber,
                 fontFamily = SpaceGroteskFamily,
                 fontWeight = FontWeight.Black,
                 fontSize = 18.sp,
@@ -372,7 +372,7 @@ private fun CommandMenuItem(
             Spacer(modifier = Modifier.width(16.dp))
             Text(
                 text = label,
-                color = if (isPressed) GruvboxOnPrimary else GruvboxOnSurface,
+                color = if (isPressed) GlacierOnPrimary else GlacierOnSurface,
                 fontFamily = SpaceGroteskFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
@@ -381,7 +381,7 @@ private fun CommandMenuItem(
             )
             Text(
                 text = ">",
-                color = if (isPressed) GruvboxOnPrimary else GruvboxYellow,
+                color = if (isPressed) GlacierOnPrimary else GlacierAmber,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 16.sp,
             )

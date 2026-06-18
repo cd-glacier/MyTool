@@ -1,33 +1,26 @@
 package cdglacier.mytool.ui.screen.copyjournal
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,9 +30,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import cdglacier.mytool.ui.component.GlacierButton
+import cdglacier.mytool.ui.component.GlacierConfirmDialog
+import cdglacier.mytool.ui.component.GlacierSectionCard
+import cdglacier.mytool.ui.component.GlacierSwitch
+import cdglacier.mytool.ui.component.GlacierTopBar
+import cdglacier.mytool.ui.component.NoticeCard
+import cdglacier.mytool.ui.theme.GlacierAmber
+import cdglacier.mytool.ui.theme.GlacierBg
+import cdglacier.mytool.ui.theme.GlacierMuted
+import cdglacier.mytool.ui.theme.GlacierOnSurface
+import cdglacier.mytool.ui.theme.GlacierSurface
+import cdglacier.mytool.ui.theme.SpaceGroteskFamily
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -92,125 +100,69 @@ private fun CopyObsidianJournalContent(
     val displayFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd")
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Journal コピー") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
-            )
-        },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        topBar = { GlacierTopBar(title = "COPY_JOURNAL", onBack = onBack) },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = GlacierBg,
     ) { innerPadding ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             if (uiState.journalDirUri == null) {
-                item {
-                    Text(
-                        text = "Journalフォルダが設定されていません。\nSettingsページでJournalフォルダを設定してください。",
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.errorContainer)
-                            .padding(12.dp)
-                    )
-                }
-            }
-
-            item {
-                Text(
-                    text = "コピー操作",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(top = 16.dp, bottom = 4.dp)
+                NoticeCard(
+                    title = "JOURNAL_DIR: NOT_SET",
+                    body = "SYS_SETTINGS から Journal フォルダを設定してください。",
                 )
             }
 
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("コピー元", style = MaterialTheme.typography.labelMedium)
-                        Text(uiState.sourceDate.format(displayFormatter))
-                    }
-                    IconButton(onClick = { showSourceDatePicker = true }) {
-                        Icon(Icons.Default.DateRange, contentDescription = "コピー元の日付を選択")
-                    }
-                }
-            }
-
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("コピー先", style = MaterialTheme.typography.labelMedium)
-                        Text(uiState.targetDate.format(displayFormatter))
-                    }
-                    IconButton(onClick = { showTargetDatePicker = true }) {
-                        Icon(Icons.Default.DateRange, contentDescription = "コピー先の日付を選択")
-                    }
-                }
-            }
-
-            item {
-                Button(
+            GlacierSectionCard(title = "COPY_OPS") {
+                DateRow(
+                    label = "SOURCE_DATE",
+                    date = uiState.sourceDate.format(displayFormatter),
+                    onClick = { showSourceDatePicker = true },
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                DateRow(
+                    label = "TARGET_DATE",
+                    date = uiState.targetDate.format(displayFormatter),
+                    onClick = { showTargetDatePicker = true },
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                GlacierButton(
+                    label = "COPY",
+                    loadingLabel = "COPYING...",
                     onClick = onCopy,
-                    enabled = uiState.journalDirUri != null && !uiState.isCopying,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                ) {
-                    if (uiState.isCopying) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp,
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    } else {
-                        Text("コピー")
-                    }
-                }
-            }
-
-            item {
-                Text(
-                    text = "自動コピー",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(top = 24.dp, bottom = 4.dp)
+                    enabled = uiState.journalDirUri != null,
+                    loading = uiState.isCopying,
                 )
             }
 
-            item {
+            GlacierSectionCard(title = "AUTO_COPY") {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("今日のJournalを自動で作成")
                         Text(
-                            text = "1時間ごとに前日のJournalから今日の分をコピーします",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            text = "今日のJournalを自動作成",
+                            color = GlacierOnSurface,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 13.sp,
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "1時間ごとに前日Journalから今日分をコピー",
+                            color = GlacierMuted,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 11.sp,
                         )
                     }
-                    Switch(
+                    Spacer(modifier = Modifier.padding(start = 8.dp))
+                    GlacierSwitch(
                         checked = uiState.autoCopyEnabled,
                         onCheckedChange = onAutoCopyToggle,
                         enabled = uiState.journalDirUri != null,
@@ -221,60 +173,100 @@ private fun CopyObsidianJournalContent(
     }
 
     if (uiState.showOverwriteConfirmation) {
-        AlertDialog(
-            onDismissRequest = onOverwriteCancelled,
-            title = { Text("上書き確認") },
-            text = { Text("コピー先にすでに内容があります。上書きしますか？") },
-            confirmButton = {
-                TextButton(onClick = onOverwriteConfirmed) { Text("上書き") }
-            },
-            dismissButton = {
-                TextButton(onClick = onOverwriteCancelled) { Text("キャンセル") }
-            }
+        GlacierConfirmDialog(
+            title = "OVERWRITE_CONFIRM",
+            body = "コピー先にすでに内容があります。上書きしますか？",
+            confirmLabel = "OVERWRITE",
+            cancelLabel = "CANCEL",
+            onConfirm = onOverwriteConfirmed,
+            onCancel = onOverwriteCancelled,
         )
     }
 
     if (showSourceDatePicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = uiState.sourceDate.atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli()
-        )
-        DatePickerDialog(
-            onDismissRequest = { showSourceDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let { millis ->
-                        onSourceDateChange(Instant.ofEpochMilli(millis).atZone(ZoneId.of("UTC")).toLocalDate())
-                    }
-                    showSourceDatePicker = false
-                }) { Text("OK") }
+        DateDialog(
+            initialDate = uiState.sourceDate,
+            onConfirm = {
+                onSourceDateChange(it)
+                showSourceDatePicker = false
             },
-            dismissButton = {
-                TextButton(onClick = { showSourceDatePicker = false }) { Text("キャンセル") }
-            }
-        ) {
-            DatePicker(state = datePickerState)
+            onDismiss = { showSourceDatePicker = false },
+        )
+    }
+    if (showTargetDatePicker) {
+        DateDialog(
+            initialDate = uiState.targetDate,
+            onConfirm = {
+                onTargetDateChange(it)
+                showTargetDatePicker = false
+            },
+            onDismiss = { showTargetDatePicker = false },
+        )
+    }
+}
+
+@Composable
+private fun DateRow(label: String, date: String, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(GlacierSurface)
+            .clickable { onClick() }
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = label,
+                color = GlacierMuted,
+                fontFamily = SpaceGroteskFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 11.sp,
+                letterSpacing = 2.sp,
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = date,
+                color = GlacierOnSurface,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 14.sp,
+            )
+        }
+        Box {
+            Text(
+                text = "EDIT >",
+                color = GlacierAmber,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+            )
         }
     }
+}
 
-    if (showTargetDatePicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = uiState.targetDate.atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli()
-        )
-        DatePickerDialog(
-            onDismissRequest = { showTargetDatePicker = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let { millis ->
-                        onTargetDateChange(Instant.ofEpochMilli(millis).atZone(ZoneId.of("UTC")).toLocalDate())
-                    }
-                    showTargetDatePicker = false
-                }) { Text("OK") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showTargetDatePicker = false }) { Text("キャンセル") }
-            }
-        ) {
-            DatePicker(state = datePickerState)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DateDialog(
+    initialDate: LocalDate,
+    onConfirm: (LocalDate) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = initialDate.atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli()
+    )
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                datePickerState.selectedDateMillis?.let { millis ->
+                    onConfirm(Instant.ofEpochMilli(millis).atZone(ZoneId.of("UTC")).toLocalDate())
+                }
+            }) { Text("OK") }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("CANCEL") }
         }
+    ) {
+        DatePicker(state = datePickerState)
     }
 }

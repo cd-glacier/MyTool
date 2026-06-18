@@ -5,34 +5,49 @@ import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import cdglacier.mytool.ui.component.GlacierSectionCard
+import cdglacier.mytool.ui.component.GlacierTopBar
+import cdglacier.mytool.ui.theme.GlacierAmber
+import cdglacier.mytool.ui.theme.GlacierBg
+import cdglacier.mytool.ui.theme.GlacierMuted
+import cdglacier.mytool.ui.theme.GlacierOnSurface
+import cdglacier.mytool.ui.theme.GlacierSurface
+import cdglacier.mytool.ui.theme.GlacierTeal
+import cdglacier.mytool.ui.theme.SpaceGroteskFamily
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -95,7 +110,6 @@ fun SettingsScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SettingsContent(
     uiState: SettingsUiState,
@@ -105,85 +119,149 @@ private fun SettingsContent(
     onRequestCalendarPermission: () -> Unit,
     onBack: () -> Unit,
 ) {
-    val filenameHelperText = remember(uiState.filenameFormat) {
-        try {
-            val fmt = DateTimeFormatter.ofPattern(uiState.filenameFormat)
-            "${LocalDate.now().format(fmt)}.md"
-        } catch (e: Exception) {
-            "無効なフォーマット"
-        }
-    }
-
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Settings") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
-                        )
-                    }
-                }
-            )
-        }
+        topBar = { GlacierTopBar(title = "SYS_SETTINGS", onBack = onBack) },
+        containerColor = GlacierBg,
     ) { innerPadding ->
-        LazyColumn(
-            contentPadding = innerPadding,
-            modifier = Modifier.fillMaxSize()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            item {
-                ListItem(
-                    headlineContent = { Text("Obsidian フォルダ") },
-                    supportingContent = { Text(uiState.vaultUri.toDisplayString()) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onPickVaultFolder() }
+            GlacierSectionCard(title = "OBSIDIAN_DIRS") {
+                SettingRow(
+                    label = "VAULT_DIR",
+                    value = uiState.vaultUri.toDisplayString(),
+                    onClick = onPickVaultFolder,
                 )
-                HorizontalDivider()
-            }
-            item {
-                ListItem(
-                    headlineContent = { Text("Journal フォルダ") },
-                    supportingContent = { Text(uiState.journalDirUri.toDisplayString()) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onPickJournalFolder() }
+                Spacer(modifier = Modifier.height(4.dp))
+                SettingRow(
+                    label = "JOURNAL_DIR",
+                    value = uiState.journalDirUri.toDisplayString(),
+                    onClick = onPickJournalFolder,
                 )
-                HorizontalDivider()
             }
-            item {
-                OutlinedTextField(
+
+            GlacierSectionCard(title = "JOURNAL_FMT") {
+                FilenameFormatRow(
                     value = uiState.filenameFormat,
                     onValueChange = onFilenameFormatChange,
-                    label = { Text("ファイル名フォーマット") },
-                    supportingText = { Text("例: $filenameHelperText") },
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
                 )
             }
-            item {
-                ListItem(
-                    headlineContent = { Text("カレンダーアクセス") },
-                    supportingContent = {
-                        Text(if (uiState.calendarPermissionGranted) "許可済み" else "未許可")
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(enabled = !uiState.calendarPermissionGranted) {
-                            onRequestCalendarPermission()
-                        }
+
+            GlacierSectionCard(title = "PERMISSIONS") {
+                val granted = uiState.calendarPermissionGranted
+                SettingRow(
+                    label = "CALENDAR_ACCESS",
+                    value = if (granted) "[GRANTED]" else "[DENIED]",
+                    valueColor = if (granted) GlacierTeal else GlacierAmber,
+                    onClick = if (granted) null else onRequestCalendarPermission,
                 )
             }
         }
     }
 }
 
+@Composable
+private fun SettingRow(
+    label: String,
+    value: String,
+    onClick: (() -> Unit)?,
+    valueColor: Color = GlacierOnSurface,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(GlacierSurface)
+            .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = label,
+                color = GlacierMuted,
+                fontFamily = SpaceGroteskFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 11.sp,
+                letterSpacing = 2.sp,
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = value,
+                color = valueColor,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 13.sp,
+            )
+        }
+        if (onClick != null) {
+            Text(
+                text = ">",
+                color = GlacierAmber,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+    }
+}
+
+@Composable
+private fun FilenameFormatRow(
+    value: String,
+    onValueChange: (String) -> Unit,
+) {
+    val example = remember(value) {
+        try {
+            "${LocalDate.now().format(DateTimeFormatter.ofPattern(value))}.md"
+        } catch (e: Exception) {
+            "INVALID_FORMAT"
+        }
+    }
+    val isValid = example != "INVALID_FORMAT"
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(GlacierSurface)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+    ) {
+        Text(
+            text = "FILENAME_FMT",
+            color = GlacierMuted,
+            fontFamily = SpaceGroteskFamily,
+            fontWeight = FontWeight.Bold,
+            fontSize = 11.sp,
+            letterSpacing = 2.sp,
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            singleLine = true,
+            textStyle = TextStyle(
+                color = GlacierOnSurface,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 14.sp,
+            ),
+            cursorBrush = SolidColor(GlacierAmber),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = if (isValid) "EXAMPLE: $example" else "EXAMPLE: INVALID_FORMAT",
+            color = if (isValid) GlacierMuted else GlacierAmber,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 11.sp,
+        )
+    }
+}
+
 private fun Uri?.toDisplayString(): String {
-    if (this == null) return "未設定"
+    if (this == null) return "[NOT_SET]"
     val path = lastPathSegment
     return path?.replace("primary:", "/storage/emulated/0/") ?: toString()
 }
