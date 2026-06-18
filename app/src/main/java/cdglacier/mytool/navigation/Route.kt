@@ -14,3 +14,6 @@ data object HabitTrackingRoute : NavKey
 
 @Serializable
 data object SettingsRoute : NavKey
+
+@Serializable
+data object PositionTrackingRoute : NavKey

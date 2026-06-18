@@ -57,6 +57,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = viewModel(),
     onNavigateToCopyObsidianJournal: () -> Unit,
     onNavigateToHabitTracking: () -> Unit,
+    onNavigateToPositionTracking: () -> Unit,
     onNavigateToSettings: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -82,6 +83,7 @@ fun HomeScreen(
             ExecCommandsSection(
                 onNavigateToCopyObsidianJournal = onNavigateToCopyObsidianJournal,
                 onNavigateToHabitTracking = onNavigateToHabitTracking,
+                onNavigateToPositionTracking = onNavigateToPositionTracking,
                 onNavigateToSettings = onNavigateToSettings,
             )
         }
@@ -291,6 +293,7 @@ private fun HabitCompletionGraph(
 private fun ExecCommandsSection(
     onNavigateToCopyObsidianJournal: () -> Unit,
     onNavigateToHabitTracking: () -> Unit,
+    onNavigateToPositionTracking: () -> Unit,
     onNavigateToSettings: () -> Unit,
 ) {
     Row(
@@ -328,6 +331,12 @@ private fun ExecCommandsSection(
     Spacer(modifier = Modifier.height(2.dp))
     CommandMenuItem(
         number = "03.",
+        label = "POSITION_TRACKING",
+        onClick = onNavigateToPositionTracking,
+    )
+    Spacer(modifier = Modifier.height(2.dp))
+    CommandMenuItem(
+        number = "04.",
         label = "SYS_SETTINGS",
         onClick = onNavigateToSettings,
     )
