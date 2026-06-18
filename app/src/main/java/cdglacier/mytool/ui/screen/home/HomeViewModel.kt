@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cdglacier.mytool.data.repository.HabitHistoryRepository
 import cdglacier.mytool.data.repository.ObsidianRepository
+import cdglacier.mytool.data.repository.TrackingStateRepository
 import cdglacier.mytool.domain.usecase.GetTodayHabitCompletionRateUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +21,7 @@ class HomeViewModel @Inject constructor(
     private val obsidianRepository: ObsidianRepository,
     private val habitHistoryRepository: HabitHistoryRepository,
     private val getTodayHabitCompletionRateUseCase: GetTodayHabitCompletionRateUseCase,
+    private val trackingStateRepository: TrackingStateRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -35,6 +37,16 @@ class HomeViewModel @Inject constructor(
                     val today = state.todayCompletionRate
                     state.copy(habitCompletionRates = mergeWithToday(history, today))
                 }
+            }
+        }
+        viewModelScope.launch {
+            trackingStateRepository.trackingEnabled.collect { enabled ->
+                _uiState.update { it.copy(trackingEnabled = enabled) }
+            }
+        }
+        viewModelScope.launch {
+            trackingStateRepository.mode.collect { mode ->
+                _uiState.update { it.copy(trackingMode = mode) }
             }
         }
     }
