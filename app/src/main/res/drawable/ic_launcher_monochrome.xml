@@ -2,7 +2,7 @@
 <!--
   ic_launcher_monochrome.xml
   Android 13+ Themed Icon 用
-  鉱山ピッケルのシルエットを単色で
+  ピッケルのシルエットを単色で
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
@@ -17,12 +17,17 @@
 
         <!-- 柄 -->
         <path
-            android:pathData="M51,34 L57,34 L57,74 Q57,77 54,77 Q51,77 51,74 Z"
+            android:pathData="M53.5,36 Q52,36 52,37.5 L52,78.5 Q52,80 53.5,80 L54.5,80 Q56,80 56,78.5 L56,37.5 Q56,36 54.5,36 Z"
             android:fillColor="#FFFFFFFF"/>
 
-        <!-- 頭部 -->
+        <!-- ヘッド -->
         <path
-            android:pathData="M30,38 Q54,14 78,38 Q54,28 30,38 Z"
+            android:pathData="M38,36 Q52,32 68,40 L76,44 L74,48 L66,44 Q54,38 40,40 Z"
+            android:fillColor="#FFFFFFFF"/>
+
+        <!-- 石突き -->
+        <path
+            android:pathData="M52,80 L56,80 L54,86 Z"
             android:fillColor="#FFFFFFFF"/>
 
     </group>
