@@ -13,6 +13,7 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -43,9 +44,9 @@ class LocationTrackingManager @Inject constructor(
 
     /** Receiver からモード切替を行う。前回と同じなら何もしない。 */
     suspend fun switchMode(newMode: TrackingMode) {
-        if (trackingStateRepository.getModeNow() == newMode) return
+        if (trackingStateRepository.mode.first() == newMode) return
         trackingStateRepository.setMode(newMode)
-        if (trackingStateRepository.isTrackingEnabledNow()) {
+        if (trackingStateRepository.trackingEnabled.first()) {
             requestUpdates(newMode)
         }
     }

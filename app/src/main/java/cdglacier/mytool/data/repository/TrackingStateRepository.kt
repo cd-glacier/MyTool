@@ -26,8 +26,6 @@ interface TrackingStateRepository {
     suspend fun setMode(mode: TrackingMode)
     suspend fun getLastSignificantMoveAt(): Long
     suspend fun setLastSignificantMoveAt(epochMillis: Long)
-    suspend fun isTrackingEnabledNow(): Boolean
-    suspend fun getModeNow(): TrackingMode
 }
 
 @Singleton
@@ -62,7 +60,4 @@ class TrackingStateRepositoryImpl @Inject constructor(
     override suspend fun setLastSignificantMoveAt(epochMillis: Long) {
         context.trackingDataStore.edit { it[LAST_MOVE_KEY] = epochMillis }
     }
-
-    override suspend fun isTrackingEnabledNow(): Boolean = trackingEnabled.first()
-    override suspend fun getModeNow(): TrackingMode = mode.first()
 }

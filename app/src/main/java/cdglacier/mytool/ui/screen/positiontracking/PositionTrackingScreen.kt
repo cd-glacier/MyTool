@@ -98,7 +98,7 @@ fun PositionTrackingScreen(
 
             DateNavRow(
                 dateText = uiState.date.format(DateTimeFormatter.ISO_LOCAL_DATE),
-                recordCount = uiState.records.size,
+                recordCount = uiState.points.size,
                 onPrev = { viewModel.onDateChange(-1) },
                 onNext = { viewModel.onDateChange(1) },
             )
@@ -110,10 +110,10 @@ fun PositionTrackingScreen(
                     .background(GlacierSurface),
             ) {
                 OsmMapView(
-                    records = uiState.records,
+                    points = uiState.points,
                     modifier = Modifier.fillMaxSize(),
                 )
-                if (uiState.records.isEmpty()) {
+                if (uiState.points.isEmpty()) {
                     Text(
                         text = "NO_RECORDS",
                         color = GlacierMuted,

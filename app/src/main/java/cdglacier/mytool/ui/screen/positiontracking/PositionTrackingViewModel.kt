@@ -1,16 +1,13 @@
 package cdglacier.mytool.ui.screen.positiontracking
 
-import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cdglacier.mytool.data.db.LocationRecordEntity
+import cdglacier.mytool.data.repository.LocationPermissionRepository
 import cdglacier.mytool.data.repository.TrackingStateRepository
 import cdglacier.mytool.domain.usecase.ObserveLocationRecordsByDateUseCase
 import cdglacier.mytool.domain.usecase.ToggleLocationTrackingUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,7 +22,7 @@ class PositionTrackingViewModel @Inject constructor(
     private val toggleLocationTrackingUseCase: ToggleLocationTrackingUseCase,
     private val observeLocationRecordsByDateUseCase: ObserveLocationRecordsByDateUseCase,
     private val trackingStateRepository: TrackingStateRepository,
-    @ApplicationContext private val context: Context,
+    private val locationPermissionRepository: LocationPermissionRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PositionTrackingUiState())
@@ -39,19 +36,20 @@ class PositionTrackingViewModel @Inject constructor(
                 _uiState.update { it.copy(trackingEnabled = enabled) }
             }
         }
+        viewModelScope.launch {
+            locationPermissionRepository.fineLocationGranted.collect { granted ->
+                _uiState.update { it.copy(foregroundLocationGranted = granted) }
+            }
+        }
+        viewModelScope.launch {
+            locationPermissionRepository.backgroundLocationGranted.collect { granted ->
+                _uiState.update { it.copy(backgroundLocationGranted = granted) }
+            }
+        }
         observeRecords(_uiState.value.date)
-        refreshPermissions()
     }
 
-    fun refreshPermissions() {
-        val fine = ContextCompat.checkSelfPermission(
-            context, Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-        val bg = ContextCompat.checkSelfPermission(
-            context, Manifest.permission.ACCESS_BACKGROUND_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-        _uiState.update { it.copy(foregroundLocationGranted = fine, backgroundLocationGranted = bg) }
-    }
+    fun refreshPermissions() = locationPermissionRepository.refresh()
 
     fun onToggleTracking(enabled: Boolean) {
         if (enabled && !_uiState.value.permissionsReady) return
@@ -60,7 +58,7 @@ class PositionTrackingViewModel @Inject constructor(
 
     fun onDateChange(delta: Long) {
         val newDate = _uiState.value.date.plusDays(delta)
-        _uiState.update { it.copy(date = newDate, records = emptyList()) }
+        _uiState.update { it.copy(date = newDate, points = emptyList()) }
         observeRecords(newDate)
     }
 
@@ -68,8 +66,16 @@ class PositionTrackingViewModel @Inject constructor(
         recordsJob?.cancel()
         recordsJob = viewModelScope.launch {
             observeLocationRecordsByDateUseCase(date).collect { list ->
-                _uiState.update { it.copy(records = list) }
+                _uiState.update { it.copy(points = list.map { e -> e.toUiModel() }) }
             }
         }
     }
+
+    private fun LocationRecordEntity.toUiModel() = LocationPointUiModel(
+        latitude = latitude,
+        longitude = longitude,
+        accuracy = accuracy,
+        batteryLevel = batteryLevel,
+        sameLocationCount = sameLocationCount,
+    )
 }

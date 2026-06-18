@@ -1,11 +1,18 @@
 package cdglacier.mytool.ui.screen.positiontracking
 
-import cdglacier.mytool.data.db.LocationRecordEntity
 import java.time.LocalDate
+
+data class LocationPointUiModel(
+    val latitude: Double,
+    val longitude: Double,
+    val accuracy: Float,
+    val batteryLevel: Int,
+    val sameLocationCount: Int,
+)
 
 data class PositionTrackingUiState(
     val date: LocalDate = LocalDate.now(),
-    val records: List<LocationRecordEntity> = emptyList(),
+    val points: List<LocationPointUiModel> = emptyList(),
     val trackingEnabled: Boolean = false,
     val foregroundLocationGranted: Boolean = false,
     val backgroundLocationGranted: Boolean = false,
