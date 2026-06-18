@@ -109,10 +109,6 @@ fun PositionTrackingScreen(
                     .weight(1f)
                     .background(GlacierSurface),
             ) {
-                OsmMapView(
-                    points = uiState.points,
-                    modifier = Modifier.fillMaxSize(),
-                )
                 if (uiState.points.isEmpty()) {
                     Text(
                         text = "NO_RECORDS",
@@ -120,6 +116,11 @@ fun PositionTrackingScreen(
                         fontFamily = FontFamily.Monospace,
                         fontSize = 12.sp,
                         modifier = Modifier.align(Alignment.Center),
+                    )
+                } else {
+                    OsmMapView(
+                        points = uiState.points,
+                        modifier = Modifier.fillMaxSize(),
                     )
                 }
             }
