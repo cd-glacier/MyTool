@@ -23,7 +23,7 @@
 
         <!-- 頭部 (chunky symmetric crescent head) -->
         <path
-            android:pathData="M30,40 Q54,8 78,40 Q54,30 30,40 Z"
+            android:pathData="M30,38 Q54,14 78,38 Q54,28 30,38 Z"
             android:fillColor="#FF37474F"/>
 
     </group>
