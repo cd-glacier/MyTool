@@ -12,6 +12,11 @@ class CopyJournalUseCase @Inject constructor(
         sourceDate: LocalDate,
         targetDate: LocalDate,
         filenameFormat: String,
-    ): Result<Unit> =
-        journalRepository.copy(journalDirUri, sourceDate, targetDate, filenameFormat)
+    ): Result<Unit> = runCatching {
+        val source = journalRepository.readContent(journalDirUri, sourceDate, filenameFormat)
+            ?: error("コピー元ファイルが見つかりません")
+        val transformed = JournalTransformer.transform(source)
+        journalRepository.writeContent(journalDirUri, targetDate, filenameFormat, transformed)
+            .getOrThrow()
+    }
 }

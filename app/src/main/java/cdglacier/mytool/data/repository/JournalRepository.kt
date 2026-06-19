@@ -20,13 +20,6 @@ interface JournalRepository {
         filenameFormat: String,
         content: String,
     ): Result<Unit>
-    suspend fun copy(
-        journalDirUri: String,
-        sourceDate: LocalDate,
-        targetDate: LocalDate,
-        filenameFormat: String,
-    ): Result<Unit>
-
     suspend fun getLineCounts(
         journalDirUri: String,
         dates: List<LocalDate>,
@@ -82,36 +75,6 @@ class JournalRepositoryImpl @Inject constructor(
             context.contentResolver.openOutputStream(file.uri, "wt")
                 ?.use { it.write(content.toByteArray()) }
                 ?: error("書き込めません")
-        }
-    }
-
-    override suspend fun copy(
-        journalDirUri: String,
-        sourceDate: LocalDate,
-        targetDate: LocalDate,
-        filenameFormat: String,
-    ): Result<Unit> = withContext(Dispatchers.IO) {
-        runCatching {
-            val srcName = filenameOf(sourceDate, filenameFormat)
-            val dstName = filenameOf(targetDate, filenameFormat)
-
-            val dir = DocumentFile.fromTreeUri(context, Uri.parse(journalDirUri))
-                ?: error("フォルダを開けません")
-
-            val srcFile = dir.findFile(srcName)
-                ?: error("コピー元ファイルが見つかりません: $srcName")
-
-            val srcBytes = context.contentResolver.openInputStream(srcFile.uri)
-                ?.use { it.readBytes() }
-                ?: error("コピー元ファイルを読み込めません")
-
-            val dstFile = dir.findFile(dstName)
-                ?: dir.createFile("text/markdown", dstName)
-                ?: error("コピー先ファイルを作成できません")
-
-            context.contentResolver.openOutputStream(dstFile.uri, "wt")
-                ?.use { it.write(srcBytes) }
-                ?: error("コピー先ファイルに書き込めません")
         }
     }
 
