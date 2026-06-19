@@ -76,11 +76,18 @@ fun OsmMapView(
                     outlinePaint.color = AndroidColor.parseColor("#4DD0E1")
                     outlinePaint.strokeWidth = 6f
                 })
-                points.forEach { p ->
+                val startPoint = points.first()
+                map.overlays.add(Marker(map).apply {
+                    position = GeoPoint(startPoint.latitude, startPoint.longitude)
+                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                    title = "START acc=${startPoint.accuracy.toInt()}m bat=${startPoint.batteryLevel}%"
+                })
+                if (points.size > 1) {
+                    val endPoint = points.last()
                     map.overlays.add(Marker(map).apply {
-                        position = GeoPoint(p.latitude, p.longitude)
-                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
-                        title = "acc=${p.accuracy.toInt()}m bat=${p.batteryLevel}% stay=${p.sameLocationCount}"
+                        position = GeoPoint(endPoint.latitude, endPoint.longitude)
+                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                        title = "END acc=${endPoint.accuracy.toInt()}m bat=${endPoint.batteryLevel}%"
                     })
                 }
                 // points が変わった時だけカメラを軌跡にフィット。
