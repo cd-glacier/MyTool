@@ -1,5 +1,6 @@
 package cdglacier.mytool.ui.screen.positiontracking
 
+import android.net.Uri
 import java.time.LocalDate
 
 data class LocationPointUiModel(
@@ -16,7 +17,14 @@ data class PositionTrackingUiState(
     val trackingEnabled: Boolean = false,
     val foregroundLocationGranted: Boolean = false,
     val backgroundLocationGranted: Boolean = false,
+    val journalDirUri: Uri? = null,
+    val filenameFormat: String = "yyyy-MM-dd",
+    val isExporting: Boolean = false,
+    val snackbarMessage: String? = null,
 ) {
     val permissionsReady: Boolean
         get() = foregroundLocationGranted && backgroundLocationGranted
+
+    val canExport: Boolean
+        get() = journalDirUri != null && !isExporting
 }
