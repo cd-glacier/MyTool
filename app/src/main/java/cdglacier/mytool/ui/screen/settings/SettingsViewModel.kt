@@ -43,14 +43,36 @@ class SettingsViewModel @Inject constructor(
                 _uiState.update { it.copy(filenameFormat = fmt) }
             }
         }
-        refreshCalendarPermission()
+        refreshPermissions()
     }
 
-    fun refreshCalendarPermission() {
-        val granted = ContextCompat.checkSelfPermission(
+    fun refreshPermissions() {
+        val calendar = ContextCompat.checkSelfPermission(
             context, Manifest.permission.READ_CALENDAR
         ) == PackageManager.PERMISSION_GRANTED
-        _uiState.update { it.copy(calendarPermissionGranted = granted) }
+        val fine = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        val bg = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.ACCESS_BACKGROUND_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        _uiState.update {
+            it.copy(
+                calendarPermissionGranted = calendar,
+                fineLocationGranted = fine,
+                backgroundLocationGranted = bg,
+            )
+        }
+    }
+
+    fun refreshCalendarPermission() = refreshPermissions()
+
+    fun onLocationPermissionResult(granted: Boolean) {
+        _uiState.update { it.copy(fineLocationGranted = granted) }
+    }
+
+    fun onBackgroundLocationPermissionResult(granted: Boolean) {
+        _uiState.update { it.copy(backgroundLocationGranted = granted) }
     }
 
     fun onCalendarPermissionResult(granted: Boolean) {

@@ -3,6 +3,7 @@ package cdglacier.mytool.ui.screen.settings
 import android.Manifest
 import android.content.Intent
 import android.net.Uri
+import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -89,10 +90,22 @@ fun SettingsScreen(
         viewModel.onCalendarPermissionResult(granted)
     }
 
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        viewModel.onLocationPermissionResult(granted)
+    }
+
+    val backgroundLocationLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        viewModel.onBackgroundLocationPermissionResult(granted)
+    }
+
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) viewModel.refreshCalendarPermission()
+            if (event == Lifecycle.Event.ON_RESUME) viewModel.refreshPermissions()
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
@@ -106,6 +119,20 @@ fun SettingsScreen(
         onRequestCalendarPermission = {
             calendarPermissionLauncher.launch(Manifest.permission.READ_CALENDAR)
         },
+        onRequestLocationPermission = {
+            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        },
+        onRequestBackgroundLocationPermission = {
+            if (uiState.fineLocationGranted) {
+                backgroundLocationLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+            } else {
+                // FINE_LOCATIONが先に必要 → アプリ設定画面に飛ばす
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.fromParts("package", context.packageName, null)
+                }
+                context.startActivity(intent)
+            }
+        },
         onBack = onBack,
     )
 }
@@ -117,6 +144,8 @@ private fun SettingsContent(
     onPickJournalFolder: () -> Unit,
     onFilenameFormatChange: (String) -> Unit,
     onRequestCalendarPermission: () -> Unit,
+    onRequestLocationPermission: () -> Unit,
+    onRequestBackgroundLocationPermission: () -> Unit,
     onBack: () -> Unit,
 ) {
     Scaffold(
@@ -153,12 +182,28 @@ private fun SettingsContent(
             }
 
             GlacierSectionCard(title = "PERMISSIONS") {
-                val granted = uiState.calendarPermissionGranted
+                val cal = uiState.calendarPermissionGranted
                 SettingRow(
                     label = "CALENDAR_ACCESS",
-                    value = if (granted) "[GRANTED]" else "[DENIED]",
-                    valueColor = if (granted) GlacierTeal else GlacierAmber,
-                    onClick = if (granted) null else onRequestCalendarPermission,
+                    value = if (cal) "[GRANTED]" else "[DENIED]",
+                    valueColor = if (cal) GlacierTeal else GlacierAmber,
+                    onClick = if (cal) null else onRequestCalendarPermission,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                val fine = uiState.fineLocationGranted
+                SettingRow(
+                    label = "LOCATION_ACCESS",
+                    value = if (fine) "[GRANTED]" else "[DENIED]",
+                    valueColor = if (fine) GlacierTeal else GlacierAmber,
+                    onClick = if (fine) null else onRequestLocationPermission,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                val bg = uiState.backgroundLocationGranted
+                SettingRow(
+                    label = "BACKGROUND_LOCATION",
+                    value = if (bg) "[GRANTED]" else "[DENIED]",
+                    valueColor = if (bg) GlacierTeal else GlacierAmber,
+                    onClick = if (bg) null else onRequestBackgroundLocationPermission,
                 )
             }
         }

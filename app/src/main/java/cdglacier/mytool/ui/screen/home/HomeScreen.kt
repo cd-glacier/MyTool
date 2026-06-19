@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import cdglacier.mytool.data.repository.TrackingMode
 import cdglacier.mytool.ui.theme.GlacierAmber
 import cdglacier.mytool.ui.theme.GlacierBg
 import cdglacier.mytool.ui.theme.GlacierCyan
@@ -57,6 +58,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = viewModel(),
     onNavigateToCopyObsidianJournal: () -> Unit,
     onNavigateToHabitTracking: () -> Unit,
+    onNavigateToPositionTracking: () -> Unit,
     onNavigateToSettings: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -78,10 +80,13 @@ fun HomeScreen(
                 .padding(horizontal = 16.dp, vertical = 24.dp)
         ) {
             ObsidianStatusCard(uiState = uiState)
+            Spacer(modifier = Modifier.height(16.dp))
+            PositionTrackingStatusCard(uiState = uiState)
             Spacer(modifier = Modifier.height(32.dp))
             ExecCommandsSection(
                 onNavigateToCopyObsidianJournal = onNavigateToCopyObsidianJournal,
                 onNavigateToHabitTracking = onNavigateToHabitTracking,
+                onNavigateToPositionTracking = onNavigateToPositionTracking,
                 onNavigateToSettings = onNavigateToSettings,
             )
         }
@@ -237,6 +242,74 @@ private fun ObsidianDirStatusRow(uiState: HomeUiState) {
     }
 }
 
+@Composable
+private fun PositionTrackingStatusCard(uiState: HomeUiState) {
+    val borderWidth = 4.dp
+    val accent = if (uiState.trackingEnabled) GlacierTeal else GlacierMuted
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(GlacierSurfaceLow)
+            .drawBehind {
+                drawRect(
+                    color = accent,
+                    topLeft = Offset.Zero,
+                    size = Size(width = borderWidth.toPx(), height = size.height),
+                )
+            }
+            .padding(start = 20.dp, end = 16.dp, top = 16.dp, bottom = 16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "POSITION_TRACKING",
+                color = GlacierMuted,
+                fontFamily = SpaceGroteskFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp,
+                letterSpacing = 2.sp,
+                modifier = Modifier.weight(1f),
+            )
+            Text(
+                text = if (uiState.trackingEnabled) "RECORDING" else "STOPPED",
+                color = if (uiState.trackingEnabled) GlacierTeal else GlacierAmber,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 10.sp,
+            )
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        val (precisionLabel, precisionDetail) = when {
+            !uiState.trackingEnabled -> "OFF" to "記録は停止しています"
+            uiState.trackingMode == TrackingMode.MOVING -> "HIGH" to "GPS高精度 / 5秒間隔"
+            else -> "BALANCED" to "省電力 / 30秒間隔"
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = "PRECISION: ",
+                color = GlacierMuted,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 13.sp,
+            )
+            Text(
+                text = precisionLabel,
+                color = accent,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp,
+            )
+        }
+        Spacer(modifier = Modifier.height(2.dp))
+        Text(
+            text = precisionDetail,
+            color = GlacierMuted,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 11.sp,
+        )
+    }
+}
+
 private fun completionRateToColor(rate: Float?, isLoading: Boolean): Color {
     val alpha = if (isLoading) 0.3f else 1f
     if (rate == null) return GlacierSurface.copy(alpha = alpha)
@@ -291,6 +364,7 @@ private fun HabitCompletionGraph(
 private fun ExecCommandsSection(
     onNavigateToCopyObsidianJournal: () -> Unit,
     onNavigateToHabitTracking: () -> Unit,
+    onNavigateToPositionTracking: () -> Unit,
     onNavigateToSettings: () -> Unit,
 ) {
     Row(
@@ -328,6 +402,12 @@ private fun ExecCommandsSection(
     Spacer(modifier = Modifier.height(2.dp))
     CommandMenuItem(
         number = "03.",
+        label = "POSITION_TRACKING",
+        onClick = onNavigateToPositionTracking,
+    )
+    Spacer(modifier = Modifier.height(2.dp))
+    CommandMenuItem(
+        number = "04.",
         label = "SYS_SETTINGS",
         onClick = onNavigateToSettings,
     )

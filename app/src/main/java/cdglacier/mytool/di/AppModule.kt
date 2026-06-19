@@ -4,6 +4,12 @@ import cdglacier.mytool.data.repository.GoogleCalendarRepository
 import cdglacier.mytool.data.repository.GoogleCalendarRepositoryImpl
 import cdglacier.mytool.data.repository.HabitHistoryRepository
 import cdglacier.mytool.data.repository.HabitHistoryRepositoryImpl
+import cdglacier.mytool.data.repository.LocationPermissionRepository
+import cdglacier.mytool.data.repository.LocationPermissionRepositoryImpl
+import cdglacier.mytool.data.repository.LocationRecordRepository
+import cdglacier.mytool.data.repository.LocationRecordRepositoryImpl
+import cdglacier.mytool.data.repository.TrackingStateRepository
+import cdglacier.mytool.data.repository.TrackingStateRepositoryImpl
 import cdglacier.mytool.data.repository.JournalRepository
 import cdglacier.mytool.data.repository.JournalRepositoryImpl
 import cdglacier.mytool.data.repository.ObsidianRepository
@@ -39,4 +45,16 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindHabitHistoryRepository(impl: HabitHistoryRepositoryImpl): HabitHistoryRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindLocationRecordRepository(impl: LocationRecordRepositoryImpl): LocationRecordRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindTrackingStateRepository(impl: TrackingStateRepositoryImpl): TrackingStateRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindLocationPermissionRepository(impl: LocationPermissionRepositoryImpl): LocationPermissionRepository
 }

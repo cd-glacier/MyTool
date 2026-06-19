@@ -15,10 +15,12 @@ import cdglacier.mytool.widget.CalendarWidgetUpdateWorker
 import cdglacier.mytool.navigation.CopyObsidianJournalRoute
 import cdglacier.mytool.navigation.HabitTrackingRoute
 import cdglacier.mytool.navigation.HomeRoute
+import cdglacier.mytool.navigation.PositionTrackingRoute
 import cdglacier.mytool.navigation.SettingsRoute
 import cdglacier.mytool.ui.screen.copyjournal.CopyObsidianJournalScreen
 import cdglacier.mytool.ui.screen.habit.HabitTrackingScreen
 import cdglacier.mytool.ui.screen.home.HomeScreen
+import cdglacier.mytool.ui.screen.positiontracking.PositionTrackingScreen
 import cdglacier.mytool.ui.screen.settings.SettingsScreen
 import cdglacier.mytool.ui.theme.MyToolTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -46,6 +48,7 @@ class MainActivity : ComponentActivity() {
                                 HomeScreen(
                                     onNavigateToCopyObsidianJournal = { backStack.add(CopyObsidianJournalRoute) },
                                     onNavigateToHabitTracking = { backStack.add(HabitTrackingRoute) },
+                                    onNavigateToPositionTracking = { backStack.add(PositionTrackingRoute) },
                                     onNavigateToSettings = { backStack.add(SettingsRoute) },
                                 )
                             }
@@ -57,6 +60,9 @@ class MainActivity : ComponentActivity() {
                             }
                             entry<SettingsRoute> {
                                 SettingsScreen(onBack = { backStack.removeLastOrNull() })
+                            }
+                            entry<PositionTrackingRoute> {
+                                PositionTrackingScreen(onBack = { backStack.removeLastOrNull() })
                             }
                         }
                     )
