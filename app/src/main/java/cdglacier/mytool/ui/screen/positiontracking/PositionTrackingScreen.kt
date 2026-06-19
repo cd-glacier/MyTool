@@ -13,10 +13,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
@@ -28,6 +32,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import cdglacier.mytool.ui.component.GlacierButton
 import cdglacier.mytool.ui.component.GlacierSectionCard
 import cdglacier.mytool.ui.component.GlacierSwitch
 import cdglacier.mytool.ui.component.GlacierTopBar
@@ -55,8 +60,17 @@ fun PositionTrackingScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(uiState.snackbarMessage) {
+        uiState.snackbarMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            viewModel.onSnackbarShown()
+        }
+    }
+
     Scaffold(
         topBar = { GlacierTopBar(title = "POSITION_TRACKING", onBack = onBack) },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = GlacierBg,
     ) { innerPadding ->
         Column(
@@ -92,6 +106,27 @@ fun PositionTrackingScreen(
                         checked = uiState.trackingEnabled,
                         onCheckedChange = viewModel::onToggleTracking,
                         enabled = uiState.permissionsReady,
+                    )
+                }
+            }
+
+            GlacierSectionCard(title = "EXPORT") {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = if (uiState.journalDirUri == null)
+                            "! SETTINGS で Journal フォルダを設定してください"
+                        else
+                            "選択中の日付の位置情報を JOURNAL に出力します",
+                        color = if (uiState.journalDirUri == null) GlacierAmber else GlacierMuted,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 11.sp,
+                    )
+                    GlacierButton(
+                        label = "JOURNALへ出力",
+                        onClick = viewModel::onExportToJournal,
+                        enabled = uiState.canExport,
+                        loading = uiState.isExporting,
+                        loadingLabel = "EXPORTING...",
                     )
                 }
             }

@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cdglacier.mytool.data.db.LocationRecordEntity
 import cdglacier.mytool.data.repository.LocationPermissionRepository
+import cdglacier.mytool.data.repository.ObsidianRepository
 import cdglacier.mytool.data.repository.TrackingStateRepository
+import cdglacier.mytool.domain.usecase.ExportPositionTrackingToJournalUseCase
 import cdglacier.mytool.domain.usecase.ObserveLocationRecordsByDateUseCase
 import cdglacier.mytool.domain.usecase.ToggleLocationTrackingUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,8 +23,10 @@ import javax.inject.Inject
 class PositionTrackingViewModel @Inject constructor(
     private val toggleLocationTrackingUseCase: ToggleLocationTrackingUseCase,
     private val observeLocationRecordsByDateUseCase: ObserveLocationRecordsByDateUseCase,
+    private val exportPositionTrackingToJournalUseCase: ExportPositionTrackingToJournalUseCase,
     private val trackingStateRepository: TrackingStateRepository,
     private val locationPermissionRepository: LocationPermissionRepository,
+    private val obsidianRepository: ObsidianRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PositionTrackingUiState())
@@ -46,6 +50,16 @@ class PositionTrackingViewModel @Inject constructor(
                 _uiState.update { it.copy(backgroundLocationGranted = granted) }
             }
         }
+        viewModelScope.launch {
+            obsidianRepository.journalDirUri.collect { uri ->
+                _uiState.update { it.copy(journalDirUri = uri) }
+            }
+        }
+        viewModelScope.launch {
+            obsidianRepository.filenameFormat.collect { fmt ->
+                _uiState.update { it.copy(filenameFormat = fmt) }
+            }
+        }
         observeRecords(_uiState.value.date)
     }
 
@@ -60,6 +74,33 @@ class PositionTrackingViewModel @Inject constructor(
         val newDate = _uiState.value.date.plusDays(delta)
         _uiState.update { it.copy(date = newDate, points = emptyList()) }
         observeRecords(newDate)
+    }
+
+    fun onExportToJournal() {
+        val state = _uiState.value
+        val dirUri = state.journalDirUri ?: return
+        if (state.isExporting) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isExporting = true) }
+            val result = exportPositionTrackingToJournalUseCase(
+                journalDirUri = dirUri.toString(),
+                date = state.date,
+                filenameFormat = state.filenameFormat,
+            )
+            _uiState.update {
+                it.copy(
+                    isExporting = false,
+                    snackbarMessage = result.fold(
+                        onSuccess = { count -> "JOURNALに出力しました ($count 件)" },
+                        onFailure = { e -> "エラー: ${e.message}" },
+                    ),
+                )
+            }
+        }
+    }
+
+    fun onSnackbarShown() {
+        _uiState.update { it.copy(snackbarMessage = null) }
     }
 
     private fun observeRecords(date: LocalDate) {
