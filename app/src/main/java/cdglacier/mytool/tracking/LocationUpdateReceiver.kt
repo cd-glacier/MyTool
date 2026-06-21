@@ -19,6 +19,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
 
 class LocationUpdateReceiver : BroadcastReceiver() {
 
@@ -55,8 +58,9 @@ class LocationUpdateReceiver : BroadcastReceiver() {
         val stateRepo = deps.trackingStateRepository()
         val manager = deps.trackingManager()
 
-        val latest = repo.getLatest()
         val now = System.currentTimeMillis()
+        val today = LocalDate.ofInstant(Instant.ofEpochMilli(now), ZoneId.systemDefault())
+        val latest = repo.getLatestOfDate(today)
         val distanceToLatest = latest?.let { distanceMeters(it.latitude, it.longitude, location.latitude, location.longitude) }
 
         if (latest != null && distanceToLatest != null && distanceToLatest <= LocationTrackingManager.SAME_LOCATION_THRESHOLD_METERS) {

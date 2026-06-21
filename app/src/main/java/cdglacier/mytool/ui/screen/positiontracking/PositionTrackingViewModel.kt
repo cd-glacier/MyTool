@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
@@ -33,6 +34,7 @@ class PositionTrackingViewModel @Inject constructor(
     val uiState: StateFlow<PositionTrackingUiState> = _uiState.asStateFlow()
 
     private var recordsJob: Job? = null
+    private var isFollowingToday: Boolean = true
 
     init {
         viewModelScope.launch {
@@ -61,6 +63,17 @@ class PositionTrackingViewModel @Inject constructor(
             }
         }
         observeRecords(_uiState.value.date)
+        viewModelScope.launch {
+            while (true) {
+                delay(DATE_CHECK_INTERVAL_MS)
+                if (!isFollowingToday) continue
+                val today = LocalDate.now()
+                if (today != _uiState.value.date) {
+                    _uiState.update { it.copy(date = today, points = emptyList()) }
+                    observeRecords(today)
+                }
+            }
+        }
     }
 
     fun refreshPermissions() = locationPermissionRepository.refresh()
@@ -72,6 +85,7 @@ class PositionTrackingViewModel @Inject constructor(
 
     fun onDateChange(delta: Long) {
         val newDate = _uiState.value.date.plusDays(delta)
+        isFollowingToday = newDate == LocalDate.now()
         _uiState.update { it.copy(date = newDate, points = emptyList()) }
         observeRecords(newDate)
     }
@@ -110,6 +124,10 @@ class PositionTrackingViewModel @Inject constructor(
                 _uiState.update { it.copy(points = list.map { e -> e.toUiModel() }) }
             }
         }
+    }
+
+    companion object {
+        private const val DATE_CHECK_INTERVAL_MS = 60_000L
     }
 
     private fun LocationRecordEntity.toUiModel() = LocationPointUiModel(

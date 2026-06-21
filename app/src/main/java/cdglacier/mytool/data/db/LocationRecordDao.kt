@@ -15,6 +15,9 @@ interface LocationRecordDao {
     @Query("SELECT * FROM location_records ORDER BY timestamp DESC LIMIT 1")
     suspend fun getLatest(): LocationRecordEntity?
 
+    @Query("SELECT * FROM location_records WHERE timestamp BETWEEN :fromMillis AND :toMillis ORDER BY timestamp DESC LIMIT 1")
+    suspend fun getLatestBetween(fromMillis: Long, toMillis: Long): LocationRecordEntity?
+
     @Insert
     suspend fun insert(record: LocationRecordEntity): Long
 
