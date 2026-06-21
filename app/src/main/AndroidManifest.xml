@@ -37,6 +37,15 @@
             android:name=".tracking.LocationUpdateReceiver"
             android:exported="false" />
 
+        <!-- Boot Receiver: 再起動時にトラッキングを自動再開 -->
+        <receiver
+            android:name=".tracking.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
         <!-- Glance Widget Receiver -->
         <receiver
             android:name=".widget.JournalTodoWidgetReceiver"
