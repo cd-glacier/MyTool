@@ -172,10 +172,11 @@ private fun ObsidianStatusCard(uiState: HomeUiState) {
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Directory status row
-        ObsidianDirStatusRow(uiState = uiState)
-
-        Spacer(modifier = Modifier.height(16.dp))
+        // Directory status row (NOT_SET の警告のみ表示)
+        if (uiState.journalDirUri == null) {
+            ObsidianDirStatusRow(uiState = uiState)
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
         // Activity graph
         ActivityGraph(
@@ -187,57 +188,29 @@ private fun ObsidianStatusCard(uiState: HomeUiState) {
 
 @Composable
 private fun ObsidianDirStatusRow(uiState: HomeUiState) {
-    if (uiState.journalDirUri == null) {
-        Row(verticalAlignment = Alignment.Top) {
+    if (uiState.journalDirUri != null) return
+    Row(verticalAlignment = Alignment.Top) {
+        Text(
+            text = "! ",
+            color = GlacierAmber,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Bold,
+        )
+        Column {
             Text(
-                text = "! ",
+                text = "OBSIDIAN_DIR: NOT_SET",
                 color = GlacierAmber,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
             )
-            Column {
-                Text(
-                    text = "OBSIDIAN_DIR: NOT_SET",
-                    color = GlacierAmber,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 13.sp,
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "設定が必要です。SYS_SETTINGS から設定してください。",
-                    color = GlacierMuted,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 11.sp,
-                )
-            }
-        }
-    } else {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = "✓ ",
-                color = GlacierTeal,
+                text = "設定が必要です。SYS_SETTINGS から設定してください。",
+                color = GlacierMuted,
                 fontFamily = FontFamily.Monospace,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
+                fontSize = 11.sp,
             )
-            Column {
-                Text(
-                    text = "OBSIDIAN_DIR: CONFIGURED",
-                    color = GlacierTeal,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 13.sp,
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = uiState.journalDirUri.lastPathSegment ?: uiState.journalDirUri.toString(),
-                    color = GlacierMuted,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 11.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
         }
     }
 }
