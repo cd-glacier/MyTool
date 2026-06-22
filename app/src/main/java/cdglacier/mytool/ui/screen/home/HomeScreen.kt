@@ -152,7 +152,7 @@ private fun ObsidianStatusCard(uiState: HomeUiState) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = "HABIT_COMPLETION",
+                text = "ACTIVITY",
                 color = GlacierMuted,
                 fontFamily = SpaceGroteskFamily,
                 fontWeight = FontWeight.Bold,
@@ -177,9 +177,9 @@ private fun ObsidianStatusCard(uiState: HomeUiState) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Habit completion graph
-        HabitCompletionGraph(
-            completionRates = uiState.habitCompletionRates,
+        // Activity graph
+        ActivityGraph(
+            activityRates = uiState.activityRates,
             isLoading = uiState.isLoading,
         )
     }
@@ -310,7 +310,7 @@ private fun PositionTrackingStatusCard(uiState: HomeUiState) {
     }
 }
 
-private fun completionRateToColor(rate: Float?, isLoading: Boolean): Color {
+private fun activityRateToColor(rate: Float?, isLoading: Boolean): Color {
     val alpha = if (isLoading) 0.3f else 1f
     if (rate == null) return GlacierSurface.copy(alpha = alpha)
     return when {
@@ -322,8 +322,8 @@ private fun completionRateToColor(rate: Float?, isLoading: Boolean): Color {
 }
 
 @Composable
-private fun HabitCompletionGraph(
-    completionRates: Map<LocalDate, Float?>,
+private fun ActivityGraph(
+    activityRates: Map<LocalDate, Float?>,
     isLoading: Boolean,
 ) {
     val today = LocalDate.now()
@@ -346,7 +346,7 @@ private fun HabitCompletionGraph(
                         val color = if (date.isAfter(today)) {
                             Color.Transparent
                         } else {
-                            completionRateToColor(completionRates[date], isLoading)
+                            activityRateToColor(activityRates[date], isLoading)
                         }
                         Box(
                             modifier = Modifier
