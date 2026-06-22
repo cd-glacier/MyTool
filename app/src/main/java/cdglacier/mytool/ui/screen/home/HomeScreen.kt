@@ -32,7 +32,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -159,46 +158,11 @@ private fun ObsidianStatusCard(uiState: HomeUiState) {
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Directory status row (NOT_SET の警告のみ表示)
-        if (uiState.journalDirUri == null) {
-            ObsidianDirStatusRow(uiState = uiState)
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-
         // Activity graph
         ActivityGraph(
             activityRates = uiState.activityRates,
             isLoading = uiState.isLoading,
         )
-    }
-}
-
-@Composable
-private fun ObsidianDirStatusRow(uiState: HomeUiState) {
-    if (uiState.journalDirUri != null) return
-    Row(verticalAlignment = Alignment.Top) {
-        Text(
-            text = "! ",
-            color = GlacierAmber,
-            fontFamily = FontFamily.Monospace,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.Bold,
-        )
-        Column {
-            Text(
-                text = "OBSIDIAN_DIR: NOT_SET",
-                color = GlacierAmber,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 13.sp,
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = "設定が必要です。SYS_SETTINGS から設定してください。",
-                color = GlacierMuted,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 11.sp,
-            )
-        }
     }
 }
 
