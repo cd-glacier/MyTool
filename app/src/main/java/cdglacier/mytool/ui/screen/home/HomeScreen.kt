@@ -1,6 +1,7 @@
 package cdglacier.mytool.ui.screen.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -78,7 +79,7 @@ fun HomeScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 24.dp)
         ) {
-            ObsidianStatusCard(uiState = uiState)
+            ObsidianStatusCard(uiState = uiState, onSelectDate = viewModel::onSelectDate)
             Spacer(modifier = Modifier.height(16.dp))
             PositionTrackingStatusCard(uiState = uiState)
             Spacer(modifier = Modifier.height(32.dp))
@@ -130,7 +131,7 @@ private fun TerminalTopBar() {
 }
 
 @Composable
-private fun ObsidianStatusCard(uiState: HomeUiState) {
+private fun ObsidianStatusCard(uiState: HomeUiState, onSelectDate: (LocalDate) -> Unit) {
     val yellowBorderWidth = 4.dp
     Column(
         modifier = Modifier
@@ -160,8 +161,55 @@ private fun ObsidianStatusCard(uiState: HomeUiState) {
 
         // Activity graph
         ActivityGraph(
-            activityRates = uiState.activityRates,
+            dailyActivities = uiState.dailyActivities,
+            selectedDate = uiState.selectedDate,
             isLoading = uiState.isLoading,
+            onSelectDate = onSelectDate,
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        ActivityBreakdown(
+            date = uiState.selectedDate,
+            activity = uiState.dailyActivities[uiState.selectedDate],
+        )
+    }
+}
+
+@Composable
+private fun ActivityBreakdown(
+    date: LocalDate,
+    activity: cdglacier.mytool.domain.usecase.DailyActivity?,
+) {
+    val habitPercent = ((activity?.habitRate ?: 0f) * 100).toInt()
+    val distanceKm = (activity?.distanceMeters ?: 0.0) / 1000.0
+    val activityPercent = ((activity?.activityRate ?: 0f) * 100).toInt()
+    Column {
+        Text(
+            text = "DATE: $date",
+            color = GlacierMuted,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 11.sp,
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "HABIT:    $habitPercent%",
+            color = GlacierOnSurface,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 12.sp,
+        )
+        Text(
+            text = "DIST:     %.2f km".format(distanceKm),
+            color = GlacierOnSurface,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 12.sp,
+        )
+        Text(
+            text = "ACTIVITY: $activityPercent%",
+            color = GlacierTeal,
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.Bold,
+            fontSize = 12.sp,
         )
     }
 }
@@ -247,8 +295,10 @@ private fun activityRateToColor(rate: Float?, isLoading: Boolean): Color {
 
 @Composable
 private fun ActivityGraph(
-    activityRates: Map<LocalDate, Float?>,
+    dailyActivities: Map<LocalDate, cdglacier.mytool.domain.usecase.DailyActivity>,
+    selectedDate: LocalDate,
     isLoading: Boolean,
+    onSelectDate: (LocalDate) -> Unit,
 ) {
     val today = LocalDate.now()
     val cellSize = 12.dp
@@ -256,7 +306,6 @@ private fun ActivityGraph(
 
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val weekCount = ((maxWidth + cellGap) / (cellSize + cellGap)).toInt()
-        // 今週の日曜日を起点に、過去 weekCount 週分を表示する（日曜始まり）
         val thisSunday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
         val startSunday = thisSunday.minusWeeks((weekCount - 1).toLong())
 
@@ -267,15 +316,25 @@ private fun ActivityGraph(
                         val date = startSunday
                             .plusWeeks(weekIndex.toLong())
                             .plusDays(dayOfWeekIndex.toLong())
-                        val color = if (date.isAfter(today)) {
+                        val isFuture = date.isAfter(today)
+                        val color = if (isFuture) {
                             Color.Transparent
                         } else {
-                            activityRateToColor(activityRates[date], isLoading)
+                            activityRateToColor(dailyActivities[date]?.activityRate, isLoading)
                         }
+                        val isSelected = !isFuture && date == selectedDate
                         Box(
                             modifier = Modifier
                                 .size(cellSize)
                                 .background(color)
+                                .then(
+                                    if (isSelected) Modifier.border(1.dp, GlacierAmber)
+                                    else Modifier
+                                )
+                                .then(
+                                    if (!isFuture) Modifier.clickable { onSelectDate(date) }
+                                    else Modifier
+                                )
                         )
                     }
                 }

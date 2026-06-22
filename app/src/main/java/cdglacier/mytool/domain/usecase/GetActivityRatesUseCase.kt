@@ -7,6 +7,12 @@ import java.time.LocalDate
 import java.time.ZoneId
 import javax.inject.Inject
 
+data class DailyActivity(
+    val habitRate: Float?,
+    val distanceMeters: Double,
+    val activityRate: Float?,
+)
+
 class GetActivityRatesUseCase @Inject constructor(
     private val locationRecordRepository: LocationRecordRepository,
 ) {
@@ -14,7 +20,7 @@ class GetActivityRatesUseCase @Inject constructor(
         habitCompletionRates: Map<LocalDate, Float?>,
         from: LocalDate,
         toInclusive: LocalDate,
-    ): Map<LocalDate, Float?> {
+    ): Map<LocalDate, DailyActivity> {
         val distances = dailyDistancesMeters(from, toInclusive)
         val keys = habitCompletionRates.keys + distances.keys
         return keys.associateWith { date ->
@@ -23,8 +29,9 @@ class GetActivityRatesUseCase @Inject constructor(
             val distanceRatio = (distance / OSAKA_TOKYO_DISTANCE_METERS)
                 .coerceIn(0.0, 1.0)
                 .toFloat()
-            if (habit == null && distance <= 0.0) null
+            val activity = if (habit == null && distance <= 0.0) null
             else (habit ?: 0f) * HABIT_WEIGHT + distanceRatio * DISTANCE_WEIGHT
+            DailyActivity(habit, distance, activity)
         }
     }
 

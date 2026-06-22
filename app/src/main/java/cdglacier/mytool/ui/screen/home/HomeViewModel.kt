@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import cdglacier.mytool.data.repository.HabitHistoryRepository
 import cdglacier.mytool.data.repository.ObsidianRepository
 import cdglacier.mytool.data.repository.TrackingStateRepository
+import cdglacier.mytool.domain.usecase.DailyActivity
 import cdglacier.mytool.domain.usecase.GetActivityRatesUseCase
 import cdglacier.mytool.domain.usecase.GetTodayHabitCompletionRateUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -35,8 +36,8 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             habitHistoryRepository.history.collect { history ->
                 val today = _uiState.value.todayCompletionRate
-                val rates = computeActivityRates(history, today)
-                _uiState.update { it.copy(activityRates = rates) }
+                val activities = computeActivities(history, today)
+                _uiState.update { it.copy(dailyActivities = activities) }
             }
         }
         viewModelScope.launch {
@@ -49,6 +50,11 @@ class HomeViewModel @Inject constructor(
                 _uiState.update { it.copy(trackingMode = mode) }
             }
         }
+    }
+
+    fun onSelectDate(date: LocalDate) {
+        if (date.isAfter(LocalDate.now())) return
+        _uiState.update { it.copy(selectedDate = date) }
     }
 
     fun refresh() {
@@ -67,11 +73,11 @@ class HomeViewModel @Inject constructor(
                 getTodayHabitCompletionRateUseCase(uri.toString(), format, today)
             }.getOrNull()
             val history = habitHistoryRepository.history.first()
-            val rates = computeActivityRates(history, todayRate)
+            val activities = computeActivities(history, todayRate)
             _uiState.update {
                 it.copy(
                     todayCompletionRate = todayRate,
-                    activityRates = rates,
+                    dailyActivities = activities,
                     isLoading = false,
                 )
             }
@@ -79,10 +85,10 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private suspend fun computeActivityRates(
+    private suspend fun computeActivities(
         history: Map<LocalDate, Float>,
         todayRate: Float?,
-    ): Map<LocalDate, Float?> {
+    ): Map<LocalDate, DailyActivity> {
         val today = LocalDate.now()
         val habits: MutableMap<LocalDate, Float?> = mutableMapOf<LocalDate, Float?>().apply { putAll(history) }
         habits.remove(today)
@@ -92,7 +98,6 @@ class HomeViewModel @Inject constructor(
     }
 
     companion object {
-        // Graph shows ~ 1 year of weeks; over-fetch to cover any width.
         private const val GRAPH_RANGE_DAYS: Long = 400
     }
 }
