@@ -1,6 +1,7 @@
 package cdglacier.mytool.ui.screen.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -32,7 +33,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -79,7 +79,7 @@ fun HomeScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 24.dp)
         ) {
-            ObsidianStatusCard(uiState = uiState)
+            ObsidianStatusCard(uiState = uiState, onSelectDate = viewModel::onSelectDate)
             Spacer(modifier = Modifier.height(16.dp))
             PositionTrackingStatusCard(uiState = uiState)
             Spacer(modifier = Modifier.height(32.dp))
@@ -131,7 +131,7 @@ private fun TerminalTopBar() {
 }
 
 @Composable
-private fun ObsidianStatusCard(uiState: HomeUiState) {
+private fun ObsidianStatusCard(uiState: HomeUiState, onSelectDate: (LocalDate) -> Unit) {
     val yellowBorderWidth = 4.dp
     Column(
         modifier = Modifier
@@ -147,98 +147,70 @@ private fun ObsidianStatusCard(uiState: HomeUiState) {
             .padding(start = 20.dp, end = 16.dp, top = 16.dp, bottom = 16.dp)
     ) {
         // Section header
-        Row(
+        Text(
+            text = "ACTIVITY",
+            color = GlacierMuted,
+            fontFamily = SpaceGroteskFamily,
+            fontWeight = FontWeight.Bold,
+            fontSize = 12.sp,
+            letterSpacing = 2.sp,
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = "HABIT_COMPLETION",
-                color = GlacierMuted,
-                fontFamily = SpaceGroteskFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = 12.sp,
-                letterSpacing = 2.sp,
-                modifier = Modifier.weight(1f),
-            )
-            val statusText = if (uiState.journalDirUri != null) "CONFIGURED" else "NOT_SET"
-            val statusColor = if (uiState.journalDirUri != null) GlacierTeal else GlacierAmber
-            Text(
-                text = statusText,
-                color = statusColor,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 10.sp,
-            )
-        }
+        )
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Directory status row
-        ObsidianDirStatusRow(uiState = uiState)
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Habit completion graph
-        HabitCompletionGraph(
-            completionRates = uiState.habitCompletionRates,
+        // Activity graph
+        ActivityGraph(
+            dailyActivities = uiState.dailyActivities,
+            selectedDate = uiState.selectedDate,
             isLoading = uiState.isLoading,
+            onSelectDate = onSelectDate,
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        ActivityBreakdown(
+            date = uiState.selectedDate,
+            activity = uiState.dailyActivities[uiState.selectedDate],
         )
     }
 }
 
 @Composable
-private fun ObsidianDirStatusRow(uiState: HomeUiState) {
-    if (uiState.journalDirUri == null) {
-        Row(verticalAlignment = Alignment.Top) {
-            Text(
-                text = "! ",
-                color = GlacierAmber,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-            )
-            Column {
-                Text(
-                    text = "OBSIDIAN_DIR: NOT_SET",
-                    color = GlacierAmber,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 13.sp,
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "設定が必要です。SYS_SETTINGS から設定してください。",
-                    color = GlacierMuted,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 11.sp,
-                )
-            }
-        }
-    } else {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = "✓ ",
-                color = GlacierTeal,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-            )
-            Column {
-                Text(
-                    text = "OBSIDIAN_DIR: CONFIGURED",
-                    color = GlacierTeal,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 13.sp,
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = uiState.journalDirUri.lastPathSegment ?: uiState.journalDirUri.toString(),
-                    color = GlacierMuted,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 11.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
+private fun ActivityBreakdown(
+    date: LocalDate,
+    activity: cdglacier.mytool.domain.usecase.DailyActivity?,
+) {
+    val habitPercent = ((activity?.habitRate ?: 0f) * 100).toInt()
+    val distanceKm = (activity?.distanceMeters ?: 0.0) / 1000.0
+    val activityPercent = ((activity?.activityRate ?: 0f) * 100).toInt()
+    Column {
+        Text(
+            text = "DATE: $date",
+            color = GlacierMuted,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 11.sp,
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "HABIT:    $habitPercent%",
+            color = GlacierOnSurface,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 12.sp,
+        )
+        Text(
+            text = "DIST:     %.2f km".format(distanceKm),
+            color = GlacierOnSurface,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 12.sp,
+        )
+        Text(
+            text = "ACTIVITY: $activityPercent%",
+            color = GlacierTeal,
+            fontFamily = FontFamily.Monospace,
+            fontWeight = FontWeight.Bold,
+            fontSize = 12.sp,
+        )
     }
 }
 
@@ -310,21 +282,21 @@ private fun PositionTrackingStatusCard(uiState: HomeUiState) {
     }
 }
 
-private fun completionRateToColor(rate: Float?, isLoading: Boolean): Color {
-    val alpha = if (isLoading) 0.3f else 1f
-    if (rate == null) return GlacierSurface.copy(alpha = alpha)
-    return when {
-        rate <= 0f -> GlacierTeal.copy(alpha = 0.15f * alpha)
-        rate < 0.5f -> GlacierTeal.copy(alpha = 0.4f * alpha)
-        rate < 1f -> GlacierTeal.copy(alpha = 0.7f * alpha)
-        else -> GlacierTeal.copy(alpha = alpha)
-    }
+private fun activityRateToColor(rate: Float?, isLoading: Boolean): Color {
+    val dim = if (isLoading) 0.3f else 1f
+    if (rate == null) return GlacierSurface.copy(alpha = dim)
+    val clamped = rate.coerceIn(0f, 1f)
+    // 0 → 0.15, 1 → 1.0 を線形補間。HABIT単独(0.33)でもα≒0.43、両方達成でα=1.0
+    val alpha = (0.15f + 0.85f * clamped) * dim
+    return GlacierTeal.copy(alpha = alpha)
 }
 
 @Composable
-private fun HabitCompletionGraph(
-    completionRates: Map<LocalDate, Float?>,
+private fun ActivityGraph(
+    dailyActivities: Map<LocalDate, cdglacier.mytool.domain.usecase.DailyActivity>,
+    selectedDate: LocalDate,
     isLoading: Boolean,
+    onSelectDate: (LocalDate) -> Unit,
 ) {
     val today = LocalDate.now()
     val cellSize = 12.dp
@@ -332,7 +304,6 @@ private fun HabitCompletionGraph(
 
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val weekCount = ((maxWidth + cellGap) / (cellSize + cellGap)).toInt()
-        // 今週の日曜日を起点に、過去 weekCount 週分を表示する（日曜始まり）
         val thisSunday = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
         val startSunday = thisSunday.minusWeeks((weekCount - 1).toLong())
 
@@ -343,15 +314,25 @@ private fun HabitCompletionGraph(
                         val date = startSunday
                             .plusWeeks(weekIndex.toLong())
                             .plusDays(dayOfWeekIndex.toLong())
-                        val color = if (date.isAfter(today)) {
+                        val isFuture = date.isAfter(today)
+                        val color = if (isFuture) {
                             Color.Transparent
                         } else {
-                            completionRateToColor(completionRates[date], isLoading)
+                            activityRateToColor(dailyActivities[date]?.activityRate, isLoading)
                         }
+                        val isSelected = !isFuture && date == selectedDate
                         Box(
                             modifier = Modifier
                                 .size(cellSize)
                                 .background(color)
+                                .then(
+                                    if (isSelected) Modifier.border(1.dp, GlacierAmber)
+                                    else Modifier
+                                )
+                                .then(
+                                    if (!isFuture) Modifier.clickable { onSelectDate(date) }
+                                    else Modifier
+                                )
                         )
                     }
                 }

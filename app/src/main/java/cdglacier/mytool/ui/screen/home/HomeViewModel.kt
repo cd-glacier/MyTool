@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import cdglacier.mytool.data.repository.HabitHistoryRepository
 import cdglacier.mytool.data.repository.ObsidianRepository
 import cdglacier.mytool.data.repository.TrackingStateRepository
+import cdglacier.mytool.domain.usecase.DailyActivity
+import cdglacier.mytool.domain.usecase.GetActivityRatesUseCase
 import cdglacier.mytool.domain.usecase.GetTodayHabitCompletionRateUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +23,7 @@ class HomeViewModel @Inject constructor(
     private val obsidianRepository: ObsidianRepository,
     private val habitHistoryRepository: HabitHistoryRepository,
     private val getTodayHabitCompletionRateUseCase: GetTodayHabitCompletionRateUseCase,
+    private val getActivityRatesUseCase: GetActivityRatesUseCase,
     private val trackingStateRepository: TrackingStateRepository,
 ) : ViewModel() {
 
@@ -30,13 +33,11 @@ class HomeViewModel @Inject constructor(
     private var hasLoadedOnce = false
 
     init {
-        // キャッシュは Flow で常に追従(SYNC_HISTORYボタン押下後に自動反映)
         viewModelScope.launch {
             habitHistoryRepository.history.collect { history ->
-                _uiState.update { state ->
-                    val today = state.todayCompletionRate
-                    state.copy(habitCompletionRates = mergeWithToday(history, today))
-                }
+                val today = _uiState.value.todayCompletionRate
+                val activities = computeActivities(history, today)
+                _uiState.update { it.copy(dailyActivities = activities) }
             }
         }
         viewModelScope.launch {
@@ -49,6 +50,11 @@ class HomeViewModel @Inject constructor(
                 _uiState.update { it.copy(trackingMode = mode) }
             }
         }
+    }
+
+    fun onSelectDate(date: LocalDate) {
+        if (date.isAfter(LocalDate.now())) return
+        _uiState.update { it.copy(selectedDate = date) }
     }
 
     fun refresh() {
@@ -67,10 +73,11 @@ class HomeViewModel @Inject constructor(
                 getTodayHabitCompletionRateUseCase(uri.toString(), format, today)
             }.getOrNull()
             val history = habitHistoryRepository.history.first()
+            val activities = computeActivities(history, todayRate)
             _uiState.update {
                 it.copy(
                     todayCompletionRate = todayRate,
-                    habitCompletionRates = mergeWithToday(history, todayRate),
+                    dailyActivities = activities,
                     isLoading = false,
                 )
             }
@@ -78,16 +85,19 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun mergeWithToday(
+    private suspend fun computeActivities(
         history: Map<LocalDate, Float>,
         todayRate: Float?,
-    ): Map<LocalDate, Float?> {
+    ): Map<LocalDate, DailyActivity> {
         val today = LocalDate.now()
-        val merged = history.toMutableMap<LocalDate, Float>()
-        // 過去日(今日以外)はキャッシュ、当日はライブ値で上書き
-        merged.remove(today)
-        val result: MutableMap<LocalDate, Float?> = merged.toMutableMap()
-        if (todayRate != null) result[today] = todayRate
-        return result
+        val habits: MutableMap<LocalDate, Float?> = mutableMapOf<LocalDate, Float?>().apply { putAll(history) }
+        habits.remove(today)
+        if (todayRate != null) habits[today] = todayRate
+        val from = today.minusDays(GRAPH_RANGE_DAYS)
+        return getActivityRatesUseCase(habits, from, today)
+    }
+
+    companion object {
+        private const val GRAPH_RANGE_DAYS: Long = 400
     }
 }

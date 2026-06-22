@@ -10,6 +10,7 @@ import javax.inject.Singleton
 
 interface LocationRecordRepository {
     fun observeByDate(date: LocalDate): Flow<List<LocationRecordEntity>>
+    suspend fun getBetweenDates(from: LocalDate, toInclusive: LocalDate): List<LocationRecordEntity>
     suspend fun getLatest(): LocationRecordEntity?
     suspend fun getLatestOfDate(date: LocalDate): LocationRecordEntity?
     suspend fun insert(record: LocationRecordEntity): Long
@@ -20,6 +21,13 @@ interface LocationRecordRepository {
 class LocationRecordRepositoryImpl @Inject constructor(
     private val dao: LocationRecordDao,
 ) : LocationRecordRepository {
+
+    override suspend fun getBetweenDates(from: LocalDate, toInclusive: LocalDate): List<LocationRecordEntity> {
+        val zone = ZoneId.systemDefault()
+        val fromMillis = from.atStartOfDay(zone).toInstant().toEpochMilli()
+        val toMillis = toInclusive.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli() - 1
+        return dao.getBetween(fromMillis, toMillis)
+    }
 
     override fun observeByDate(date: LocalDate): Flow<List<LocationRecordEntity>> {
         val zone = ZoneId.systemDefault()

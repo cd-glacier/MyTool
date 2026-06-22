@@ -12,6 +12,9 @@ interface LocationRecordDao {
     @Query("SELECT * FROM location_records WHERE timestamp BETWEEN :fromMillis AND :toMillis ORDER BY timestamp ASC")
     fun observeBetween(fromMillis: Long, toMillis: Long): Flow<List<LocationRecordEntity>>
 
+    @Query("SELECT * FROM location_records WHERE timestamp BETWEEN :fromMillis AND :toMillis ORDER BY timestamp ASC")
+    suspend fun getBetween(fromMillis: Long, toMillis: Long): List<LocationRecordEntity>
+
     @Query("SELECT * FROM location_records ORDER BY timestamp DESC LIMIT 1")
     suspend fun getLatest(): LocationRecordEntity?
 
