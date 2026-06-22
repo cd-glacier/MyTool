@@ -283,14 +283,12 @@ private fun PositionTrackingStatusCard(uiState: HomeUiState) {
 }
 
 private fun activityRateToColor(rate: Float?, isLoading: Boolean): Color {
-    val alpha = if (isLoading) 0.3f else 1f
-    if (rate == null) return GlacierSurface.copy(alpha = alpha)
-    return when {
-        rate <= 0f -> GlacierTeal.copy(alpha = 0.15f * alpha)
-        rate < 0.5f -> GlacierTeal.copy(alpha = 0.4f * alpha)
-        rate < 1f -> GlacierTeal.copy(alpha = 0.7f * alpha)
-        else -> GlacierTeal.copy(alpha = alpha)
-    }
+    val dim = if (isLoading) 0.3f else 1f
+    if (rate == null) return GlacierSurface.copy(alpha = dim)
+    val clamped = rate.coerceIn(0f, 1f)
+    // 0 → 0.15, 1 → 1.0 を線形補間。HABIT単独(0.33)でもα≒0.43、両方達成でα=1.0
+    val alpha = (0.15f + 0.85f * clamped) * dim
+    return GlacierTeal.copy(alpha = alpha)
 }
 
 @Composable
