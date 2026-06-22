@@ -147,28 +147,15 @@ private fun ObsidianStatusCard(uiState: HomeUiState) {
             .padding(start = 20.dp, end = 16.dp, top = 16.dp, bottom = 16.dp)
     ) {
         // Section header
-        Row(
+        Text(
+            text = "ACTIVITY",
+            color = GlacierMuted,
+            fontFamily = SpaceGroteskFamily,
+            fontWeight = FontWeight.Bold,
+            fontSize = 12.sp,
+            letterSpacing = 2.sp,
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = "ACTIVITY",
-                color = GlacierMuted,
-                fontFamily = SpaceGroteskFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = 12.sp,
-                letterSpacing = 2.sp,
-                modifier = Modifier.weight(1f),
-            )
-            val statusText = if (uiState.journalDirUri != null) "CONFIGURED" else "NOT_SET"
-            val statusColor = if (uiState.journalDirUri != null) GlacierTeal else GlacierAmber
-            Text(
-                text = statusText,
-                color = statusColor,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 10.sp,
-            )
-        }
+        )
 
         Spacer(modifier = Modifier.height(12.dp))
 
