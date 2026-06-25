@@ -59,10 +59,10 @@ class MoneyRepositoryImpl @Inject constructor(
         val vaultUri = obsidianRepository.vaultUri.first() ?: return null
         val pagesDirName = obsidianRepository.pagesDir.first()
         val vault = DocumentFile.fromTreeUri(context, vaultUri) ?: return null
-        val pagesDir = vault.findFile(pagesDirName)
-            ?: if (create) vault.createDirectory(pagesDirName) else null
+        val pagesDir: DocumentFile = vault.findFile(pagesDirName)
+            ?: (if (create) vault.createDirectory(pagesDirName) else null)
             ?: return null
         return pagesDir.findFile(MONEY_FILENAME)
-            ?: if (create) pagesDir.createFile("text/markdown", MONEY_FILENAME) else null
+            ?: (if (create) pagesDir.createFile("text/markdown", MONEY_FILENAME) else null)
     }
 }
