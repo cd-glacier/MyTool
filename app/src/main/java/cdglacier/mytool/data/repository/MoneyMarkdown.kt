@@ -73,9 +73,9 @@ object MoneyMarkdown {
             for (i in m.cardExpenses) appendLine("| ${escape(i.name)} | ${i.amount} |")
             appendLine()
             appendLine("### Budget")
-            appendLine("| Name | Amount |")
-            appendLine("|---|---|")
-            for (i in m.budgets) appendLine("| ${escape(i.name)} | ${i.amount} |")
+            appendLine("| Name | Amount | Tag |")
+            appendLine("|---|---|---|")
+            for (i in m.budgets) appendLine("| ${escape(i.name)} | ${i.amount} | ${escape(i.tag)} |")
             appendLine()
             appendLine("### Savings")
             appendLine("| Name | Amount | Category | ToLifeAccount |")
@@ -163,7 +163,11 @@ object MoneyMarkdown {
                             currentCard += MoneyItem(cells[0], cells[1].toLongOrNull() ?: 0L)
                         }
                         "budget" -> if (cells.size >= 2) {
-                            currentBudget += MoneyItem(cells[0], cells[1].toLongOrNull() ?: 0L)
+                            currentBudget += MoneyItem(
+                                name = cells[0],
+                                amount = cells[1].toLongOrNull() ?: 0L,
+                                tag = cells.getOrNull(2).orEmpty(),
+                            )
                         }
                         "savings" -> if (cells.size >= 4) {
                             currentSavings += SavingsItem(

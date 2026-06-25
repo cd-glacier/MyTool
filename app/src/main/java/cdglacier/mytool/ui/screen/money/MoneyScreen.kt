@@ -42,6 +42,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import cdglacier.mytool.domain.model.AnnualService
 import cdglacier.mytool.domain.model.MoneyItem
 import cdglacier.mytool.domain.model.SavingsItem
+import cdglacier.mytool.ui.component.GlacierConfirmDialog
 import cdglacier.mytool.ui.component.GlacierSectionCard
 import cdglacier.mytool.ui.component.GlacierTopBar
 import cdglacier.mytool.ui.theme.GlacierAmber
@@ -87,6 +88,21 @@ private fun MoneyContent(
     onClearError: () -> Unit,
     viewModel: MoneyViewModel,
 ) {
+    var pendingDelete by remember { mutableStateOf<PendingDelete?>(null) }
+    pendingDelete?.let { pd ->
+        GlacierConfirmDialog(
+            title = "ARCHIVE_CONFIRM",
+            body = "${pd.label} をアーカイブします。よろしいですか？",
+            confirmLabel = "ARCHIVE",
+            cancelLabel = "CANCEL",
+            onConfirm = { pd.action(); pendingDelete = null },
+            onCancel = { pendingDelete = null },
+        )
+    }
+    val requestRemove: (String, () -> Unit) -> Unit = { label, action ->
+        pendingDelete = PendingDelete(label, action)
+    }
+
     Scaffold(
         topBar = { GlacierTopBar(title = "MONEY", onBack = onBack) },
         containerColor = GlacierBg,
@@ -124,34 +140,33 @@ private fun MoneyContent(
                 items = uiState.currentMonth.incomes,
                 onAdd = { viewModel.addIncome(it) },
                 onUpdate = { i, item -> viewModel.updateIncome(i, item) },
-                onRemove = { viewModel.removeIncome(it) },
+                onRequestRemove = { i, name -> requestRemove("INCOME: $name") { viewModel.removeIncome(i) } },
             )
             EditableMoneyItemSection(
                 title = "CARD_2M_AGO",
                 items = uiState.currentMonth.cardExpenses,
                 onAdd = { viewModel.addCard(it) },
                 onUpdate = { i, item -> viewModel.updateCard(i, item) },
-                onRemove = { viewModel.removeCard(it) },
+                onRequestRemove = { i, name -> requestRemove("CARD: $name") { viewModel.removeCard(i) } },
             )
-            EditableMoneyItemSection(
-                title = "BUDGET_ENVELOPES",
+            EditableBudgetSection(
                 items = uiState.currentMonth.budgets,
                 onAdd = { viewModel.addBudget(it) },
                 onUpdate = { i, item -> viewModel.updateBudget(i, item) },
-                onRemove = { viewModel.removeBudget(it) },
+                onRequestRemove = { i, name -> requestRemove("BUDGET: $name") { viewModel.removeBudget(i) } },
             )
             EditableSavingsSection(
                 items = uiState.currentMonth.savings,
                 onAdd = { viewModel.addSavings(it) },
                 onUpdate = { i, item -> viewModel.updateSavings(i, item) },
-                onRemove = { viewModel.removeSavings(it) },
+                onRequestRemove = { i, name -> requestRemove("SAVINGS: $name") { viewModel.removeSavings(i) } },
             )
             ServicesSection(
                 month = uiState.displayedMonth,
                 services = uiState.services,
                 onAdd = { viewModel.addService(it) },
                 onUpdate = { i, s -> viewModel.updateService(i, s) },
-                onRemove = { viewModel.removeService(it) },
+                onRequestRemove = { i, name -> requestRemove("SERVICE: $name") { viewModel.removeService(i) } },
             )
 
             HistoryGraphSection(uiState = uiState)
@@ -243,7 +258,7 @@ private fun EditableMoneyItemSection(
     items: List<MoneyItem>,
     onAdd: (String) -> Unit,
     onUpdate: (Int, MoneyItem) -> Unit,
-    onRemove: (Int) -> Unit,
+    onRequestRemove: (Int, String) -> Unit,
 ) {
     GlacierSectionCard(title = title) {
         items.forEachIndexed { index, item ->
@@ -268,8 +283,60 @@ private fun EditableMoneyItemSection(
                     color = GlacierAmber,
                     fontFamily = FontFamily.Monospace,
                     fontSize = 12.sp,
-                    modifier = Modifier.clickable { onRemove(index) },
+                    modifier = Modifier.clickable { onRequestRemove(index, item.name) },
                 )
+            }
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+        AddItemRow(onAdd = onAdd)
+    }
+}
+
+@Composable
+private fun EditableBudgetSection(
+    items: List<MoneyItem>,
+    onAdd: (String) -> Unit,
+    onUpdate: (Int, MoneyItem) -> Unit,
+    onRequestRemove: (Int, String) -> Unit,
+) {
+    GlacierSectionCard(title = "BUDGET_ENVELOPES") {
+        // 元のインデックスを保ったまま、タグ順に表示する
+        val sortedWithIndex = items.withIndex().sortedWith(
+            compareBy({ it.value.tag }, { it.value.name })
+        )
+        sortedWithIndex.forEach { (index, item) ->
+            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = item.name,
+                        color = GlacierOnSurface,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 13.sp,
+                        modifier = Modifier.weight(1f),
+                    )
+                    AmountInput(
+                        value = item.amount,
+                        onChange = { onUpdate(index, item.copy(amount = it)) },
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "[X]",
+                        color = GlacierAmber,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 12.sp,
+                        modifier = Modifier.clickable { onRequestRemove(index, item.name) },
+                    )
+                }
+                Spacer(modifier = Modifier.height(2.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("TAG:", color = GlacierMuted, fontFamily = FontFamily.Monospace, fontSize = 11.sp)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    TextInput(
+                        value = item.tag,
+                        onChange = { onUpdate(index, item.copy(tag = it)) },
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
         }
         Spacer(modifier = Modifier.height(6.dp))
@@ -282,7 +349,7 @@ private fun EditableSavingsSection(
     items: List<SavingsItem>,
     onAdd: (String) -> Unit,
     onUpdate: (Int, SavingsItem) -> Unit,
-    onRemove: (Int) -> Unit,
+    onRequestRemove: (Int, String) -> Unit,
 ) {
     GlacierSectionCard(title = "SAVINGS") {
         items.forEachIndexed { index, item ->
@@ -305,7 +372,7 @@ private fun EditableSavingsSection(
                         color = GlacierAmber,
                         fontFamily = FontFamily.Monospace,
                         fontSize = 12.sp,
-                        modifier = Modifier.clickable { onRemove(index) },
+                        modifier = Modifier.clickable { onRequestRemove(index, item.name) },
                     )
                 }
                 Spacer(modifier = Modifier.height(2.dp))
@@ -342,7 +409,7 @@ private fun ServicesSection(
     services: List<AnnualService>,
     onAdd: (AnnualService) -> Unit,
     onUpdate: (Int, AnnualService) -> Unit,
-    onRemove: (Int) -> Unit,
+    onRequestRemove: (Int, String) -> Unit,
 ) {
     GlacierSectionCard(title = "ANNUAL_SERVICES") {
         services.forEachIndexed { index, s ->
@@ -357,7 +424,7 @@ private fun ServicesSection(
                     AmountInput(value = s.annualAmount, onChange = { onUpdate(index, s.copy(annualAmount = it)) })
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("[X]", color = GlacierAmber, fontFamily = FontFamily.Monospace, fontSize = 12.sp,
-                        modifier = Modifier.clickable { onRemove(index) })
+                        modifier = Modifier.clickable { onRequestRemove(index, s.name) })
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("FROM:", color = GlacierMuted, fontFamily = FontFamily.Monospace, fontSize = 11.sp)
@@ -576,6 +643,8 @@ private fun SaveButton(onSave: () -> Unit) {
         )
     }
 }
+
+private data class PendingDelete(val label: String, val action: () -> Unit)
 
 private data class BarValue(
     val month: YearMonth,

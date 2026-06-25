@@ -6,6 +6,7 @@ import java.time.YearMonth
 data class MoneyItem(
     val name: String,
     val amount: Long,
+    val tag: String = "",
 )
 
 data class SavingsItem(

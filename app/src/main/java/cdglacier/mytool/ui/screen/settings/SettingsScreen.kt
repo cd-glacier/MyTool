@@ -174,19 +174,17 @@ private fun SettingsContent(
                     value = uiState.journalDirUri.toDisplayString(),
                     onClick = onPickJournalFolder,
                 )
+                Spacer(modifier = Modifier.height(4.dp))
+                PagesDirRow(
+                    value = uiState.pagesDir,
+                    onValueChange = onPagesDirChange,
+                )
             }
 
             GlacierSectionCard(title = "JOURNAL_FMT") {
                 FilenameFormatRow(
                     value = uiState.filenameFormat,
                     onValueChange = onFilenameFormatChange,
-                )
-            }
-
-            GlacierSectionCard(title = "PAGES_DIR") {
-                PagesDirRow(
-                    value = uiState.pagesDir,
-                    onValueChange = onPagesDirChange,
                 )
             }
 
@@ -323,7 +321,7 @@ private fun PagesDirRow(value: String, onValueChange: (String) -> Unit) {
             .padding(horizontal = 14.dp, vertical = 12.dp),
     ) {
         Text(
-            text = "DIR_NAME",
+            text = "PAGES_DIR",
             color = GlacierMuted,
             fontFamily = SpaceGroteskFamily,
             fontWeight = FontWeight.Bold,
