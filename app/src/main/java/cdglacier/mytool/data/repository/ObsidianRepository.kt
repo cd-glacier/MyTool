@@ -21,11 +21,13 @@ interface ObsidianRepository {
     val journalDirUri: Flow<Uri?>
     val filenameFormat: Flow<String>
     val autoCopyEnabled: Flow<Boolean>
+    val pagesDir: Flow<String>
 
     suspend fun setVaultUri(uri: Uri)
     suspend fun setJournalDirUri(uri: Uri)
     suspend fun setFilenameFormat(format: String)
     suspend fun setAutoCopyEnabled(enabled: Boolean)
+    suspend fun setPagesDir(dir: String)
 }
 
 @Singleton
@@ -37,6 +39,7 @@ class ObsidianRepositoryImpl @Inject constructor(
     private val JOURNAL_DIR_URI_KEY = stringPreferencesKey("journal_dir_uri")
     private val JOURNAL_FILENAME_FORMAT_KEY = stringPreferencesKey("journal_filename_format")
     private val JOURNAL_AUTO_COPY_ENABLED_KEY = booleanPreferencesKey("journal_auto_copy_enabled")
+    private val PAGES_DIR_KEY = stringPreferencesKey("pages_dir")
 
     override val vaultUri: Flow<Uri?> =
         context.obsidianDataStore.data.map { prefs ->
@@ -82,7 +85,19 @@ class ObsidianRepositoryImpl @Inject constructor(
         }
     }
 
+    override val pagesDir: Flow<String> =
+        context.obsidianDataStore.data.map { prefs ->
+            prefs[PAGES_DIR_KEY] ?: DEFAULT_PAGES_DIR
+        }
+
+    override suspend fun setPagesDir(dir: String) {
+        context.obsidianDataStore.edit { prefs ->
+            prefs[PAGES_DIR_KEY] = dir
+        }
+    }
+
     companion object {
         const val DEFAULT_FILENAME_FORMAT = "yyyy-MM-dd"
+        const val DEFAULT_PAGES_DIR = "pages"
     }
 }

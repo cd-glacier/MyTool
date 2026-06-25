@@ -8,6 +8,8 @@ import cdglacier.mytool.data.repository.LocationPermissionRepository
 import cdglacier.mytool.data.repository.LocationPermissionRepositoryImpl
 import cdglacier.mytool.data.repository.LocationRecordRepository
 import cdglacier.mytool.data.repository.LocationRecordRepositoryImpl
+import cdglacier.mytool.data.repository.MoneyRepository
+import cdglacier.mytool.data.repository.MoneyRepositoryImpl
 import cdglacier.mytool.data.repository.TrackingStateRepository
 import cdglacier.mytool.data.repository.TrackingStateRepositoryImpl
 import cdglacier.mytool.data.repository.JournalRepository
@@ -57,4 +59,8 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindLocationPermissionRepository(impl: LocationPermissionRepositoryImpl): LocationPermissionRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindMoneyRepository(impl: MoneyRepositoryImpl): MoneyRepository
 }

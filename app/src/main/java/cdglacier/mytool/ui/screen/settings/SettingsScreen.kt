@@ -116,6 +116,7 @@ fun SettingsScreen(
         onPickVaultFolder = { vaultFolderPickerLauncher.launch(uiState.vaultUri) },
         onPickJournalFolder = { journalFolderPickerLauncher.launch(uiState.journalDirUri) },
         onFilenameFormatChange = viewModel::onFilenameFormatChange,
+        onPagesDirChange = viewModel::onPagesDirChange,
         onRequestCalendarPermission = {
             calendarPermissionLauncher.launch(Manifest.permission.READ_CALENDAR)
         },
@@ -143,6 +144,7 @@ private fun SettingsContent(
     onPickVaultFolder: () -> Unit,
     onPickJournalFolder: () -> Unit,
     onFilenameFormatChange: (String) -> Unit,
+    onPagesDirChange: (String) -> Unit,
     onRequestCalendarPermission: () -> Unit,
     onRequestLocationPermission: () -> Unit,
     onRequestBackgroundLocationPermission: () -> Unit,
@@ -178,6 +180,13 @@ private fun SettingsContent(
                 FilenameFormatRow(
                     value = uiState.filenameFormat,
                     onValueChange = onFilenameFormatChange,
+                )
+            }
+
+            GlacierSectionCard(title = "PAGES_DIR") {
+                PagesDirRow(
+                    value = uiState.pagesDir,
+                    onValueChange = onPagesDirChange,
                 )
             }
 
@@ -299,6 +308,45 @@ private fun FilenameFormatRow(
         Text(
             text = if (isValid) "EXAMPLE: $example" else "EXAMPLE: INVALID_FORMAT",
             color = if (isValid) GlacierMuted else GlacierAmber,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 11.sp,
+        )
+    }
+}
+
+@Composable
+private fun PagesDirRow(value: String, onValueChange: (String) -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(GlacierSurface)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+    ) {
+        Text(
+            text = "DIR_NAME",
+            color = GlacierMuted,
+            fontFamily = SpaceGroteskFamily,
+            fontWeight = FontWeight.Bold,
+            fontSize = 11.sp,
+            letterSpacing = 2.sp,
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            singleLine = true,
+            textStyle = TextStyle(
+                color = GlacierOnSurface,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 14.sp,
+            ),
+            cursorBrush = SolidColor(GlacierAmber),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = "vault/${value.ifBlank { "<unset>" }}/money.md",
+            color = GlacierMuted,
             fontFamily = FontFamily.Monospace,
             fontSize = 11.sp,
         )

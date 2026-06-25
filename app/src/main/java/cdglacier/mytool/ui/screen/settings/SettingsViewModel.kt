@@ -43,6 +43,11 @@ class SettingsViewModel @Inject constructor(
                 _uiState.update { it.copy(filenameFormat = fmt) }
             }
         }
+        viewModelScope.launch {
+            obsidianRepository.pagesDir.collect { dir ->
+                _uiState.update { it.copy(pagesDir = dir) }
+            }
+        }
         refreshPermissions()
     }
 
@@ -90,5 +95,9 @@ class SettingsViewModel @Inject constructor(
 
     fun onFilenameFormatChange(format: String) {
         viewModelScope.launch { obsidianRepository.setFilenameFormat(format) }
+    }
+
+    fun onPagesDirChange(dir: String) {
+        viewModelScope.launch { obsidianRepository.setPagesDir(dir) }
     }
 }

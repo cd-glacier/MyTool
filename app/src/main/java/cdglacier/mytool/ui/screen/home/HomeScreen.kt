@@ -59,6 +59,7 @@ fun HomeScreen(
     onNavigateToCopyObsidianJournal: () -> Unit,
     onNavigateToHabitTracking: () -> Unit,
     onNavigateToPositionTracking: () -> Unit,
+    onNavigateToMoney: () -> Unit,
     onNavigateToSettings: () -> Unit,
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -87,6 +88,7 @@ fun HomeScreen(
                 onNavigateToCopyObsidianJournal = onNavigateToCopyObsidianJournal,
                 onNavigateToHabitTracking = onNavigateToHabitTracking,
                 onNavigateToPositionTracking = onNavigateToPositionTracking,
+                onNavigateToMoney = onNavigateToMoney,
                 onNavigateToSettings = onNavigateToSettings,
             )
         }
@@ -346,6 +348,7 @@ private fun ExecCommandsSection(
     onNavigateToCopyObsidianJournal: () -> Unit,
     onNavigateToHabitTracking: () -> Unit,
     onNavigateToPositionTracking: () -> Unit,
+    onNavigateToMoney: () -> Unit,
     onNavigateToSettings: () -> Unit,
 ) {
     Row(
@@ -389,6 +392,12 @@ private fun ExecCommandsSection(
     Spacer(modifier = Modifier.height(2.dp))
     CommandMenuItem(
         number = "04.",
+        label = "MONEY",
+        onClick = onNavigateToMoney,
+    )
+    Spacer(modifier = Modifier.height(2.dp))
+    CommandMenuItem(
+        number = "05.",
         label = "SYS_SETTINGS",
         onClick = onNavigateToSettings,
     )
