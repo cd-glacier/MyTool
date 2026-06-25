@@ -300,9 +300,13 @@ private fun EditableBudgetSection(
     onRequestRemove: (Int, String) -> Unit,
 ) {
     GlacierSectionCard(title = "BUDGET_ENVELOPES") {
-        // 元のインデックスを保ったまま、タグ順に表示する
+        // タグ付きを上に(タグ・名前順)、タグなしは最後に挿入順で表示
         val sortedWithIndex = items.withIndex().sortedWith(
-            compareBy({ it.value.tag }, { it.value.name })
+            compareBy(
+                { it.value.tag.isEmpty() },
+                { it.value.tag },
+                { it.index },
+            )
         )
         sortedWithIndex.forEach { (index, item) ->
             Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
