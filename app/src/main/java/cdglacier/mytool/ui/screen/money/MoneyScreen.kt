@@ -142,6 +142,7 @@ private fun MoneyContent(
                 onAdd = { viewModel.addBudget(it) },
                 onUpdate = { i, item -> viewModel.updateBudget(i, item) },
                 onRequestRemove = { i, name -> requestRemove("BUDGET: $name") { viewModel.removeBudget(i) } },
+                onSortByTag = { viewModel.sortBudgetsByTag() },
             )
             EditableSavingsSection(
                 items = uiState.currentMonth.savings,
@@ -286,17 +287,22 @@ private fun EditableBudgetSection(
     onAdd: (String) -> Unit,
     onUpdate: (Int, MoneyItem) -> Unit,
     onRequestRemove: (Int, String) -> Unit,
+    onSortByTag: () -> Unit,
 ) {
     GlacierSectionCard(title = "BUDGET_ENVELOPES") {
-        // タグ付きを上に(タグ・名前順)、タグなしは最後に挿入順で表示
-        val sortedWithIndex = items.withIndex().sortedWith(
-            compareBy(
-                { it.value.tag.isEmpty() },
-                { it.value.tag },
-                { it.index },
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+            horizontalArrangement = Arrangement.End,
+        ) {
+            Text(
+                text = "[SORT_BY_TAG]",
+                color = GlacierAmber,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 11.sp,
+                modifier = Modifier.clickable { onSortByTag() },
             )
-        )
-        sortedWithIndex.forEach { (index, item) ->
+        }
+        items.forEachIndexed { index, item ->
             Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(

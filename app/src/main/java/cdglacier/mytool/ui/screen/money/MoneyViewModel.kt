@@ -76,6 +76,11 @@ class MoneyViewModel @Inject constructor(
     fun updateBudget(index: Int, item: MoneyItem) = updateList { it.copy(budgets = it.budgets.replaceAt(index, item)) }
     fun addBudget(name: String) = updateList { it.copy(budgets = it.budgets + MoneyItem(name, 0L)) }
     fun removeBudget(index: Int) = archiveAt(MoneyCategory.BUDGET, index) { it.budgets }
+    fun sortBudgetsByTag() = updateList {
+        it.copy(budgets = it.budgets.sortedWith(
+            compareBy({ b -> b.tag.isEmpty() }, { b -> b.tag }, { b -> b.name })
+        ))
+    }
 
     fun updateSavings(index: Int, item: SavingsItem) = updateList { it.copy(savings = it.savings.replaceAt(index, item)) }
     fun addSavings(name: String) = updateList {
