@@ -102,7 +102,7 @@ private fun MoneyContent(
     }
 
     Scaffold(
-        topBar = { GlacierTopBar(title = "MONEY", onBack = onBack) },
+        topBar = { GlacierTopBar(title = "MONEY_BOOK", onBack = onBack) },
         containerColor = GlacierBg,
     ) { innerPadding ->
         Column(
