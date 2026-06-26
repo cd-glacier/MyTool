@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
@@ -24,7 +25,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -116,6 +119,7 @@ fun SettingsScreen(
         onPickVaultFolder = { vaultFolderPickerLauncher.launch(uiState.vaultUri) },
         onPickJournalFolder = { journalFolderPickerLauncher.launch(uiState.journalDirUri) },
         onFilenameFormatChange = viewModel::onFilenameFormatChange,
+        onPagesDirChange = viewModel::onPagesDirChange,
         onRequestCalendarPermission = {
             calendarPermissionLauncher.launch(Manifest.permission.READ_CALENDAR)
         },
@@ -143,6 +147,7 @@ private fun SettingsContent(
     onPickVaultFolder: () -> Unit,
     onPickJournalFolder: () -> Unit,
     onFilenameFormatChange: (String) -> Unit,
+    onPagesDirChange: (String) -> Unit,
     onRequestCalendarPermission: () -> Unit,
     onRequestLocationPermission: () -> Unit,
     onRequestBackgroundLocationPermission: () -> Unit,
@@ -172,6 +177,23 @@ private fun SettingsContent(
                     value = uiState.journalDirUri.toDisplayString(),
                     onClick = onPickJournalFolder,
                 )
+                Spacer(modifier = Modifier.height(4.dp))
+                var pagesDirEditing by remember { mutableStateOf(false) }
+                SettingRow(
+                    label = "PAGES_DIR",
+                    value = uiState.pagesDir.ifBlank { "[NOT_SET]" },
+                    onClick = { pagesDirEditing = true },
+                )
+                if (pagesDirEditing) {
+                    PagesDirEditDialog(
+                        initial = uiState.pagesDir,
+                        onConfirm = {
+                            onPagesDirChange(it)
+                            pagesDirEditing = false
+                        },
+                        onCancel = { pagesDirEditing = false },
+                    )
+                }
             }
 
             GlacierSectionCard(title = "JOURNAL_FMT") {
@@ -302,6 +324,63 @@ private fun FilenameFormatRow(
             fontFamily = FontFamily.Monospace,
             fontSize = 11.sp,
         )
+    }
+}
+
+@Composable
+private fun PagesDirEditDialog(
+    initial: String,
+    onConfirm: (String) -> Unit,
+    onCancel: () -> Unit,
+) {
+    var text by remember { mutableStateOf(initial) }
+    androidx.compose.ui.window.Dialog(onDismissRequest = onCancel) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(GlacierSurface)
+                .padding(20.dp),
+        ) {
+            Text(
+                text = "PAGES_DIR",
+                color = GlacierMuted,
+                fontFamily = SpaceGroteskFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 11.sp,
+                letterSpacing = 2.sp,
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            BasicTextField(
+                value = text,
+                onValueChange = { text = it },
+                singleLine = true,
+                textStyle = TextStyle(
+                    color = GlacierOnSurface,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 14.sp,
+                ),
+                cursorBrush = SolidColor(GlacierAmber),
+                modifier = Modifier.fillMaxWidth().background(GlacierBg).padding(8.dp),
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "[CANCEL]",
+                    color = GlacierMuted,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 12.sp,
+                    modifier = Modifier.clickable { onCancel() }.padding(8.dp),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "[OK]",
+                    color = GlacierAmber,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 12.sp,
+                    modifier = Modifier.clickable { onConfirm(text.trim()) }.padding(8.dp),
+                )
+            }
+        }
     }
 }
 
