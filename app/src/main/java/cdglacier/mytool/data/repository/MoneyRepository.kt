@@ -28,7 +28,7 @@ class MoneyRepositoryImpl @Inject constructor(
 ) : MoneyRepository {
 
     companion object {
-        const val MONEY_FILENAME = "money.md"
+        const val MONEY_FILENAME = "Money.md"
     }
 
     override fun observeBook(): Flow<MoneyBook> = flow {
@@ -46,11 +46,11 @@ class MoneyRepositoryImpl @Inject constructor(
 
     override suspend fun save(book: MoneyBook): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            val file = resolveFile(create = true) ?: error("money.md を作成できません。PAGES_DIR を設定してください。")
+            val file = resolveFile(create = true) ?: error("Money.md を作成できません。PAGES_DIR を設定してください。")
             val text = MoneyMarkdown.serialize(book)
             context.contentResolver.openOutputStream(file.uri, "wt")
                 ?.use { it.write(text.toByteArray()) }
-                ?: error("money.md に書き込めません")
+                ?: error("Money.md に書き込めません")
         }
     }
 
