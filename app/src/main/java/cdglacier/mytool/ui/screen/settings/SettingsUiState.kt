@@ -6,7 +6,7 @@ data class SettingsUiState(
     val vaultUri: Uri? = null,
     val journalDirUri: Uri? = null,
     val filenameFormat: String = "",
-    val pagesDir: String = "",
+    val pagesDirUri: Uri? = null,
     val calendarPermissionGranted: Boolean = false,
     val fineLocationGranted: Boolean = false,
     val backgroundLocationGranted: Boolean = false,

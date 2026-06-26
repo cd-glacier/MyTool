@@ -7,7 +7,6 @@ import cdglacier.mytool.domain.model.MoneyBook
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -29,11 +28,11 @@ class MoneyRepositoryImpl @Inject constructor(
 ) : MoneyRepository {
 
     companion object {
-        const val MONEY_FILENAME = "money.md"
+        const val MONEY_FILENAME = "Money.md"
     }
 
     override fun observeBook(): Flow<MoneyBook> = flow {
-        combine(obsidianRepository.vaultUri, obsidianRepository.pagesDir) { v, d -> v to d }
+        obsidianRepository.pagesDirUri
             .collect { emit(load()) }
     }.flowOn(Dispatchers.IO)
 
@@ -47,21 +46,17 @@ class MoneyRepositoryImpl @Inject constructor(
 
     override suspend fun save(book: MoneyBook): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
-            val file = resolveFile(create = true) ?: error("money.md を作成できません。Vault と pages_dir を設定してください。")
+            val file = resolveFile(create = true) ?: error("Money.md を作成できません。PAGES_DIR を設定してください。")
             val text = MoneyMarkdown.serialize(book)
             context.contentResolver.openOutputStream(file.uri, "wt")
                 ?.use { it.write(text.toByteArray()) }
-                ?: error("money.md に書き込めません")
+                ?: error("Money.md に書き込めません")
         }
     }
 
     private suspend fun resolveFile(create: Boolean): DocumentFile? {
-        val vaultUri = obsidianRepository.vaultUri.first() ?: return null
-        val pagesDirName = obsidianRepository.pagesDir.first()
-        val vault = DocumentFile.fromTreeUri(context, vaultUri) ?: return null
-        val pagesDir: DocumentFile = vault.findFile(pagesDirName)
-            ?: (if (create) vault.createDirectory(pagesDirName) else null)
-            ?: return null
+        val pagesDirUri = obsidianRepository.pagesDirUri.first() ?: return null
+        val pagesDir = DocumentFile.fromTreeUri(context, pagesDirUri) ?: return null
         return pagesDir.findFile(MONEY_FILENAME)
             ?: (if (create) pagesDir.createFile("text/markdown", MONEY_FILENAME) else null)
     }

@@ -392,7 +392,7 @@ private fun ExecCommandsSection(
     Spacer(modifier = Modifier.height(2.dp))
     CommandMenuItem(
         number = "04.",
-        label = "MONEY",
+        label = "MONEY_BOOK",
         onClick = onNavigateToMoney,
     )
     Spacer(modifier = Modifier.height(2.dp))

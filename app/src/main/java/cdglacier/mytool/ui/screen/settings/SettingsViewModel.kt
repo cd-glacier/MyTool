@@ -44,8 +44,8 @@ class SettingsViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
-            obsidianRepository.pagesDir.collect { dir ->
-                _uiState.update { it.copy(pagesDir = dir) }
+            obsidianRepository.pagesDirUri.collect { uri ->
+                _uiState.update { it.copy(pagesDirUri = uri) }
             }
         }
         refreshPermissions()
@@ -97,7 +97,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { obsidianRepository.setFilenameFormat(format) }
     }
 
-    fun onPagesDirChange(dir: String) {
-        viewModelScope.launch { obsidianRepository.setPagesDir(dir) }
+    fun onPagesDirPicked(uri: Uri) {
+        viewModelScope.launch { obsidianRepository.setPagesDirUri(uri) }
     }
 }

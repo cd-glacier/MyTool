@@ -11,7 +11,7 @@ import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 
 /**
- * pages/money.md の Markdown テーブル形式シリアライザ/パーサ。
+ * pages/Money.md の Markdown テーブル形式シリアライザ/パーサ。
  *
  * フォーマット:
  *
