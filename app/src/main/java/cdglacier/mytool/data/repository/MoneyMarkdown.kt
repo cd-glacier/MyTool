@@ -19,21 +19,21 @@ import java.time.format.DateTimeFormatter
  *
  * ## Services
  * | Name | Annual | Start | End |
- * |---|---|---|---|
  *
  * ## Archived
  * | Category | Name |
- * |---|---|
  *
- * ## 2026-06
- * ### Incomes
- * | Name | Amount |
- * ### Card
- * | Name | Amount |
- * ### Budget
- * | Name | Amount |
- * ### Savings
- * | Name | Amount | Category | ToLifeAccount |
+ * ## Incomes
+ * | Month | Name | Amount |
+ *
+ * ## Card
+ * | Month | Name | Amount |
+ *
+ * ## Budget
+ * | Month | Name | Amount | Tag |
+ *
+ * ## Savings
+ * | Month | Name | Amount | Category | ToLifeAccount |
  */
 object MoneyMarkdown {
 
@@ -57,83 +57,67 @@ object MoneyMarkdown {
             for (n in names) appendLine("| ${cat.name} | ${escape(n)} |")
         }
         appendLine()
+
         val sortedMonths = book.months.keys.sortedDescending()
+
+        appendLine("## Incomes")
+        appendLine("| Month | Name | Amount |")
+        appendLine("|---|---|---|")
         for (ym in sortedMonths) {
             val m = book.months[ym] ?: continue
-            appendLine("## ${ym.format(MONTH_FMT)}")
-            appendLine()
-            appendLine("### Incomes")
-            appendLine("| Name | Amount |")
-            appendLine("|---|---|")
-            for (i in m.incomes) appendLine("| ${escape(i.name)} | ${i.amount} |")
-            appendLine()
-            appendLine("### Card")
-            appendLine("| Name | Amount |")
-            appendLine("|---|---|")
-            for (i in m.cardExpenses) appendLine("| ${escape(i.name)} | ${i.amount} |")
-            appendLine()
-            appendLine("### Budget")
-            appendLine("| Name | Amount | Tag |")
-            appendLine("|---|---|---|")
-            for (i in m.budgets) appendLine("| ${escape(i.name)} | ${i.amount} | ${escape(i.tag)} |")
-            appendLine()
-            appendLine("### Savings")
-            appendLine("| Name | Amount | Category | ToLifeAccount |")
-            appendLine("|---|---|---|---|")
-            for (s in m.savings) {
-                appendLine("| ${escape(s.name)} | ${s.amount} | ${escape(s.category)} | ${s.toLifeAccount} |")
-            }
-            appendLine()
+            for (i in m.incomes) appendLine("| ${ym.format(MONTH_FMT)} | ${escape(i.name)} | ${i.amount} |")
         }
+        appendLine()
+
+        appendLine("## Card")
+        appendLine("| Month | Name | Amount |")
+        appendLine("|---|---|---|")
+        for (ym in sortedMonths) {
+            val m = book.months[ym] ?: continue
+            for (i in m.cardExpenses) appendLine("| ${ym.format(MONTH_FMT)} | ${escape(i.name)} | ${i.amount} |")
+        }
+        appendLine()
+
+        appendLine("## Budget")
+        appendLine("| Month | Name | Amount | Tag |")
+        appendLine("|---|---|---|---|")
+        for (ym in sortedMonths) {
+            val m = book.months[ym] ?: continue
+            for (i in m.budgets) appendLine("| ${ym.format(MONTH_FMT)} | ${escape(i.name)} | ${i.amount} | ${escape(i.tag)} |")
+        }
+        appendLine()
+
+        appendLine("## Savings")
+        appendLine("| Month | Name | Amount | Category | ToLifeAccount |")
+        appendLine("|---|---|---|---|---|")
+        for (ym in sortedMonths) {
+            val m = book.months[ym] ?: continue
+            for (s in m.savings) {
+                appendLine("| ${ym.format(MONTH_FMT)} | ${escape(s.name)} | ${s.amount} | ${escape(s.category)} | ${s.toLifeAccount} |")
+            }
+        }
+        appendLine()
     }
 
     fun parse(text: String): MoneyBook {
         val lines = text.lines()
-        var i = 0
         val services = mutableListOf<AnnualService>()
         val archived = mutableMapOf<MoneyCategory, MutableSet<String>>()
-        val months = mutableMapOf<YearMonth, MonthlyMoney>()
+        val incomesByMonth = mutableMapOf<YearMonth, MutableList<MoneyItem>>()
+        val cardByMonth = mutableMapOf<YearMonth, MutableList<MoneyItem>>()
+        val budgetByMonth = mutableMapOf<YearMonth, MutableList<MoneyItem>>()
+        val savingsByMonth = mutableMapOf<YearMonth, MutableList<SavingsItem>>()
 
-        var currentMonth: YearMonth? = null
-        var currentIncomes = mutableListOf<MoneyItem>()
-        var currentCard = mutableListOf<MoneyItem>()
-        var currentBudget = mutableListOf<MoneyItem>()
-        var currentSavings = mutableListOf<SavingsItem>()
-        var section: String? = null // "services" | "archived" | "incomes" | "card" | "budget" | "savings"
+        var section: String? = null
 
-        fun flushMonth() {
-            val m = currentMonth ?: return
-            months[m] = MonthlyMoney(
-                month = m,
-                incomes = currentIncomes.toList(),
-                cardExpenses = currentCard.toList(),
-                budgets = currentBudget.toList(),
-                savings = currentSavings.toList(),
-            )
-            currentIncomes = mutableListOf()
-            currentCard = mutableListOf()
-            currentBudget = mutableListOf()
-            currentSavings = mutableListOf()
-        }
-
-        while (i < lines.size) {
-            val line = lines[i].trim()
+        for (raw in lines) {
+            val line = raw.trim()
             when {
                 line.startsWith("## ") -> {
-                    val title = line.removePrefix("## ").trim()
-                    if (title.equals("Services", ignoreCase = true)) {
-                        flushMonth(); currentMonth = null; section = "services"
-                    } else if (title.equals("Archived", ignoreCase = true)) {
-                        flushMonth(); currentMonth = null; section = "archived"
-                    } else {
-                        flushMonth()
-                        currentMonth = runCatching { YearMonth.parse(title, MONTH_FMT) }.getOrNull()
-                        section = null
-                    }
-                }
-                line.startsWith("### ") -> {
-                    val title = line.removePrefix("### ").trim().lowercase()
+                    val title = line.removePrefix("## ").trim().lowercase()
                     section = when (title) {
+                        "services" -> "services"
+                        "archived" -> "archived"
                         "incomes" -> "incomes"
                         "card" -> "card"
                         "budget" -> "budget"
@@ -156,33 +140,49 @@ object MoneyMarkdown {
                             val cat = runCatching { MoneyCategory.valueOf(cells[0]) }.getOrNull()
                             if (cat != null) archived.getOrPut(cat) { mutableSetOf() } += cells[1]
                         }
-                        "incomes" -> if (cells.size >= 2) {
-                            currentIncomes += MoneyItem(cells[0], cells[1].toLongOrNull() ?: 0L)
+                        "incomes" -> if (cells.size >= 3) {
+                            val ym = parseMonth(cells[0]) ?: continue
+                            incomesByMonth.getOrPut(ym) { mutableListOf() } +=
+                                MoneyItem(cells[1], cells[2].toLongOrNull() ?: 0L)
                         }
-                        "card" -> if (cells.size >= 2) {
-                            currentCard += MoneyItem(cells[0], cells[1].toLongOrNull() ?: 0L)
+                        "card" -> if (cells.size >= 3) {
+                            val ym = parseMonth(cells[0]) ?: continue
+                            cardByMonth.getOrPut(ym) { mutableListOf() } +=
+                                MoneyItem(cells[1], cells[2].toLongOrNull() ?: 0L)
                         }
-                        "budget" -> if (cells.size >= 2) {
-                            currentBudget += MoneyItem(
-                                name = cells[0],
-                                amount = cells[1].toLongOrNull() ?: 0L,
-                                tag = cells.getOrNull(2).orEmpty(),
+                        "budget" -> if (cells.size >= 3) {
+                            val ym = parseMonth(cells[0]) ?: continue
+                            budgetByMonth.getOrPut(ym) { mutableListOf() } += MoneyItem(
+                                name = cells[1],
+                                amount = cells[2].toLongOrNull() ?: 0L,
+                                tag = cells.getOrNull(3).orEmpty(),
                             )
                         }
-                        "savings" -> if (cells.size >= 4) {
-                            currentSavings += SavingsItem(
-                                name = cells[0],
-                                amount = cells[1].toLongOrNull() ?: 0L,
-                                category = cells[2],
-                                toLifeAccount = cells[3].equals("true", ignoreCase = true),
+                        "savings" -> if (cells.size >= 5) {
+                            val ym = parseMonth(cells[0]) ?: continue
+                            savingsByMonth.getOrPut(ym) { mutableListOf() } += SavingsItem(
+                                name = cells[1],
+                                amount = cells[2].toLongOrNull() ?: 0L,
+                                category = cells[3],
+                                toLifeAccount = cells[4].equals("true", ignoreCase = true),
                             )
                         }
                     }
                 }
             }
-            i++
         }
-        flushMonth()
+
+        val allMonths = (incomesByMonth.keys + cardByMonth.keys + budgetByMonth.keys + savingsByMonth.keys)
+        val months = allMonths.associateWith { ym ->
+            MonthlyMoney(
+                month = ym,
+                incomes = incomesByMonth[ym]?.toList().orEmpty(),
+                cardExpenses = cardByMonth[ym]?.toList().orEmpty(),
+                budgets = budgetByMonth[ym]?.toList().orEmpty(),
+                savings = savingsByMonth[ym]?.toList().orEmpty(),
+            )
+        }
+
         return MoneyBook(
             months = months,
             services = services,
@@ -190,9 +190,12 @@ object MoneyMarkdown {
         )
     }
 
+    private fun parseMonth(s: String): YearMonth? =
+        runCatching { YearMonth.parse(s, MONTH_FMT) }.getOrNull()
+
     private fun isHeaderRow(line: String): Boolean {
-        val cells = parseRow(line).map { it.lowercase() }
-        return cells.firstOrNull() in setOf("name", "category")
+        val first = parseRow(line).firstOrNull()?.lowercase()
+        return first in setOf("name", "category", "month")
     }
 
     private fun parseRow(line: String): List<String> =
