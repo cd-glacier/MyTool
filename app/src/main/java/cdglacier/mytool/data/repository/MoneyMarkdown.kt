@@ -34,7 +34,8 @@ object MoneyMarkdown {
         appendLine("| Name | Annual | Start | End |")
         appendLine("|---|---|---|---|")
         for (s in book.services) {
-            appendLine("| ${escape(s.name)} | ${s.annualAmount} | ${s.startDate.format(DATE_FMT)} | ${s.endDate.format(DATE_FMT)} |")
+            val name = (if (s.archived) MARK_ARCHIVED else "") + escape(s.name)
+            appendLine("| $name | ${s.annualAmount} | ${s.startDate.format(DATE_FMT)} | ${s.endDate.format(DATE_FMT)} |")
         }
         appendLine()
 
@@ -195,11 +196,14 @@ object MoneyMarkdown {
                 "services" -> {
                     if (isHeaderRow(cells)) continue
                     if (cells.size >= 4) {
+                        val nameRaw = cells[0]
+                        val archivedFlag = nameRaw.startsWith(MARK_ARCHIVED)
+                        val name = if (archivedFlag) nameRaw.drop(1).trim() else nameRaw
                         val annual = cells[1].toLongOrNull() ?: 0L
                         val start = runCatching { LocalDate.parse(cells[2], DATE_FMT) }.getOrNull()
                         val end = runCatching { LocalDate.parse(cells[3], DATE_FMT) }.getOrNull()
                         if (start != null && end != null) {
-                            services += AnnualService(cells[0], annual, start, end)
+                            services += AnnualService(name, annual, start, end, archivedFlag)
                         }
                     }
                 }

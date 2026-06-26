@@ -21,8 +21,10 @@ data class AnnualService(
     val annualAmount: Long,
     val startDate: LocalDate,
     val endDate: LocalDate,
+    val archived: Boolean = false,
 ) {
     fun monthlyAmountFor(month: YearMonth): Long {
+        if (archived) return 0L
         val start = YearMonth.from(startDate)
         val end = YearMonth.from(endDate)
         if (month < start || month > end) return 0L

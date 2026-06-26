@@ -20,6 +20,10 @@ data class MoneyUiState(
 
     val services: List<AnnualService> get() = book.services
 
+    /** UI 表示用: アーカイブ済みを除外し、元 index を保持 */
+    val activeServices: List<IndexedValue<AnnualService>>
+        get() = book.services.withIndex().filterNot { it.value.archived }
+
     val incomeTotal: Long get() = currentMonth.incomeTotal
     val cardTotal: Long get() = currentMonth.cardTotal
     val budgetTotal: Long get() = currentMonth.budgetTotal

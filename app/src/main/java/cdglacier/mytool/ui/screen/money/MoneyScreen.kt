@@ -151,7 +151,7 @@ private fun MoneyContent(
             )
             ServicesSection(
                 month = uiState.displayedMonth,
-                services = uiState.services,
+                services = uiState.activeServices,
                 onAdd = { viewModel.addService(it) },
                 onUpdate = { i, s -> viewModel.updateService(i, s) },
                 onRequestRemove = { i, name -> requestRemove("SERVICE: $name") { viewModel.removeService(i) } },
@@ -438,13 +438,13 @@ private fun AddTaggedItemRow(tagLabel: String, onAdd: (String, String) -> Unit) 
 @Composable
 private fun ServicesSection(
     month: YearMonth,
-    services: List<AnnualService>,
+    services: List<IndexedValue<AnnualService>>,
     onAdd: (AnnualService) -> Unit,
     onUpdate: (Int, AnnualService) -> Unit,
     onRequestRemove: (Int, String) -> Unit,
 ) {
     GlacierSectionCard(title = "ANNUAL_SERVICES") {
-        services.forEachIndexed { index, s ->
+        services.forEach { (index, s) ->
             Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     TextInput(

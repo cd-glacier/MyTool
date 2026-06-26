@@ -109,7 +109,10 @@ class MoneyViewModel @Inject constructor(
     }
     fun removeService(index: Int) {
         _uiState.update {
-            it.copy(book = it.book.copy(services = it.book.services.filterIndexed { i, _ -> i != index }))
+            val updated = it.book.services.mapIndexed { i, s ->
+                if (i == index) s.copy(archived = true) else s
+            }
+            it.copy(book = it.book.copy(services = updated))
         }
     }
 
