@@ -39,7 +39,7 @@ object MoneyCalculator {
                 .map { MoneyItem(it.name, 0L) },
             budgets = previous.budgets
                 .filterNot { it.name in MoneyCategory.BUDGET.archivedSet() }
-                .map { MoneyItem(it.name, 0L) },
+                .map { MoneyItem(it.name, 0L, it.tag) },
             savings = previous.savings
                 .filterNot { it.name in MoneyCategory.SAVINGS.archivedSet() }
                 .map { SavingsItem(it.name, 0L, it.category, it.toLifeAccount) },

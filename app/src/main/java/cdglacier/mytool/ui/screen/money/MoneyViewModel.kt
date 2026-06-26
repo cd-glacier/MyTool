@@ -74,17 +74,16 @@ class MoneyViewModel @Inject constructor(
     fun removeCard(index: Int) = archiveAt(MoneyCategory.CARD, index) { it.cardExpenses }
 
     fun updateBudget(index: Int, item: MoneyItem) = updateList { it.copy(budgets = it.budgets.replaceAt(index, item)) }
-    fun addBudget(name: String) = updateList { it.copy(budgets = it.budgets + MoneyItem(name, 0L)) }
-    fun removeBudget(index: Int) = archiveAt(MoneyCategory.BUDGET, index) { it.budgets }
-    fun sortBudgetsByTag() = updateList {
-        it.copy(budgets = it.budgets.sortedWith(
-            compareBy({ b -> b.tag.isEmpty() }, { b -> b.tag }, { b -> b.name })
-        ))
+    fun addBudget(name: String, tag: String) {
+        if (name.isBlank() || tag.isBlank()) return
+        updateList { it.copy(budgets = it.budgets + MoneyItem(name.trim(), 0L, tag.trim())) }
     }
+    fun removeBudget(index: Int) = archiveAt(MoneyCategory.BUDGET, index) { it.budgets }
 
     fun updateSavings(index: Int, item: SavingsItem) = updateList { it.copy(savings = it.savings.replaceAt(index, item)) }
-    fun addSavings(name: String) = updateList {
-        it.copy(savings = it.savings + SavingsItem(name, 0L, "未分類", false))
+    fun addSavings(name: String, category: String) {
+        if (name.isBlank() || category.isBlank()) return
+        updateList { it.copy(savings = it.savings + SavingsItem(name.trim(), 0L, category.trim(), false)) }
     }
     fun removeSavings(index: Int) {
         val state = _uiState.value

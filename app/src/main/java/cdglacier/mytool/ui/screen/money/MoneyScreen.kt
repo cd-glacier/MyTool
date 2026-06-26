@@ -138,15 +138,14 @@ private fun MoneyContent(
                 onRequestRemove = { i, name -> requestRemove("CARD: $name") { viewModel.removeCard(i) } },
             )
             EditableBudgetSection(
-                items = uiState.currentMonth.budgets,
-                onAdd = { viewModel.addBudget(it) },
+                groups = uiState.budgetGroups,
+                onAdd = { name, tag -> viewModel.addBudget(name, tag) },
                 onUpdate = { i, item -> viewModel.updateBudget(i, item) },
                 onRequestRemove = { i, name -> requestRemove("BUDGET: $name") { viewModel.removeBudget(i) } },
-                onSortByTag = { viewModel.sortBudgetsByTag() },
             )
             EditableSavingsSection(
-                items = uiState.currentMonth.savings,
-                onAdd = { viewModel.addSavings(it) },
+                groups = uiState.savingsGroups,
+                onAdd = { name, category -> viewModel.addSavings(name, category) },
                 onUpdate = { i, item -> viewModel.updateSavings(i, item) },
                 onRequestRemove = { i, name -> requestRemove("SAVINGS: $name") { viewModel.removeSavings(i) } },
             )
@@ -283,28 +282,34 @@ private fun EditableMoneyItemSection(
 
 @Composable
 private fun EditableBudgetSection(
-    items: List<MoneyItem>,
-    onAdd: (String) -> Unit,
+    groups: List<Pair<String, List<IndexedValue<MoneyItem>>>>,
+    onAdd: (String, String) -> Unit,
     onUpdate: (Int, MoneyItem) -> Unit,
     onRequestRemove: (Int, String) -> Unit,
-    onSortByTag: () -> Unit,
 ) {
     GlacierSectionCard(title = "BUDGET_ENVELOPES") {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
-            horizontalArrangement = Arrangement.End,
-        ) {
+        if (groups.isEmpty()) {
             Text(
-                text = "[SORT_BY_TAG]",
-                color = GlacierAmber,
+                text = "(no tags yet)",
+                color = GlacierMuted,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 11.sp,
-                modifier = Modifier.clickable { onSortByTag() },
             )
         }
-        items.forEachIndexed { index, item ->
-            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+        groups.forEach { (tag, indexed) ->
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = "# $tag",
+                color = GlacierCyan,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp,
+            )
+            indexed.forEach { (index, item) ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Text(
                         text = item.name,
                         color = GlacierOnSurface,
@@ -325,40 +330,61 @@ private fun EditableBudgetSection(
                         modifier = Modifier.clickable { onRequestRemove(index, item.name) },
                     )
                 }
-                Spacer(modifier = Modifier.height(2.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("TAG:", color = GlacierMuted, fontFamily = FontFamily.Monospace, fontSize = 11.sp)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    TextInput(
-                        value = item.tag,
-                        onChange = { onUpdate(index, item.copy(tag = it)) },
-                        modifier = Modifier.weight(1f),
-                    )
-                }
             }
         }
-        Spacer(modifier = Modifier.height(6.dp))
-        AddItemRow(onAdd = onAdd)
+        Spacer(modifier = Modifier.height(10.dp))
+        AddTaggedItemRow(tagLabel = "TAG:", onAdd = onAdd)
     }
 }
 
 @Composable
 private fun EditableSavingsSection(
-    items: List<SavingsItem>,
-    onAdd: (String) -> Unit,
+    groups: List<Pair<String, List<IndexedValue<SavingsItem>>>>,
+    onAdd: (String, String) -> Unit,
     onUpdate: (Int, SavingsItem) -> Unit,
     onRequestRemove: (Int, String) -> Unit,
 ) {
     GlacierSectionCard(title = "SAVINGS") {
-        items.forEachIndexed { index, item ->
-            Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+        if (groups.isEmpty()) {
+            Text(
+                text = "(no categories yet)",
+                color = GlacierMuted,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 11.sp,
+            )
+        }
+        groups.forEach { (category, indexed) ->
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = "# $category",
+                color = GlacierCyan,
+                fontFamily = FontFamily.Monospace,
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp,
+            )
+            indexed.forEach { (index, item) ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Text(
                         text = item.name,
                         color = GlacierOnSurface,
                         fontFamily = FontFamily.Monospace,
                         fontSize = 13.sp,
                         modifier = Modifier.weight(1f),
+                    )
+                    val flagLabel = if (item.toLifeAccount) "[L]" else "[ ]"
+                    Text(
+                        text = flagLabel,
+                        color = if (item.toLifeAccount) GlacierTeal else GlacierMuted,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 11.sp,
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .clickable {
+                                onUpdate(index, item.copy(toLifeAccount = !item.toLifeAccount))
+                            },
                     )
                     AmountInput(
                         value = item.amount,
@@ -373,31 +399,39 @@ private fun EditableSavingsSection(
                         modifier = Modifier.clickable { onRequestRemove(index, item.name) },
                     )
                 }
-                Spacer(modifier = Modifier.height(2.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("CAT:", color = GlacierMuted, fontFamily = FontFamily.Monospace, fontSize = 11.sp)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    TextInput(
-                        value = item.category,
-                        onChange = { onUpdate(index, item.copy(category = it)) },
-                        modifier = Modifier.weight(1f),
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    val flagLabel = if (item.toLifeAccount) "[LIFE_ACC:ON]" else "[LIFE_ACC:OFF]"
-                    Text(
-                        text = flagLabel,
-                        color = if (item.toLifeAccount) GlacierTeal else GlacierMuted,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 11.sp,
-                        modifier = Modifier.clickable {
-                            onUpdate(index, item.copy(toLifeAccount = !item.toLifeAccount))
-                        },
-                    )
-                }
             }
         }
-        Spacer(modifier = Modifier.height(6.dp))
-        AddItemRow(onAdd = onAdd)
+        Spacer(modifier = Modifier.height(10.dp))
+        AddTaggedItemRow(tagLabel = "CAT:", onAdd = onAdd)
+    }
+}
+
+@Composable
+private fun AddTaggedItemRow(tagLabel: String, onAdd: (String, String) -> Unit) {
+    var newName by remember { mutableStateOf("") }
+    var newTag by remember { mutableStateOf("") }
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TextInput(value = newName, onChange = { newName = it }, modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.width(8.dp))
+            val enabled = newName.isNotBlank() && newTag.isNotBlank()
+            Text(
+                text = "[+ADD]",
+                color = if (enabled) GlacierAmber else GlacierMuted,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 12.sp,
+                modifier = Modifier.clickable(enabled = enabled) {
+                    onAdd(newName.trim(), newTag.trim())
+                    newName = ""; newTag = ""
+                },
+            )
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(tagLabel, color = GlacierMuted, fontFamily = FontFamily.Monospace, fontSize = 11.sp)
+            Spacer(modifier = Modifier.width(4.dp))
+            TextInput(value = newTag, onChange = { newTag = it }, modifier = Modifier.weight(1f))
+        }
     }
 }
 
