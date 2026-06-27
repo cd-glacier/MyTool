@@ -18,6 +18,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -108,6 +109,17 @@ private fun MoneyContent(
         topBar = { GlacierTopBar(title = "MONEY_BOOK", onBack = onBack) },
         containerColor = GlacierBg,
     ) { innerPadding ->
+        if (uiState.isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator(color = GlacierCyan)
+            }
+            return@Scaffold
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
