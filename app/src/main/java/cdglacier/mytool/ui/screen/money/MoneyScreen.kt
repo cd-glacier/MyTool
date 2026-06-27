@@ -248,7 +248,10 @@ private fun EditableMoneyItemSection(
     onUpdate: (Int, MoneyItem) -> Unit,
     onRequestRemove: (Int, String) -> Unit,
 ) {
-    GlacierSectionCard(title = title) {
+    GlacierSectionCard(
+        title = title,
+        trailing = { SectionSubtotal(items.sumOf { it.amount }) },
+    ) {
         items.forEachIndexed { index, item ->
             Row(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
@@ -287,7 +290,10 @@ private fun EditableBudgetSection(
     onUpdate: (Int, MoneyItem) -> Unit,
     onRequestRemove: (Int, String) -> Unit,
 ) {
-    GlacierSectionCard(title = "BUDGET_ENVELOPES") {
+    GlacierSectionCard(
+        title = "BUDGET_ENVELOPES",
+        trailing = { SectionSubtotal(groups.sumOf { (_, items) -> items.sumOf { it.value.amount } }) },
+    ) {
         if (groups.isEmpty()) {
             Text(
                 text = "(no tags yet)",
@@ -357,7 +363,10 @@ private fun EditableSavingsSection(
     onUpdate: (Int, SavingsItem) -> Unit,
     onRequestRemove: (Int, String) -> Unit,
 ) {
-    GlacierSectionCard(title = "SAVINGS") {
+    GlacierSectionCard(
+        title = "SAVINGS",
+        trailing = { SectionSubtotal(groups.sumOf { (_, items) -> items.sumOf { it.value.amount } }) },
+    ) {
         if (groups.isEmpty()) {
             Text(
                 text = "(no categories yet)",
@@ -469,7 +478,10 @@ private fun ServicesSection(
     onUpdate: (Int, AnnualService) -> Unit,
     onRequestRemove: (Int, String) -> Unit,
 ) {
-    GlacierSectionCard(title = "ANNUAL_SERVICES") {
+    GlacierSectionCard(
+        title = "ANNUAL_SERVICES",
+        trailing = { SectionSubtotal(services.sumOf { it.value.monthlyAmountFor(month) }) },
+    ) {
         services.forEach { (index, s) ->
             Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -711,6 +723,17 @@ private data class BarValue(
     val budget: Long,
     val savings: Long,
 )
+
+@Composable
+private fun SectionSubtotal(amount: Long) {
+    Text(
+        text = formatYen(amount),
+        color = GlacierCyan,
+        fontFamily = FontFamily.Monospace,
+        fontWeight = FontWeight.Bold,
+        fontSize = 12.sp,
+    )
+}
 
 private fun formatYen(amount: Long): String {
     val sign = if (amount < 0) "-" else ""
