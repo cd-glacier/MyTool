@@ -81,20 +81,21 @@ private fun MoneyChartContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            GlacierSectionCard(title = "CHART_ALL_MONTHS") {
-                if (uiState.series.isEmpty() || uiState.months.isEmpty()) {
+            if (uiState.series.isEmpty() || uiState.months.isEmpty()) {
+                GlacierSectionCard(title = "CHART_ALL_MONTHS") {
                     Text(
                         text = "(no data)",
                         color = GlacierMuted,
                         fontFamily = FontFamily.Monospace,
                         fontSize = 12.sp,
                     )
-                } else {
-                    var selectedIndex by remember(uiState.series) { mutableStateOf<Int?>(null) }
+                }
+            } else {
+                var selectedIndex by remember(uiState.series) { mutableStateOf<Int?>(null) }
+                GlacierSectionCard(title = "CHART_ALL_MONTHS") {
                     if (uiState.section == MoneySection.SAVINGS) {
                         StackedBarChart(
                             months = uiState.months,
@@ -108,7 +109,12 @@ private fun MoneyChartContent(
                             selectedIndex = selectedIndex,
                         )
                     }
-                    Spacer(modifier = Modifier.height(12.dp))
+                }
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState()),
+                ) {
                     Legend(
                         series = uiState.series,
                         selectedIndex = selectedIndex,
