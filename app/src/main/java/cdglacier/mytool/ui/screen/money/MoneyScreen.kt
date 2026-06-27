@@ -298,13 +298,26 @@ private fun EditableBudgetSection(
         }
         groups.forEach { (tag, indexed) ->
             Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = "# $tag",
-                color = GlacierCyan,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Bold,
-                fontSize = 12.sp,
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "# $tag",
+                    color = GlacierCyan,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    text = indexed.sumOf { it.value.amount }.toString(),
+                    color = GlacierCyan,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
+                )
+            }
             indexed.forEach { (index, item) ->
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
@@ -355,13 +368,26 @@ private fun EditableSavingsSection(
         }
         groups.forEach { (category, indexed) ->
             Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = "# $category",
-                color = GlacierCyan,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Bold,
-                fontSize = 12.sp,
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "# $category",
+                    color = GlacierCyan,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    text = indexed.sumOf { it.value.amount }.toString(),
+                    color = GlacierCyan,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
+                )
+            }
             indexed.forEach { (index, item) ->
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
