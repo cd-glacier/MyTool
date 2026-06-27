@@ -15,6 +15,7 @@ import cdglacier.mytool.widget.CalendarWidgetUpdateWorker
 import cdglacier.mytool.navigation.CopyObsidianJournalRoute
 import cdglacier.mytool.navigation.HabitTrackingRoute
 import cdglacier.mytool.navigation.HomeRoute
+import cdglacier.mytool.navigation.MoneyChartRoute
 import cdglacier.mytool.navigation.MoneyRoute
 import cdglacier.mytool.navigation.PositionTrackingRoute
 import cdglacier.mytool.navigation.SettingsRoute
@@ -22,6 +23,7 @@ import cdglacier.mytool.ui.screen.copyjournal.CopyObsidianJournalScreen
 import cdglacier.mytool.ui.screen.habit.HabitTrackingScreen
 import cdglacier.mytool.ui.screen.home.HomeScreen
 import cdglacier.mytool.ui.screen.money.MoneyScreen
+import cdglacier.mytool.ui.screen.money.chart.MoneyChartScreen
 import cdglacier.mytool.ui.screen.positiontracking.PositionTrackingScreen
 import cdglacier.mytool.ui.screen.settings.SettingsScreen
 import cdglacier.mytool.ui.theme.MyToolTheme
@@ -56,7 +58,19 @@ class MainActivity : ComponentActivity() {
                                 )
                             }
                             entry<MoneyRoute> {
-                                MoneyScreen(onBack = { backStack.removeLastOrNull() })
+                                MoneyScreen(
+                                    onBack = { backStack.removeLastOrNull() },
+                                    onNavigateChart = { section, group ->
+                                        backStack.add(MoneyChartRoute(section, group))
+                                    },
+                                )
+                            }
+                            entry<MoneyChartRoute> { route ->
+                                MoneyChartScreen(
+                                    section = route.section,
+                                    group = route.group,
+                                    onBack = { backStack.removeLastOrNull() },
+                                )
                             }
                             entry<CopyObsidianJournalRoute> {
                                 CopyObsidianJournalScreen(onBack = { backStack.removeLastOrNull() })

@@ -63,6 +63,7 @@ private val ERROR_RED = Color(0xFFE57373)
 fun MoneyScreen(
     viewModel: MoneyViewModel = viewModel(),
     onBack: () -> Unit,
+    onNavigateChart: (section: String, group: String?) -> Unit = { _, _ -> },
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     MoneyContent(
@@ -72,6 +73,7 @@ fun MoneyScreen(
         onNextMonth = viewModel::onNextMonth,
         onSave = viewModel::save,
         onClearError = viewModel::clearError,
+        onNavigateChart = onNavigateChart,
         viewModel = viewModel,
     )
 }
@@ -84,6 +86,7 @@ private fun MoneyContent(
     onNextMonth: () -> Unit,
     onSave: () -> Unit,
     onClearError: () -> Unit,
+    onNavigateChart: (String, String?) -> Unit,
     viewModel: MoneyViewModel,
 ) {
     var pendingDelete by remember { mutableStateOf<PendingDelete?>(null) }
@@ -129,6 +132,7 @@ private fun MoneyContent(
                 onAdd = { viewModel.addIncome(it) },
                 onUpdate = { i, item -> viewModel.updateIncome(i, item) },
                 onRequestRemove = { i, name -> requestRemove("INCOME: $name") { viewModel.removeIncome(i) } },
+                onTitleClick = { onNavigateChart("INCOMES", null) },
             )
             EditableMoneyItemSection(
                 title = "CARD_2M_AGO",
@@ -136,18 +140,23 @@ private fun MoneyContent(
                 onAdd = { viewModel.addCard(it) },
                 onUpdate = { i, item -> viewModel.updateCard(i, item) },
                 onRequestRemove = { i, name -> requestRemove("CARD: $name") { viewModel.removeCard(i) } },
+                onTitleClick = { onNavigateChart("CARD", null) },
             )
             EditableBudgetSection(
                 groups = uiState.budgetGroups,
                 onAdd = { name, tag -> viewModel.addBudget(name, tag) },
                 onUpdate = { i, item -> viewModel.updateBudget(i, item) },
                 onRequestRemove = { i, name -> requestRemove("BUDGET: $name") { viewModel.removeBudget(i) } },
+                onTitleClick = { onNavigateChart("BUDGET", null) },
+                onGroupClick = { tag -> onNavigateChart("BUDGET", tag) },
             )
             EditableSavingsSection(
                 groups = uiState.savingsGroups,
                 onAdd = { name, category -> viewModel.addSavings(name, category) },
                 onUpdate = { i, item -> viewModel.updateSavings(i, item) },
                 onRequestRemove = { i, name -> requestRemove("SAVINGS: $name") { viewModel.removeSavings(i) } },
+                onTitleClick = { onNavigateChart("SAVINGS", null) },
+                onGroupClick = { category -> onNavigateChart("SAVINGS", category) },
             )
             ServicesSection(
                 month = uiState.displayedMonth,
@@ -155,6 +164,7 @@ private fun MoneyContent(
                 onAdd = { viewModel.addService(it) },
                 onUpdate = { i, s -> viewModel.updateService(i, s) },
                 onRequestRemove = { i, name -> requestRemove("SERVICE: $name") { viewModel.removeService(i) } },
+                onTitleClick = { onNavigateChart("SERVICES", null) },
             )
 
             HistoryGraphSection(uiState = uiState)
@@ -247,10 +257,12 @@ private fun EditableMoneyItemSection(
     onAdd: (String) -> Unit,
     onUpdate: (Int, MoneyItem) -> Unit,
     onRequestRemove: (Int, String) -> Unit,
+    onTitleClick: (() -> Unit)? = null,
 ) {
     GlacierSectionCard(
         title = title,
         trailing = { SectionSubtotal(items.sumOf { it.amount }) },
+        onTitleClick = onTitleClick,
     ) {
         items.forEachIndexed { index, item ->
             Row(
@@ -289,10 +301,13 @@ private fun EditableBudgetSection(
     onAdd: (String, String) -> Unit,
     onUpdate: (Int, MoneyItem) -> Unit,
     onRequestRemove: (Int, String) -> Unit,
+    onTitleClick: (() -> Unit)? = null,
+    onGroupClick: ((String) -> Unit)? = null,
 ) {
     GlacierSectionCard(
         title = "BUDGET_ENVELOPES",
         trailing = { SectionSubtotal(groups.sumOf { (_, items) -> items.sumOf { it.value.amount } }) },
+        onTitleClick = onTitleClick,
     ) {
         if (groups.isEmpty()) {
             Text(
@@ -305,7 +320,9 @@ private fun EditableBudgetSection(
         groups.forEach { (tag, indexed) ->
             Spacer(modifier = Modifier.height(6.dp))
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .then(if (onGroupClick != null) Modifier.clickable { onGroupClick(tag) } else Modifier),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
@@ -362,10 +379,13 @@ private fun EditableSavingsSection(
     onAdd: (String, String) -> Unit,
     onUpdate: (Int, SavingsItem) -> Unit,
     onRequestRemove: (Int, String) -> Unit,
+    onTitleClick: (() -> Unit)? = null,
+    onGroupClick: ((String) -> Unit)? = null,
 ) {
     GlacierSectionCard(
         title = "SAVINGS",
         trailing = { SectionSubtotal(groups.sumOf { (_, items) -> items.sumOf { it.value.amount } }) },
+        onTitleClick = onTitleClick,
     ) {
         if (groups.isEmpty()) {
             Text(
@@ -378,7 +398,9 @@ private fun EditableSavingsSection(
         groups.forEach { (category, indexed) ->
             Spacer(modifier = Modifier.height(6.dp))
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .then(if (onGroupClick != null) Modifier.clickable { onGroupClick(category) } else Modifier),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
@@ -477,10 +499,12 @@ private fun ServicesSection(
     onAdd: (AnnualService) -> Unit,
     onUpdate: (Int, AnnualService) -> Unit,
     onRequestRemove: (Int, String) -> Unit,
+    onTitleClick: (() -> Unit)? = null,
 ) {
     GlacierSectionCard(
         title = "ANNUAL_SERVICES",
         trailing = { SectionSubtotal(services.sumOf { it.value.monthlyAmountFor(month) }) },
+        onTitleClick = onTitleClick,
     ) {
         services.forEach { (index, s) ->
             Column(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
