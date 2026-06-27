@@ -311,7 +311,7 @@ private fun EditableBudgetSection(
                     modifier = Modifier.weight(1f),
                 )
                 Text(
-                    text = indexed.sumOf { it.value.amount }.toString(),
+                    text = formatYen(indexed.sumOf { it.value.amount }),
                     color = GlacierCyan,
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Bold,
@@ -381,7 +381,7 @@ private fun EditableSavingsSection(
                     modifier = Modifier.weight(1f),
                 )
                 Text(
-                    text = indexed.sumOf { it.value.amount }.toString(),
+                    text = formatYen(indexed.sumOf { it.value.amount }),
                     color = GlacierCyan,
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Bold,
