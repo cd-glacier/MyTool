@@ -95,11 +95,19 @@ private fun MoneyChartContent(
                     )
                 } else {
                     var selectedIndex by remember(uiState.series) { mutableStateOf<Int?>(null) }
-                    LineChart(
-                        months = uiState.months,
-                        series = uiState.series,
-                        selectedIndex = selectedIndex,
-                    )
+                    if (uiState.section == MoneySection.SAVINGS) {
+                        StackedBarChart(
+                            months = uiState.months,
+                            series = uiState.series,
+                            selectedIndex = selectedIndex,
+                        )
+                    } else {
+                        LineChart(
+                            months = uiState.months,
+                            series = uiState.series,
+                            selectedIndex = selectedIndex,
+                        )
+                    }
                     Spacer(modifier = Modifier.height(12.dp))
                     Legend(
                         series = uiState.series,
@@ -240,6 +248,141 @@ private fun MonthCell(
         }
         Text(
             text = months[index].toString().takeLast(7), // yyyy-MM
+            color = GlacierMuted,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 9.sp,
+            modifier = Modifier.padding(top = 4.dp),
+        )
+    }
+}
+
+@Composable
+private fun StackedBarChart(
+    months: List<java.time.YearMonth>,
+    series: List<ChartSeries>,
+    selectedIndex: Int?,
+) {
+    val chartHeight = 220.dp
+    val axisWidth = 56.dp
+
+    val visibleSeries = remember(series, selectedIndex) {
+        if (selectedIndex == null) series.withIndex().toList()
+        else series.getOrNull(selectedIndex)?.let { listOf(IndexedValue(selectedIndex, it)) }
+            ?: emptyList()
+    }
+    val globalMax = remember(visibleSeries, months) {
+        var max = 0L
+        for (i in months.indices) {
+            var sum = 0L
+            for ((_, s) in visibleSeries) sum += s.values.getOrNull(i) ?: 0L
+            if (sum > max) max = sum
+        }
+        max.coerceAtLeast(1L)
+    }
+
+    Row(modifier = Modifier.fillMaxWidth().height(chartHeight)) {
+        val listState = rememberLazyListState()
+
+        LaunchedEffect(months.size) {
+            val start = (months.size - INITIAL_VISIBLE_MONTHS).coerceAtLeast(0)
+            if (start > 0) listState.scrollToItem(start)
+        }
+
+        Column(
+            modifier = Modifier.width(axisWidth).fillMaxSize(),
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.SpaceBetween,
+        ) {
+            AxisLabel(formatYenShort(globalMax))
+            AxisLabel(formatYenShort(globalMax / 2))
+            AxisLabel("¥0")
+        }
+
+        Spacer(modifier = Modifier.width(6.dp))
+
+        LazyRow(
+            state = listState,
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            items(months.size) { index ->
+                StackedBarCell(
+                    index = index,
+                    months = months,
+                    series = visibleSeries,
+                    visibleMax = globalMax,
+                    showValueLabel = selectedIndex != null,
+                    cellWidthDp = 54.dp,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun StackedBarCell(
+    index: Int,
+    months: List<java.time.YearMonth>,
+    series: List<IndexedValue<ChartSeries>>,
+    visibleMax: Long,
+    showValueLabel: Boolean,
+    cellWidthDp: androidx.compose.ui.unit.Dp,
+) {
+    val textMeasurer = rememberTextMeasurer()
+    val labelStyle = remember {
+        TextStyle(color = Color.White, fontFamily = FontFamily.Monospace, fontSize = 9.sp)
+    }
+
+    Column(
+        modifier = Modifier.width(cellWidthDp).fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(190.dp),
+        ) {
+            drawLine(
+                color = GlacierOutline.copy(alpha = 0.3f),
+                start = Offset(size.width, 0f),
+                end = Offset(size.width, size.height),
+                strokeWidth = 1f,
+            )
+            drawLine(
+                color = GlacierOutline.copy(alpha = 0.5f),
+                start = Offset(0f, size.height),
+                end = Offset(size.width, size.height),
+                strokeWidth = 1f,
+            )
+
+            val barWidth = size.width * 0.6f
+            val barX = (size.width - barWidth) / 2f
+            var cumulative = 0L
+            var totalValue = 0L
+            series.forEach { (originalIdx, s) ->
+                val v = s.values.getOrNull(index) ?: 0L
+                if (v <= 0L) return@forEach
+                val color = SERIES_COLORS[originalIdx % SERIES_COLORS.size]
+                val yTop = pointY(cumulative + v, visibleMax, size.height)
+                val yBottom = pointY(cumulative, visibleMax, size.height)
+                drawRect(
+                    color = color,
+                    topLeft = Offset(barX, yTop),
+                    size = androidx.compose.ui.geometry.Size(barWidth, (yBottom - yTop).coerceAtLeast(0f)),
+                )
+                cumulative += v
+                totalValue += v
+            }
+            if (showValueLabel && totalValue > 0L) {
+                val label = formatYenShort(totalValue)
+                val layout = textMeasurer.measure(label, labelStyle)
+                val yTotal = pointY(totalValue, visibleMax, size.height)
+                val tx = (size.width / 2f - layout.size.width / 2f).coerceAtLeast(0f)
+                val ty = (yTotal - layout.size.height - 4f).coerceAtLeast(0f)
+                drawText(layout, topLeft = Offset(tx, ty))
+            }
+        }
+        Text(
+            text = months[index].toString().takeLast(7),
             color = GlacierMuted,
             fontFamily = FontFamily.Monospace,
             fontSize = 9.sp,
