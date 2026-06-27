@@ -3,12 +3,7 @@
     "allow": [
       "Bash(~/obsidian/ai_journals/2026-03-16.md:*)",
       "Read(//Users/glacier/obsidian/ai_journals/**)",
-      "Bash(git checkout *)",
-      "WebFetch(domain:)",
-      "Bash(git add *)",
-      "Bash(git commit -m ' *)",
-      "Bash(git push *)",
-      "WebSearch"
+      "Bash(git checkout *)"
     ]
   }
 }
