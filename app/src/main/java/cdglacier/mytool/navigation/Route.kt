@@ -20,3 +20,9 @@ data object PositionTrackingRoute : NavKey
 
 @Serializable
 data object MoneyRoute : NavKey
+
+@Serializable
+data class MoneyChartRoute(
+    val section: String,
+    val group: String? = null,
+) : NavKey
