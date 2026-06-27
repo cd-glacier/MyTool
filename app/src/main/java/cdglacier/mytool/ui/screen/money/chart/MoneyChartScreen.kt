@@ -18,8 +18,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,7 +42,7 @@ private val SERIES_COLORS = listOf(
     GlacierCyan, GlacierAmber, GlacierTeal, GlacierIce, GlacierOnSurface,
 )
 
-private const val INITIAL_VISIBLE_MONTHS = 6
+private const val INITIAL_VISIBLE_MONTHS = 12
 
 @Composable
 fun MoneyChartScreen(
@@ -102,38 +100,27 @@ private fun LineChart(
     val chartHeight = 220.dp
     val axisWidth = 56.dp
 
+    val globalMax = remember(series) {
+        var max = 0L
+        for (s in series) for (v in s.values) if (v > max) max = v
+        max.coerceAtLeast(1L)
+    }
+
     Row(modifier = Modifier.fillMaxWidth().height(chartHeight)) {
-        // visible-range computed from scroll position
         val listState = rememberLazyListState()
-        val visibleMax by remember(months, series) {
-            derivedStateOf {
-                val firstIndex = listState.firstVisibleItemIndex
-                val visibleCount = INITIAL_VISIBLE_MONTHS
-                val end = (firstIndex + visibleCount).coerceAtMost(months.size)
-                var max = 0L
-                for (s in series) {
-                    for (i in firstIndex until end) {
-                        val v = s.values.getOrNull(i) ?: 0L
-                        if (v > max) max = v
-                    }
-                }
-                max.coerceAtLeast(1L)
-            }
-        }
 
         LaunchedEffect(months.size) {
             val start = (months.size - INITIAL_VISIBLE_MONTHS).coerceAtLeast(0)
             if (start > 0) listState.scrollToItem(start)
         }
 
-        // Y-axis labels
         Column(
             modifier = Modifier.width(axisWidth).fillMaxSize(),
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
-            AxisLabel(formatYenShort(visibleMax))
-            AxisLabel(formatYenShort(visibleMax / 2))
+            AxisLabel(formatYenShort(globalMax))
+            AxisLabel(formatYenShort(globalMax / 2))
             AxisLabel("¥0")
         }
 
@@ -143,13 +130,12 @@ private fun LineChart(
             state = listState,
             modifier = Modifier.fillMaxSize(),
         ) {
-            // Render all months in one Canvas-backed item per month for cell-based painting
             items(months.size) { index ->
                 MonthCell(
                     index = index,
                     months = months,
                     series = series,
-                    visibleMax = visibleMax,
+                    visibleMax = globalMax,
                     cellWidthDp = 54.dp,
                 )
             }
