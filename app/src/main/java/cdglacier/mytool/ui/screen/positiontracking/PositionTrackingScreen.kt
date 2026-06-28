@@ -17,7 +17,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -27,9 +26,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cdglacier.mytool.ui.component.GlacierButton
@@ -46,21 +43,17 @@ import cdglacier.mytool.ui.theme.GlacierTeal
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun PositionTrackingScreen(
-    viewModel: PositionTrackingViewModel = viewModel(),
+fun PositionTrackingRoute(
     onBack: () -> Unit,
+    viewModel: PositionTrackingViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) viewModel.refreshPermissions()
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
-    }
-
     val snackbarHostState = remember { SnackbarHostState() }
+
+    LifecycleResumeEffect(Unit) {
+        viewModel.refreshPermissions()
+        onPauseOrDispose { }
+    }
     LaunchedEffect(uiState.snackbarMessage) {
         uiState.snackbarMessage?.let { message ->
             snackbarHostState.showSnackbar(message)
@@ -68,6 +61,25 @@ fun PositionTrackingScreen(
         }
     }
 
+    PositionTrackingScreen(
+        uiState = uiState,
+        snackbarHostState = snackbarHostState,
+        onToggleTracking = viewModel::onToggleTracking,
+        onExportToJournal = viewModel::onExportToJournal,
+        onDateChange = viewModel::onDateChange,
+        onBack = onBack,
+    )
+}
+
+@Composable
+fun PositionTrackingScreen(
+    uiState: PositionTrackingUiState,
+    snackbarHostState: SnackbarHostState,
+    onToggleTracking: (Boolean) -> Unit,
+    onExportToJournal: () -> Unit,
+    onDateChange: (Long) -> Unit,
+    onBack: () -> Unit,
+) {
     Scaffold(
         topBar = { GlacierTopBar(title = "POSITION_TRACKING", onBack = onBack) },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -104,7 +116,7 @@ fun PositionTrackingScreen(
                     }
                     GlacierSwitch(
                         checked = uiState.trackingEnabled,
-                        onCheckedChange = viewModel::onToggleTracking,
+                        onCheckedChange = onToggleTracking,
                         enabled = uiState.permissionsReady,
                     )
                 }
@@ -123,7 +135,7 @@ fun PositionTrackingScreen(
                     )
                     GlacierButton(
                         label = "JOURNALへ出力",
-                        onClick = viewModel::onExportToJournal,
+                        onClick = onExportToJournal,
                         enabled = uiState.canExport,
                         loading = uiState.isExporting,
                         loadingLabel = "EXPORTING...",
@@ -134,8 +146,8 @@ fun PositionTrackingScreen(
             DateNavRow(
                 dateText = uiState.date.format(DateTimeFormatter.ISO_LOCAL_DATE),
                 recordCount = uiState.points.size,
-                onPrev = { viewModel.onDateChange(-1) },
-                onNext = { viewModel.onDateChange(1) },
+                onPrev = { onDateChange(-1) },
+                onNext = { onDateChange(1) },
             )
 
             Box(

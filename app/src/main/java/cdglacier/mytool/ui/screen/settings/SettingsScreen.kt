@@ -22,7 +22,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -35,9 +34,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cdglacier.mytool.ui.component.GlacierSectionCard
@@ -49,13 +46,14 @@ import cdglacier.mytool.ui.theme.GlacierOnSurface
 import cdglacier.mytool.ui.theme.GlacierSurface
 import cdglacier.mytool.ui.theme.GlacierTeal
 import cdglacier.mytool.ui.theme.SpaceGroteskFamily
+import cdglacier.mytool.widget.CalendarWidgetUpdateWorker
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun SettingsScreen(
-    viewModel: SettingsViewModel = viewModel(),
+fun SettingsRoute(
     onBack: () -> Unit,
+    viewModel: SettingsViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -99,31 +97,28 @@ fun SettingsScreen(
     val calendarPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
-        viewModel.onCalendarPermissionResult(granted)
+        viewModel.refreshPermissions()
+        if (granted) CalendarWidgetUpdateWorker.runOnce(context)
     }
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        viewModel.onLocationPermissionResult(granted)
+    ) { _ ->
+        viewModel.refreshPermissions()
     }
 
     val backgroundLocationLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        viewModel.onBackgroundLocationPermissionResult(granted)
+    ) { _ ->
+        viewModel.refreshPermissions()
     }
 
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) viewModel.refreshPermissions()
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    LifecycleResumeEffect(Unit) {
+        viewModel.refreshPermissions()
+        onPauseOrDispose { }
     }
 
-    SettingsContent(
+    SettingsScreen(
         uiState = uiState,
         onPickVaultFolder = { vaultFolderPickerLauncher.launch(uiState.vaultUri) },
         onPickJournalFolder = { journalFolderPickerLauncher.launch(uiState.journalDirUri) },
@@ -139,7 +134,6 @@ fun SettingsScreen(
             if (uiState.fineLocationGranted) {
                 backgroundLocationLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
             } else {
-                // FINE_LOCATIONが先に必要 → アプリ設定画面に飛ばす
                 val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                     data = Uri.fromParts("package", context.packageName, null)
                 }
@@ -151,7 +145,7 @@ fun SettingsScreen(
 }
 
 @Composable
-private fun SettingsContent(
+fun SettingsScreen(
     uiState: SettingsUiState,
     onPickVaultFolder: () -> Unit,
     onPickJournalFolder: () -> Unit,

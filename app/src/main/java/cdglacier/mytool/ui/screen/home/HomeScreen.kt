@@ -25,6 +25,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -35,10 +38,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.LifecycleResumeEffect
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import cdglacier.mytool.data.repository.TrackingMode
+import cdglacier.mytool.domain.usecase.DailyActivity
 import cdglacier.mytool.ui.theme.GlacierAmber
 import cdglacier.mytool.ui.theme.GlacierBg
 import cdglacier.mytool.ui.theme.GlacierCyan
@@ -54,21 +55,40 @@ import java.time.LocalDate
 import java.time.temporal.TemporalAdjusters
 
 @Composable
-fun HomeScreen(
+fun HomeRoute(
+    onNavigateToCopyObsidianJournal: () -> Unit,
+    onNavigateToHabitTracking: () -> Unit,
+    onNavigateToPositionTracking: () -> Unit,
+    onNavigateToMoney: () -> Unit,
+    onNavigateToSettings: () -> Unit,
     viewModel: HomeViewModel = viewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    LifecycleResumeEffect(Unit) {
+        viewModel.refresh()
+        onPauseOrDispose { }
+    }
+    HomeScreen(
+        uiState = uiState,
+        onSelectDate = viewModel::onSelectDate,
+        onNavigateToCopyObsidianJournal = onNavigateToCopyObsidianJournal,
+        onNavigateToHabitTracking = onNavigateToHabitTracking,
+        onNavigateToPositionTracking = onNavigateToPositionTracking,
+        onNavigateToMoney = onNavigateToMoney,
+        onNavigateToSettings = onNavigateToSettings,
+    )
+}
+
+@Composable
+fun HomeScreen(
+    uiState: HomeUiState,
+    onSelectDate: (LocalDate) -> Unit,
     onNavigateToCopyObsidianJournal: () -> Unit,
     onNavigateToHabitTracking: () -> Unit,
     onNavigateToPositionTracking: () -> Unit,
     onNavigateToMoney: () -> Unit,
     onNavigateToSettings: () -> Unit,
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-
-    LifecycleResumeEffect(Unit) {
-        viewModel.refresh()
-        onPauseOrDispose { }
-    }
-
     Scaffold(
         topBar = { TerminalTopBar() },
         containerColor = GlacierBg,
@@ -80,7 +100,7 @@ fun HomeScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 24.dp)
         ) {
-            ObsidianStatusCard(uiState = uiState, onSelectDate = viewModel::onSelectDate)
+            ObsidianStatusCard(uiState = uiState, onSelectDate = onSelectDate)
             Spacer(modifier = Modifier.height(16.dp))
             PositionTrackingStatusCard(uiState = uiState)
             Spacer(modifier = Modifier.height(32.dp))
@@ -148,7 +168,6 @@ private fun ObsidianStatusCard(uiState: HomeUiState, onSelectDate: (LocalDate) -
             }
             .padding(start = 20.dp, end = 16.dp, top = 16.dp, bottom = 16.dp)
     ) {
-        // Section header
         Text(
             text = "ACTIVITY",
             color = GlacierMuted,
@@ -161,7 +180,6 @@ private fun ObsidianStatusCard(uiState: HomeUiState, onSelectDate: (LocalDate) -
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Activity graph
         ActivityGraph(
             dailyActivities = uiState.dailyActivities,
             selectedDate = uiState.selectedDate,
@@ -181,7 +199,7 @@ private fun ObsidianStatusCard(uiState: HomeUiState, onSelectDate: (LocalDate) -
 @Composable
 private fun ActivityBreakdown(
     date: LocalDate,
-    activity: cdglacier.mytool.domain.usecase.DailyActivity?,
+    activity: DailyActivity?,
 ) {
     val habitPercent = ((activity?.habitRate ?: 0f) * 100).toInt()
     val distanceKm = (activity?.distanceMeters ?: 0.0) / 1000.0
@@ -288,14 +306,13 @@ private fun activityRateToColor(rate: Float?, isLoading: Boolean): Color {
     val dim = if (isLoading) 0.3f else 1f
     if (rate == null) return GlacierSurface.copy(alpha = dim)
     val clamped = rate.coerceIn(0f, 1f)
-    // 0 → 0.15, 1 → 1.0 を線形補間。HABIT単独(0.33)でもα≒0.43、両方達成でα=1.0
     val alpha = (0.15f + 0.85f * clamped) * dim
     return GlacierTeal.copy(alpha = alpha)
 }
 
 @Composable
 private fun ActivityGraph(
-    dailyActivities: Map<LocalDate, cdglacier.mytool.domain.usecase.DailyActivity>,
+    dailyActivities: Map<LocalDate, DailyActivity>,
     selectedDate: LocalDate,
     isLoading: Boolean,
     onSelectDate: (LocalDate) -> Unit,
