@@ -44,6 +44,7 @@ object MoneyMarkdown {
         val archivedCard = book.archived[MoneyCategory.CARD].orEmpty()
         val archivedBudget = book.archived[MoneyCategory.BUDGET].orEmpty()
         val archivedSavings = book.archived[MoneyCategory.SAVINGS].orEmpty()
+        val archivedExtra = book.archived[MoneyCategory.EXTRA].orEmpty()
 
         appendItemSection(
             heading = "Incomes",
@@ -81,6 +82,13 @@ object MoneyMarkdown {
                 archived = archivedSavings,
             )
         }
+
+        appendItemSection(
+            heading = "Extra",
+            months = months,
+            itemsOf = { ym -> book.months[ym]?.extras.orEmpty() },
+            archived = archivedExtra,
+        )
     }
 
     private fun StringBuilder.appendItemSection(
@@ -159,6 +167,7 @@ object MoneyMarkdown {
         val cardByMonth = mutableMapOf<YearMonth, MutableList<MoneyItem>>()
         val budgetByMonth = mutableMapOf<YearMonth, MutableList<MoneyItem>>()
         val savingsByMonth = mutableMapOf<YearMonth, MutableList<SavingsItem>>()
+        val extraByMonth = mutableMapOf<YearMonth, MutableList<MoneyItem>>()
 
         // current section state
         var sectionKind: String? = null // "services" | "incomes" | "card" | "budget" | "savings"
@@ -170,7 +179,7 @@ object MoneyMarkdown {
             sectionKind = kind
             sectionGrouping = grouping
             columns = emptyList()
-            awaitingHeader = kind in setOf("incomes", "card", "budget", "savings")
+            awaitingHeader = kind in setOf("incomes", "card", "budget", "savings", "extra")
         }
 
         for (raw in lines) {
@@ -185,6 +194,7 @@ object MoneyMarkdown {
                         resetSection("budget", title.removePrefix("Budget:").trim())
                     title.startsWith("Savings:", ignoreCase = true) ->
                         resetSection("savings", title.removePrefix("Savings:").trim())
+                    title.equals("Extra", ignoreCase = true) -> resetSection("extra")
                     else -> resetSection(null)
                 }
                 continue
@@ -207,7 +217,7 @@ object MoneyMarkdown {
                         }
                     }
                 }
-                "incomes", "card", "budget", "savings" -> {
+                "incomes", "card", "budget", "savings", "extra" -> {
                     if (awaitingHeader) {
                         // 最初の table 行はヘッダ: | Month | name1 | name2 |
                         columns = cells.drop(1).map { parseColumn(it) }
@@ -217,6 +227,7 @@ object MoneyMarkdown {
                             "card" -> MoneyCategory.CARD
                             "budget" -> MoneyCategory.BUDGET
                             "savings" -> MoneyCategory.SAVINGS
+                            "extra" -> MoneyCategory.EXTRA
                             else -> null
                         }
                         if (cat != null) {
@@ -236,6 +247,7 @@ object MoneyMarkdown {
                                 "card" -> cardByMonth.getOrPut(ym) { mutableListOf() } += MoneyItem(col.name, amount)
                                 "budget" -> budgetByMonth.getOrPut(ym) { mutableListOf() } += MoneyItem(col.name, amount, sectionGrouping)
                                 "savings" -> savingsByMonth.getOrPut(ym) { mutableListOf() } += SavingsItem(col.name, amount, sectionGrouping, col.life)
+                                "extra" -> extraByMonth.getOrPut(ym) { mutableListOf() } += MoneyItem(col.name, amount)
                             }
                         }
                     }
@@ -243,7 +255,7 @@ object MoneyMarkdown {
             }
         }
 
-        val allMonths = (incomesByMonth.keys + cardByMonth.keys + budgetByMonth.keys + savingsByMonth.keys)
+        val allMonths = (incomesByMonth.keys + cardByMonth.keys + budgetByMonth.keys + savingsByMonth.keys + extraByMonth.keys)
         val months = allMonths.associateWith { ym ->
             MonthlyMoney(
                 month = ym,
@@ -251,6 +263,7 @@ object MoneyMarkdown {
                 cardExpenses = cardByMonth[ym]?.toList().orEmpty(),
                 budgets = budgetByMonth[ym]?.toList().orEmpty(),
                 savings = savingsByMonth[ym]?.toList().orEmpty(),
+                extras = extraByMonth[ym]?.toList().orEmpty(),
             )
         }
 

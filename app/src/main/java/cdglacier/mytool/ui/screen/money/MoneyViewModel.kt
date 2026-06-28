@@ -73,6 +73,10 @@ class MoneyViewModel @Inject constructor(
     fun addCard(name: String) = updateList { it.copy(cardExpenses = it.cardExpenses + MoneyItem(name, 0L)) }
     fun removeCard(index: Int) = archiveAt(MoneyCategory.CARD, index) { it.cardExpenses }
 
+    fun updateExtra(index: Int, item: MoneyItem) = updateList { it.copy(extras = it.extras.replaceAt(index, item)) }
+    fun addExtra(name: String) = updateList { it.copy(extras = it.extras + MoneyItem(name, 0L)) }
+    fun removeExtra(index: Int) = archiveAt(MoneyCategory.EXTRA, index) { it.extras }
+
     fun updateBudget(index: Int, item: MoneyItem) = updateList { it.copy(budgets = it.budgets.replaceAt(index, item)) }
     fun addBudget(name: String, tag: String) {
         if (name.isBlank() || tag.isBlank()) return
@@ -133,6 +137,7 @@ class MoneyViewModel @Inject constructor(
                 MoneyCategory.INCOME -> s.currentMonth.copy(incomes = s.currentMonth.incomes.filterIndexed { i, _ -> i != index })
                 MoneyCategory.CARD -> s.currentMonth.copy(cardExpenses = s.currentMonth.cardExpenses.filterIndexed { i, _ -> i != index })
                 MoneyCategory.BUDGET -> s.currentMonth.copy(budgets = s.currentMonth.budgets.filterIndexed { i, _ -> i != index })
+                MoneyCategory.EXTRA -> s.currentMonth.copy(extras = s.currentMonth.extras.filterIndexed { i, _ -> i != index })
                 MoneyCategory.SAVINGS -> s.currentMonth
             }
             s.copy(book = s.book.copy(

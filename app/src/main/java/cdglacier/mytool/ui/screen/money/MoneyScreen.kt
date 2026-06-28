@@ -47,6 +47,7 @@ import cdglacier.mytool.ui.component.GlacierTopBar
 import cdglacier.mytool.ui.theme.GlacierAmber
 import cdglacier.mytool.ui.theme.GlacierBg
 import cdglacier.mytool.ui.theme.GlacierCyan
+import cdglacier.mytool.ui.theme.GlacierIce
 import cdglacier.mytool.ui.theme.GlacierMuted
 import cdglacier.mytool.ui.theme.GlacierOnPrimary
 import cdglacier.mytool.ui.theme.GlacierOnSurface
@@ -170,6 +171,14 @@ private fun MoneyContent(
                 onTitleClick = { onNavigateChart("SAVINGS", null) },
                 onGroupClick = { category -> onNavigateChart("SAVINGS", category) },
             )
+            EditableMoneyItemSection(
+                title = "EXTRA",
+                items = uiState.currentMonth.extras,
+                onAdd = { viewModel.addExtra(it) },
+                onUpdate = { i, item -> viewModel.updateExtra(i, item) },
+                onRequestRemove = { i, name -> requestRemove("EXTRA: $name") { viewModel.removeExtra(i) } },
+                onTitleClick = { onNavigateChart("EXTRA", null) },
+            )
             ServicesSection(
                 month = uiState.displayedMonth,
                 services = uiState.activeServices,
@@ -227,6 +236,7 @@ private fun SummaryCard(uiState: MoneyUiState) {
         SummaryRow("CARD(2M_AGO)", uiState.cardTotal)
         SummaryRow("BUDGET", uiState.budgetTotal)
         SummaryRow("SAVINGS", uiState.savingsTotal)
+        SummaryRow("EXTRA", uiState.extraTotal)
         SummaryRow("SERVICES", uiState.servicesMonthlyTotal)
         Spacer(modifier = Modifier.height(8.dp))
         SummaryRow(
@@ -647,9 +657,10 @@ private fun HistoryGraphSection(uiState: MoneyUiState) {
                 card = m.cardTotal,
                 budget = m.budgetTotal,
                 savings = m.savingsTotal,
+                extra = m.extraTotal,
             )
         }
-        val max = values.flatMap { listOf(it.income, it.card, it.budget, it.savings) }.maxOrNull()?.coerceAtLeast(1) ?: 1L
+        val max = values.flatMap { listOf(it.income, it.card, it.budget, it.savings, it.extra) }.maxOrNull()?.coerceAtLeast(1) ?: 1L
         BoxWithConstraints(modifier = Modifier.fillMaxWidth().height(180.dp)) {
             val barGroupWidth = maxWidth / 12
             Row(modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -668,6 +679,7 @@ private fun HistoryGraphSection(uiState: MoneyUiState) {
                             Bar(v.card, max, GlacierAmber)
                             Bar(v.budget, max, GlacierCyan)
                             Bar(v.savings, max, GlacierOnSurface)
+                            Bar(v.extra, max, GlacierIce)
                         }
                         Text(
                             text = v.month.monthValue.toString(),
@@ -685,6 +697,7 @@ private fun HistoryGraphSection(uiState: MoneyUiState) {
             LegendDot("CARD", GlacierAmber)
             LegendDot("BUDGET", GlacierCyan)
             LegendDot("SAV", GlacierOnSurface)
+            LegendDot("EXTRA", GlacierIce)
         }
     }
 }
@@ -758,6 +771,7 @@ private data class BarValue(
     val card: Long,
     val budget: Long,
     val savings: Long,
+    val extra: Long,
 )
 
 @Composable

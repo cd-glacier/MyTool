@@ -14,7 +14,7 @@ object MoneyCalculator {
      */
     fun difference(book: MoneyBook, month: YearMonth): Long {
         val m = book.monthOrEmpty(month)
-        return m.incomeTotal - m.cardTotal - m.budgetTotal - m.savingsTotal - book.servicesMonthlyTotal(month)
+        return m.incomeTotal - m.cardTotal - m.budgetTotal - m.savingsTotal - m.extraTotal - book.servicesMonthlyTotal(month)
     }
 
     /** 生活用口座への振込内訳: 予算方式生活費合計 + 「生活用口座行き」貯蓄 */
@@ -43,6 +43,9 @@ object MoneyCalculator {
             savings = previous.savings
                 .filterNot { it.name in MoneyCategory.SAVINGS.archivedSet() }
                 .map { SavingsItem(it.name, 0L, it.category, it.toLifeAccount) },
+            extras = previous.extras
+                .filterNot { it.name in MoneyCategory.EXTRA.archivedSet() }
+                .map { MoneyItem(it.name, 0L) },
         )
     }
 }

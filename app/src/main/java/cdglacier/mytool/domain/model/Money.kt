@@ -38,15 +38,17 @@ data class MonthlyMoney(
     val cardExpenses: List<MoneyItem> = emptyList(),
     val budgets: List<MoneyItem> = emptyList(),
     val savings: List<SavingsItem> = emptyList(),
+    val extras: List<MoneyItem> = emptyList(),
 ) {
     val incomeTotal: Long get() = incomes.sumOf { it.amount }
     val cardTotal: Long get() = cardExpenses.sumOf { it.amount }
     val budgetTotal: Long get() = budgets.sumOf { it.amount }
     val savingsTotal: Long get() = savings.sumOf { it.amount }
+    val extraTotal: Long get() = extras.sumOf { it.amount }
     val savingsToLifeAccount: Long get() = savings.filter { it.toLifeAccount }.sumOf { it.amount }
 }
 
-enum class MoneyCategory { INCOME, CARD, BUDGET, SAVINGS }
+enum class MoneyCategory { INCOME, CARD, BUDGET, SAVINGS, EXTRA }
 
 data class MoneyBook(
     val months: Map<YearMonth, MonthlyMoney> = emptyMap(),
