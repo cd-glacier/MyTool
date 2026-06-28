@@ -52,6 +52,15 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    private suspend fun computeActivities(
+        history: Map<LocalDate, Float>,
+        todayRate: Float?,
+    ): Map<LocalDate, DailyActivity> {
+        val today = LocalDate.now()
+        val from = today.minusDays(GRAPH_RANGE_DAYS)
+        return getActivityRatesUseCase(history, todayRate, from, today)
+    }
+
     fun onSelectDate(date: LocalDate) {
         if (date.isAfter(LocalDate.now())) return
         _uiState.update { it.copy(selectedDate = date) }
@@ -83,18 +92,6 @@ class HomeViewModel @Inject constructor(
             }
             hasLoadedOnce = true
         }
-    }
-
-    private suspend fun computeActivities(
-        history: Map<LocalDate, Float>,
-        todayRate: Float?,
-    ): Map<LocalDate, DailyActivity> {
-        val today = LocalDate.now()
-        val habits: MutableMap<LocalDate, Float?> = mutableMapOf<LocalDate, Float?>().apply { putAll(history) }
-        habits.remove(today)
-        if (todayRate != null) habits[today] = todayRate
-        val from = today.minusDays(GRAPH_RANGE_DAYS)
-        return getActivityRatesUseCase(habits, from, today)
     }
 
     companion object {

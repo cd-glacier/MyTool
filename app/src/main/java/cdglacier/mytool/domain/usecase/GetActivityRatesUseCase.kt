@@ -17,10 +17,16 @@ class GetActivityRatesUseCase @Inject constructor(
     private val locationRecordRepository: LocationRecordRepository,
 ) {
     suspend operator fun invoke(
-        habitCompletionRates: Map<LocalDate, Float?>,
+        history: Map<LocalDate, Float>,
+        todayRate: Float?,
         from: LocalDate,
         toInclusive: LocalDate,
     ): Map<LocalDate, DailyActivity> {
+        val habitCompletionRates: Map<LocalDate, Float?> = buildMap {
+            putAll(history)
+            remove(toInclusive)
+            if (todayRate != null) put(toInclusive, todayRate)
+        }
         val distances = dailyDistancesMeters(from, toInclusive)
         val keys = habitCompletionRates.keys + distances.keys
         return keys.associateWith { date ->

@@ -6,7 +6,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.entry
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -22,6 +26,7 @@ import cdglacier.mytool.navigation.SettingsRoute
 import cdglacier.mytool.ui.screen.copyjournal.CopyObsidianJournalScreen
 import cdglacier.mytool.ui.screen.habit.HabitTrackingScreen
 import cdglacier.mytool.ui.screen.home.HomeScreen
+import cdglacier.mytool.ui.screen.home.HomeViewModel
 import cdglacier.mytool.ui.screen.money.MoneyScreen
 import cdglacier.mytool.ui.screen.money.chart.MoneyChartScreen
 import cdglacier.mytool.ui.screen.positiontracking.PositionTrackingScreen
@@ -49,7 +54,15 @@ class MainActivity : ComponentActivity() {
                         onBack = { backStack.removeLastOrNull() },
                         entryProvider = entryProvider {
                             entry<HomeRoute> {
+                                val viewModel: HomeViewModel = viewModel()
+                                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+                                LifecycleResumeEffect(Unit) {
+                                    viewModel.refresh()
+                                    onPauseOrDispose { }
+                                }
                                 HomeScreen(
+                                    uiState = uiState,
+                                    onSelectDate = viewModel::onSelectDate,
                                     onNavigateToCopyObsidianJournal = { backStack.add(CopyObsidianJournalRoute) },
                                     onNavigateToHabitTracking = { backStack.add(HabitTrackingRoute) },
                                     onNavigateToPositionTracking = { backStack.add(PositionTrackingRoute) },
