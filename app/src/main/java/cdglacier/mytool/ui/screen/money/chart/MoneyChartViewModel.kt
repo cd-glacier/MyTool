@@ -79,7 +79,12 @@ class MoneyChartViewModel @Inject constructor(
                     .filter { group == null || it.category == group }
                     .map { it.name to it.amount }
             }
-            MoneySection.EXTRA -> seriesForItems(months) { m -> book.monthOrEmpty(m).extras.map { it.name to it.amount } }
+            MoneySection.EXTRA -> listOf(
+                ChartSeries(
+                    name = "TOTAL",
+                    values = months.map { m -> book.monthOrEmpty(m).extraTotal },
+                )
+            )
             MoneySection.SERVICES -> {
                 val names = book.services.filterNot { it.archived }.map { it.name }.distinct()
                 names.map { name ->
