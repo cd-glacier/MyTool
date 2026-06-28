@@ -81,7 +81,6 @@ class HabitTrackingViewModel @Inject constructor(
             val uri = obsidianRepository.journalDirUri.first()?.toString() ?: return@launch
             val format = obsidianRepository.filenameFormat.first()
             val date = _uiState.value.date
-            // 楽観更新
             _uiState.update { state ->
                 state.copy(
                     habits = state.habits.map {

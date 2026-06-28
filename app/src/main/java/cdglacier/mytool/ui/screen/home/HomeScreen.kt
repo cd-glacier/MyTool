@@ -25,6 +25,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -50,6 +53,31 @@ import cdglacier.mytool.ui.theme.SpaceGroteskFamily
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.temporal.TemporalAdjusters
+
+@Composable
+fun HomeRoute(
+    onNavigateToCopyObsidianJournal: () -> Unit,
+    onNavigateToHabitTracking: () -> Unit,
+    onNavigateToPositionTracking: () -> Unit,
+    onNavigateToMoney: () -> Unit,
+    onNavigateToSettings: () -> Unit,
+    viewModel: HomeViewModel = viewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    LifecycleResumeEffect(Unit) {
+        viewModel.refresh()
+        onPauseOrDispose { }
+    }
+    HomeScreen(
+        uiState = uiState,
+        onSelectDate = viewModel::onSelectDate,
+        onNavigateToCopyObsidianJournal = onNavigateToCopyObsidianJournal,
+        onNavigateToHabitTracking = onNavigateToHabitTracking,
+        onNavigateToPositionTracking = onNavigateToPositionTracking,
+        onNavigateToMoney = onNavigateToMoney,
+        onNavigateToSettings = onNavigateToSettings,
+    )
+}
 
 @Composable
 fun HomeScreen(

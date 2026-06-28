@@ -1,15 +1,8 @@
 package cdglacier.mytool.ui.screen.positiontracking
 
 import android.net.Uri
+import cdglacier.mytool.ui.component.LocationPointUiModel
 import java.time.LocalDate
-
-data class LocationPointUiModel(
-    val latitude: Double,
-    val longitude: Double,
-    val accuracy: Float,
-    val batteryLevel: Int,
-    val sameLocationCount: Int,
-)
 
 data class PositionTrackingUiState(
     val date: LocalDate = LocalDate.now(),

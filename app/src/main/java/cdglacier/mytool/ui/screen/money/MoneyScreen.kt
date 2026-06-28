@@ -62,13 +62,13 @@ import java.time.format.DateTimeFormatter
 private val ERROR_RED = Color(0xFFE57373)
 
 @Composable
-fun MoneyScreen(
-    viewModel: MoneyViewModel = viewModel(),
+fun MoneyRoute(
     onBack: () -> Unit,
     onNavigateChart: (section: String, group: String?) -> Unit = { _, _ -> },
+    viewModel: MoneyViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    MoneyContent(
+    MoneyScreen(
         uiState = uiState,
         onBack = onBack,
         onPrevMonth = viewModel::onPrevMonth,
@@ -76,12 +76,29 @@ fun MoneyScreen(
         onSave = viewModel::save,
         onClearError = viewModel::clearError,
         onNavigateChart = onNavigateChart,
-        viewModel = viewModel,
+        onAddIncome = viewModel::addIncome,
+        onUpdateIncome = viewModel::updateIncome,
+        onRemoveIncome = viewModel::removeIncome,
+        onAddCard = viewModel::addCard,
+        onUpdateCard = viewModel::updateCard,
+        onRemoveCard = viewModel::removeCard,
+        onAddBudget = viewModel::addBudget,
+        onUpdateBudget = viewModel::updateBudget,
+        onRemoveBudget = viewModel::removeBudget,
+        onAddSavings = viewModel::addSavings,
+        onUpdateSavings = viewModel::updateSavings,
+        onRemoveSavings = viewModel::removeSavings,
+        onAddExtra = viewModel::addExtra,
+        onUpdateExtra = viewModel::updateExtra,
+        onRemoveExtra = viewModel::removeExtra,
+        onAddService = viewModel::addService,
+        onUpdateService = viewModel::updateService,
+        onRemoveService = viewModel::removeService,
     )
 }
 
 @Composable
-private fun MoneyContent(
+fun MoneyScreen(
     uiState: MoneyUiState,
     onBack: () -> Unit,
     onPrevMonth: () -> Unit,
@@ -89,7 +106,24 @@ private fun MoneyContent(
     onSave: () -> Unit,
     onClearError: () -> Unit,
     onNavigateChart: (String, String?) -> Unit,
-    viewModel: MoneyViewModel,
+    onAddIncome: (String) -> Unit,
+    onUpdateIncome: (Int, MoneyItem) -> Unit,
+    onRemoveIncome: (Int) -> Unit,
+    onAddCard: (String) -> Unit,
+    onUpdateCard: (Int, MoneyItem) -> Unit,
+    onRemoveCard: (Int) -> Unit,
+    onAddBudget: (String, String) -> Unit,
+    onUpdateBudget: (Int, MoneyItem) -> Unit,
+    onRemoveBudget: (Int) -> Unit,
+    onAddSavings: (String, String) -> Unit,
+    onUpdateSavings: (Int, SavingsItem) -> Unit,
+    onRemoveSavings: (Int) -> Unit,
+    onAddExtra: (String) -> Unit,
+    onUpdateExtra: (Int, MoneyItem) -> Unit,
+    onRemoveExtra: (Int) -> Unit,
+    onAddService: (AnnualService) -> Unit,
+    onUpdateService: (Int, AnnualService) -> Unit,
+    onRemoveService: (Int) -> Unit,
 ) {
     var pendingDelete by remember { mutableStateOf<PendingDelete?>(null) }
     pendingDelete?.let { pd ->
@@ -142,49 +176,49 @@ private fun MoneyContent(
             EditableMoneyItemSection(
                 title = "INCOMES",
                 items = uiState.currentMonth.incomes,
-                onAdd = { viewModel.addIncome(it) },
-                onUpdate = { i, item -> viewModel.updateIncome(i, item) },
-                onRequestRemove = { i, name -> requestRemove("INCOME: $name") { viewModel.removeIncome(i) } },
+                onAdd = onAddIncome,
+                onUpdate = onUpdateIncome,
+                onRequestRemove = { i, name -> requestRemove("INCOME: $name") { onRemoveIncome(i) } },
                 onTitleClick = { onNavigateChart("INCOMES", null) },
             )
             EditableMoneyItemSection(
                 title = "CARD_2M_AGO",
                 items = uiState.currentMonth.cardExpenses,
-                onAdd = { viewModel.addCard(it) },
-                onUpdate = { i, item -> viewModel.updateCard(i, item) },
-                onRequestRemove = { i, name -> requestRemove("CARD: $name") { viewModel.removeCard(i) } },
+                onAdd = onAddCard,
+                onUpdate = onUpdateCard,
+                onRequestRemove = { i, name -> requestRemove("CARD: $name") { onRemoveCard(i) } },
                 onTitleClick = { onNavigateChart("CARD", null) },
             )
             EditableBudgetSection(
                 groups = uiState.budgetGroups,
-                onAdd = { name, tag -> viewModel.addBudget(name, tag) },
-                onUpdate = { i, item -> viewModel.updateBudget(i, item) },
-                onRequestRemove = { i, name -> requestRemove("BUDGET: $name") { viewModel.removeBudget(i) } },
+                onAdd = onAddBudget,
+                onUpdate = onUpdateBudget,
+                onRequestRemove = { i, name -> requestRemove("BUDGET: $name") { onRemoveBudget(i) } },
                 onTitleClick = { onNavigateChart("BUDGET", null) },
                 onGroupClick = { tag -> onNavigateChart("BUDGET", tag) },
             )
             EditableSavingsSection(
                 groups = uiState.savingsGroups,
-                onAdd = { name, category -> viewModel.addSavings(name, category) },
-                onUpdate = { i, item -> viewModel.updateSavings(i, item) },
-                onRequestRemove = { i, name -> requestRemove("SAVINGS: $name") { viewModel.removeSavings(i) } },
+                onAdd = onAddSavings,
+                onUpdate = onUpdateSavings,
+                onRequestRemove = { i, name -> requestRemove("SAVINGS: $name") { onRemoveSavings(i) } },
                 onTitleClick = { onNavigateChart("SAVINGS", null) },
                 onGroupClick = { category -> onNavigateChart("SAVINGS", category) },
             )
             EditableMoneyItemSection(
                 title = "EXTRA",
                 items = uiState.currentMonth.extras,
-                onAdd = { viewModel.addExtra(it) },
-                onUpdate = { i, item -> viewModel.updateExtra(i, item) },
-                onRequestRemove = { i, name -> requestRemove("EXTRA: $name") { viewModel.removeExtra(i) } },
+                onAdd = onAddExtra,
+                onUpdate = onUpdateExtra,
+                onRequestRemove = { i, name -> requestRemove("EXTRA: $name") { onRemoveExtra(i) } },
                 onTitleClick = { onNavigateChart("EXTRA", null) },
             )
             ServicesSection(
                 month = uiState.displayedMonth,
                 services = uiState.activeServices,
-                onAdd = { viewModel.addService(it) },
-                onUpdate = { i, s -> viewModel.updateService(i, s) },
-                onRequestRemove = { i, name -> requestRemove("SERVICE: $name") { viewModel.removeService(i) } },
+                onAdd = onAddService,
+                onUpdate = onUpdateService,
+                onRequestRemove = { i, name -> requestRemove("SERVICE: $name") { onRemoveService(i) } },
                 onTitleClick = { onNavigateChart("SERVICES", null) },
             )
 

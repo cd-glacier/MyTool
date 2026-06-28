@@ -1,16 +1,12 @@
 package cdglacier.mytool.ui.screen.settings
 
-import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
 import android.net.Uri
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cdglacier.mytool.data.repository.CalendarPermissionRepository
+import cdglacier.mytool.data.repository.LocationPermissionRepository
 import cdglacier.mytool.data.repository.ObsidianRepository
-import cdglacier.mytool.widget.CalendarWidgetUpdateWorker
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,7 +17,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val obsidianRepository: ObsidianRepository,
-    @ApplicationContext private val context: Context,
+    private val locationPermissionRepository: LocationPermissionRepository,
+    private val calendarPermissionRepository: CalendarPermissionRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -48,41 +45,26 @@ class SettingsViewModel @Inject constructor(
                 _uiState.update { it.copy(pagesDirUri = uri) }
             }
         }
-        refreshPermissions()
-    }
-
-    fun refreshPermissions() {
-        val calendar = ContextCompat.checkSelfPermission(
-            context, Manifest.permission.READ_CALENDAR
-        ) == PackageManager.PERMISSION_GRANTED
-        val fine = ContextCompat.checkSelfPermission(
-            context, Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-        val bg = ContextCompat.checkSelfPermission(
-            context, Manifest.permission.ACCESS_BACKGROUND_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-        _uiState.update {
-            it.copy(
-                calendarPermissionGranted = calendar,
-                fineLocationGranted = fine,
-                backgroundLocationGranted = bg,
-            )
+        viewModelScope.launch {
+            calendarPermissionRepository.calendarGranted.collect { granted ->
+                _uiState.update { it.copy(calendarPermissionGranted = granted) }
+            }
+        }
+        viewModelScope.launch {
+            locationPermissionRepository.fineLocationGranted.collect { granted ->
+                _uiState.update { it.copy(fineLocationGranted = granted) }
+            }
+        }
+        viewModelScope.launch {
+            locationPermissionRepository.backgroundLocationGranted.collect { granted ->
+                _uiState.update { it.copy(backgroundLocationGranted = granted) }
+            }
         }
     }
 
-    fun refreshCalendarPermission() = refreshPermissions()
-
-    fun onLocationPermissionResult(granted: Boolean) {
-        _uiState.update { it.copy(fineLocationGranted = granted) }
-    }
-
-    fun onBackgroundLocationPermissionResult(granted: Boolean) {
-        _uiState.update { it.copy(backgroundLocationGranted = granted) }
-    }
-
-    fun onCalendarPermissionResult(granted: Boolean) {
-        _uiState.update { it.copy(calendarPermissionGranted = granted) }
-        if (granted) CalendarWidgetUpdateWorker.runOnce(context)
+    fun refreshPermissions() {
+        calendarPermissionRepository.refresh()
+        locationPermissionRepository.refresh()
     }
 
     fun onVaultUriPicked(uri: Uri) {
@@ -93,11 +75,11 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { obsidianRepository.setJournalDirUri(uri) }
     }
 
-    fun onFilenameFormatChange(format: String) {
-        viewModelScope.launch { obsidianRepository.setFilenameFormat(format) }
-    }
-
     fun onPagesDirPicked(uri: Uri) {
         viewModelScope.launch { obsidianRepository.setPagesDirUri(uri) }
+    }
+
+    fun onFilenameFormatChange(format: String) {
+        viewModelScope.launch { obsidianRepository.setFilenameFormat(format) }
     }
 }

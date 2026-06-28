@@ -6,32 +6,27 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.LifecycleResumeEffect
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.entry
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
-import cdglacier.mytool.widget.CalendarWidgetUpdateWorker
-import cdglacier.mytool.navigation.CopyObsidianJournalRoute
-import cdglacier.mytool.navigation.HabitTrackingRoute
-import cdglacier.mytool.navigation.HomeRoute
-import cdglacier.mytool.navigation.MoneyChartRoute
-import cdglacier.mytool.navigation.MoneyRoute
-import cdglacier.mytool.navigation.PositionTrackingRoute
-import cdglacier.mytool.navigation.SettingsRoute
-import cdglacier.mytool.ui.screen.copyjournal.CopyObsidianJournalScreen
-import cdglacier.mytool.ui.screen.habit.HabitTrackingScreen
-import cdglacier.mytool.ui.screen.home.HomeScreen
-import cdglacier.mytool.ui.screen.home.HomeViewModel
-import cdglacier.mytool.ui.screen.money.MoneyScreen
-import cdglacier.mytool.ui.screen.money.chart.MoneyChartScreen
-import cdglacier.mytool.ui.screen.positiontracking.PositionTrackingScreen
-import cdglacier.mytool.ui.screen.settings.SettingsScreen
+import cdglacier.mytool.navigation.CopyObsidianJournalRoute as CopyObsidianJournalNav
+import cdglacier.mytool.navigation.HabitTrackingRoute as HabitTrackingNav
+import cdglacier.mytool.navigation.HomeRoute as HomeNav
+import cdglacier.mytool.navigation.MoneyChartRoute as MoneyChartNav
+import cdglacier.mytool.navigation.MoneyRoute as MoneyNav
+import cdglacier.mytool.navigation.PositionTrackingRoute as PositionTrackingNav
+import cdglacier.mytool.navigation.SettingsRoute as SettingsNav
+import cdglacier.mytool.ui.screen.copyjournal.CopyObsidianJournalRoute
+import cdglacier.mytool.ui.screen.habit.HabitTrackingRoute
+import cdglacier.mytool.ui.screen.home.HomeRoute
+import cdglacier.mytool.ui.screen.money.MoneyRoute
+import cdglacier.mytool.ui.screen.money.chart.MoneyChartRoute
+import cdglacier.mytool.ui.screen.positiontracking.PositionTrackingRoute
+import cdglacier.mytool.ui.screen.settings.SettingsRoute
 import cdglacier.mytool.ui.theme.MyToolTheme
+import cdglacier.mytool.widget.CalendarWidgetUpdateWorker
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -48,54 +43,46 @@ class MainActivity : ComponentActivity() {
         setContent {
             MyToolTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    val backStack = rememberNavBackStack(HomeRoute)
+                    val backStack = rememberNavBackStack(HomeNav)
                     NavDisplay(
                         backStack = backStack,
                         onBack = { backStack.removeLastOrNull() },
                         entryProvider = entryProvider {
-                            entry<HomeRoute> {
-                                val viewModel: HomeViewModel = viewModel()
-                                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-                                LifecycleResumeEffect(Unit) {
-                                    viewModel.refresh()
-                                    onPauseOrDispose { }
-                                }
-                                HomeScreen(
-                                    uiState = uiState,
-                                    onSelectDate = viewModel::onSelectDate,
-                                    onNavigateToCopyObsidianJournal = { backStack.add(CopyObsidianJournalRoute) },
-                                    onNavigateToHabitTracking = { backStack.add(HabitTrackingRoute) },
-                                    onNavigateToPositionTracking = { backStack.add(PositionTrackingRoute) },
-                                    onNavigateToMoney = { backStack.add(MoneyRoute) },
-                                    onNavigateToSettings = { backStack.add(SettingsRoute) },
+                            entry<HomeNav> {
+                                HomeRoute(
+                                    onNavigateToCopyObsidianJournal = { backStack.add(CopyObsidianJournalNav) },
+                                    onNavigateToHabitTracking = { backStack.add(HabitTrackingNav) },
+                                    onNavigateToPositionTracking = { backStack.add(PositionTrackingNav) },
+                                    onNavigateToMoney = { backStack.add(MoneyNav) },
+                                    onNavigateToSettings = { backStack.add(SettingsNav) },
                                 )
                             }
-                            entry<MoneyRoute> {
-                                MoneyScreen(
+                            entry<MoneyNav> {
+                                MoneyRoute(
                                     onBack = { backStack.removeLastOrNull() },
                                     onNavigateChart = { section, group ->
-                                        backStack.add(MoneyChartRoute(section, group))
+                                        backStack.add(MoneyChartNav(section, group))
                                     },
                                 )
                             }
-                            entry<MoneyChartRoute> { route ->
-                                MoneyChartScreen(
+                            entry<MoneyChartNav> { route ->
+                                MoneyChartRoute(
                                     section = route.section,
                                     group = route.group,
                                     onBack = { backStack.removeLastOrNull() },
                                 )
                             }
-                            entry<CopyObsidianJournalRoute> {
-                                CopyObsidianJournalScreen(onBack = { backStack.removeLastOrNull() })
+                            entry<CopyObsidianJournalNav> {
+                                CopyObsidianJournalRoute(onBack = { backStack.removeLastOrNull() })
                             }
-                            entry<HabitTrackingRoute> {
-                                HabitTrackingScreen(onBack = { backStack.removeLastOrNull() })
+                            entry<HabitTrackingNav> {
+                                HabitTrackingRoute(onBack = { backStack.removeLastOrNull() })
                             }
-                            entry<SettingsRoute> {
-                                SettingsScreen(onBack = { backStack.removeLastOrNull() })
+                            entry<SettingsNav> {
+                                SettingsRoute(onBack = { backStack.removeLastOrNull() })
                             }
-                            entry<PositionTrackingRoute> {
-                                PositionTrackingScreen(onBack = { backStack.removeLastOrNull() })
+                            entry<PositionTrackingNav> {
+                                PositionTrackingRoute(onBack = { backStack.removeLastOrNull() })
                             }
                         }
                     )

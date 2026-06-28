@@ -1,5 +1,9 @@
 package cdglacier.mytool.di
 
+import cdglacier.mytool.data.repository.AutoCopyJournalScheduler
+import cdglacier.mytool.data.repository.AutoCopyJournalSchedulerImpl
+import cdglacier.mytool.data.repository.CalendarPermissionRepository
+import cdglacier.mytool.data.repository.CalendarPermissionRepositoryImpl
 import cdglacier.mytool.data.repository.GoogleCalendarRepository
 import cdglacier.mytool.data.repository.GoogleCalendarRepositoryImpl
 import cdglacier.mytool.data.repository.HabitHistoryRepository
@@ -59,6 +63,14 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindLocationPermissionRepository(impl: LocationPermissionRepositoryImpl): LocationPermissionRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCalendarPermissionRepository(impl: CalendarPermissionRepositoryImpl): CalendarPermissionRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAutoCopyJournalScheduler(impl: AutoCopyJournalSchedulerImpl): AutoCopyJournalScheduler
 
     @Binds
     @Singleton

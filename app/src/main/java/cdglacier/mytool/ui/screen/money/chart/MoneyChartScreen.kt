@@ -55,7 +55,7 @@ private val SERIES_COLORS = listOf(
 private const val INITIAL_VISIBLE_MONTHS = 12
 
 @Composable
-fun MoneyChartScreen(
+fun MoneyChartRoute(
     section: String,
     group: String?,
     onBack: () -> Unit,
@@ -65,11 +65,11 @@ fun MoneyChartScreen(
         viewModel.setTarget(MoneySection.fromKey(section), group?.takeIf { it.isNotEmpty() })
     }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    MoneyChartContent(uiState = uiState, onBack = onBack)
+    MoneyChartScreen(uiState = uiState, onBack = onBack)
 }
 
 @Composable
-private fun MoneyChartContent(
+fun MoneyChartScreen(
     uiState: MoneyChartUiState,
     onBack: () -> Unit,
 ) {

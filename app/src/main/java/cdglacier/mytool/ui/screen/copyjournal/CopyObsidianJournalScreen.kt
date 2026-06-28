@@ -54,9 +54,9 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun CopyObsidianJournalScreen(
-    viewModel: CopyObsidianJournalViewModel = viewModel(),
+fun CopyObsidianJournalRoute(
     onBack: () -> Unit,
+    viewModel: CopyObsidianJournalViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -68,7 +68,7 @@ fun CopyObsidianJournalScreen(
         }
     }
 
-    CopyObsidianJournalContent(
+    CopyObsidianJournalScreen(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
         onSourceDateChange = viewModel::onSourceDateChange,
@@ -83,7 +83,7 @@ fun CopyObsidianJournalScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun CopyObsidianJournalContent(
+fun CopyObsidianJournalScreen(
     uiState: CopyObsidianJournalUiState,
     snackbarHostState: SnackbarHostState,
     onSourceDateChange: (LocalDate) -> Unit,

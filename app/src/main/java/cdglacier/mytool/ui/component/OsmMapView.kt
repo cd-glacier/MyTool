@@ -15,13 +15,20 @@ import android.view.ViewGroup
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import cdglacier.mytool.ui.screen.positiontracking.LocationPointUiModel
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
+
+data class LocationPointUiModel(
+    val latitude: Double,
+    val longitude: Double,
+    val accuracy: Float,
+    val batteryLevel: Int,
+    val sameLocationCount: Int,
+)
 
 @Composable
 fun OsmMapView(

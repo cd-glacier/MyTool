@@ -51,9 +51,9 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun HabitTrackingScreen(
-    viewModel: HabitTrackingViewModel = viewModel(),
+fun HabitTrackingRoute(
     onBack: () -> Unit,
+    viewModel: HabitTrackingViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -70,6 +70,23 @@ fun HabitTrackingScreen(
         }
     }
 
+    HabitTrackingScreen(
+        uiState = uiState,
+        snackbarHostState = snackbarHostState,
+        onHabitToggle = viewModel::onHabitToggle,
+        onSyncHistory = viewModel::onSyncHistory,
+        onBack = onBack,
+    )
+}
+
+@Composable
+fun HabitTrackingScreen(
+    uiState: HabitTrackingUiState,
+    snackbarHostState: SnackbarHostState,
+    onHabitToggle: (Habit) -> Unit,
+    onSyncHistory: () -> Unit,
+    onBack: () -> Unit,
+) {
     Scaffold(
         topBar = { HabitTopBar(onBack = onBack) },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -94,12 +111,12 @@ fun HabitTrackingScreen(
                     "NO_HABITS",
                     "今日のJournalに該当する習慣がありません。\n`# Habit` セクションを追加してください。",
                 )
-                else -> HabitList(uiState.habits, viewModel::onHabitToggle)
+                else -> HabitList(uiState.habits, onHabitToggle)
             }
             Spacer(modifier = Modifier.height(24.dp))
             SyncHistorySection(
                 uiState = uiState,
-                onSync = viewModel::onSyncHistory,
+                onSync = onSyncHistory,
             )
         }
     }
