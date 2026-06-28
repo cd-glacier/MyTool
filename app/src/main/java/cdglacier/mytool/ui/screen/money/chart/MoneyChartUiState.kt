@@ -3,7 +3,7 @@ package cdglacier.mytool.ui.screen.money.chart
 import java.time.YearMonth
 
 enum class MoneySection {
-    INCOMES, CARD, BUDGET, SAVINGS, SERVICES;
+    INCOMES, CARD, BUDGET, SAVINGS, EXTRA, SERVICES;
 
     companion object {
         fun fromKey(key: String): MoneySection = valueOf(key)
