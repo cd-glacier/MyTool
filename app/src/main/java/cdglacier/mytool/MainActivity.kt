@@ -1,11 +1,17 @@
 package cdglacier.mytool
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.entry
 import androidx.navigation3.runtime.entryProvider
@@ -34,6 +40,8 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    private var pendingSharedUrl by mutableStateOf<String?>(null)
+
     override fun onResume() {
         super.onResume()
         CalendarWidgetUpdateWorker.runOnce(this)
@@ -42,10 +50,16 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        pendingSharedUrl = extractSharedUrl(intent)
         setContent {
             MyToolTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     val backStack = rememberNavBackStack(HomeNav)
+                    LaunchedEffect(pendingSharedUrl) {
+                        val url = pendingSharedUrl ?: return@LaunchedEffect
+                        backStack.add(RecipeNav(prefilledUrl = url))
+                        pendingSharedUrl = null
+                    }
                     NavDisplay(
                         backStack = backStack,
                         onBack = { backStack.removeLastOrNull() },
@@ -56,7 +70,7 @@ class MainActivity : ComponentActivity() {
                                     onNavigateToHabitTracking = { backStack.add(HabitTrackingNav) },
                                     onNavigateToPositionTracking = { backStack.add(PositionTrackingNav) },
                                     onNavigateToMoney = { backStack.add(MoneyNav) },
-                                    onNavigateToRecipe = { backStack.add(RecipeNav) },
+                                    onNavigateToRecipe = { backStack.add(RecipeNav()) },
                                     onNavigateToSettings = { backStack.add(SettingsNav) },
                                 )
                             }
@@ -87,13 +101,29 @@ class MainActivity : ComponentActivity() {
                             entry<PositionTrackingNav> {
                                 PositionTrackingRoute(onBack = { backStack.removeLastOrNull() })
                             }
-                            entry<RecipeNav> {
-                                RecipeRoute(onBack = { backStack.removeLastOrNull() })
+                            entry<RecipeNav> { route ->
+                                RecipeRoute(
+                                    onBack = { backStack.removeLastOrNull() },
+                                    prefilledUrl = route.prefilledUrl,
+                                )
                             }
                         }
                     )
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        extractSharedUrl(intent)?.let { pendingSharedUrl = it }
+    }
+
+    private fun extractSharedUrl(intent: Intent?): String? {
+        if (intent?.action != Intent.ACTION_SEND) return null
+        if (intent.type != "text/plain") return null
+        val text = intent.getStringExtra(Intent.EXTRA_TEXT) ?: return null
+        return Regex("""https?://\S+""").find(text)?.value
     }
 }

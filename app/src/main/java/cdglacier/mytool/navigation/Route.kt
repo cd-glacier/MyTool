@@ -22,7 +22,7 @@ data object PositionTrackingRoute : NavKey
 data object MoneyRoute : NavKey
 
 @Serializable
-data object RecipeRoute : NavKey
+data class RecipeRoute(val prefilledUrl: String? = null) : NavKey
 
 @Serializable
 data class MoneyChartRoute(
