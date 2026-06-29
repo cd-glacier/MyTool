@@ -162,9 +162,9 @@ class OpenObsidianCallback : ActionCallback {
         val obsidianUri = Uri.parse(
             "obsidian://open?vault=${Uri.encode(vaultName)}&file=${Uri.encode(filename)}"
         )
+        updateWidgetContent(context, glanceId)
         context.startActivity(Intent(Intent.ACTION_VIEW, obsidianUri).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK
         })
-        WidgetUpdateWorker.runOnce(context)
     }
 }
