@@ -12,8 +12,7 @@ import javax.inject.Singleton
 interface RecipeRepository {
     val sections: Flow<List<RecipeSection>>
     suspend fun getByDate(date: LocalDate): List<RecipeEntity>
-    suspend fun replaceForDate(date: LocalDate, recipes: List<Recipe>, preserveOgpFrom: List<RecipeEntity>)
-    suspend fun updateOgp(date: LocalDate, url: String, ogpTitle: String?, ogpImageUrl: String?)
+    suspend fun replaceForDate(date: LocalDate, recipes: List<Recipe>)
 }
 
 data class RecipeSection(
@@ -24,8 +23,6 @@ data class RecipeSection(
 data class RecipeItem(
     val title: String,
     val url: String,
-    val ogpTitle: String?,
-    val ogpImageUrl: String?,
 )
 
 @Singleton
@@ -40,14 +37,8 @@ class RecipeRepositoryImpl @Inject constructor(
                     val date = runCatching { LocalDate.parse(dateStr) }.getOrNull() ?: return@mapNotNull null
                     RecipeSection(
                         date = date,
-                        items = items.sortedBy { it.position }.map {
-                            RecipeItem(
-                                title = it.title,
-                                url = it.url,
-                                ogpTitle = it.ogpTitle,
-                                ogpImageUrl = it.ogpImageUrl,
-                            )
-                        },
+                        items = items.sortedBy { it.position }
+                            .map { RecipeItem(title = it.title, url = it.url) },
                     )
                 }
                 .sortedByDescending { it.date }
@@ -56,27 +47,15 @@ class RecipeRepositoryImpl @Inject constructor(
     override suspend fun getByDate(date: LocalDate): List<RecipeEntity> =
         dao.getByDate(date.toString())
 
-    override suspend fun replaceForDate(
-        date: LocalDate,
-        recipes: List<Recipe>,
-        preserveOgpFrom: List<RecipeEntity>,
-    ) {
-        val ogpByUrl = preserveOgpFrom.associateBy { it.url }
+    override suspend fun replaceForDate(date: LocalDate, recipes: List<Recipe>) {
         val entities = recipes.mapIndexed { index, recipe ->
-            val existing = ogpByUrl[recipe.url]
             RecipeEntity(
                 date = date.toString(),
                 url = recipe.url,
                 title = recipe.title,
                 position = index,
-                ogpTitle = existing?.ogpTitle,
-                ogpImageUrl = existing?.ogpImageUrl,
             )
         }
         dao.replaceForDate(date.toString(), entities)
-    }
-
-    override suspend fun updateOgp(date: LocalDate, url: String, ogpTitle: String?, ogpImageUrl: String?) {
-        dao.updateOgp(date.toString(), url, ogpTitle, ogpImageUrl)
     }
 }

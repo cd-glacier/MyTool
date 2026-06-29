@@ -25,7 +25,7 @@ class ScanRecipesUseCase @Inject constructor(
                 val parsed = RecipeParser.parse(content)
                 val existing = recipeRepository.getByDate(date)
                 if (!sameContent(existing, parsed)) {
-                    recipeRepository.replaceForDate(date, parsed, preserveOgpFrom = existing)
+                    recipeRepository.replaceForDate(date, parsed)
                 }
             }
         }

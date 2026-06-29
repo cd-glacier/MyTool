@@ -8,6 +8,4 @@ data class RecipeEntity(
     val url: String,
     val title: String,
     val position: Int,
-    val ogpTitle: String? = null,
-    val ogpImageUrl: String? = null,
 )

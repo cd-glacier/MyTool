@@ -28,6 +28,4 @@ interface RecipeDao {
         if (items.isNotEmpty()) insertAll(items)
     }
 
-    @Query("UPDATE recipes SET ogpTitle = :ogpTitle, ogpImageUrl = :ogpImageUrl WHERE date = :date AND url = :url")
-    suspend fun updateOgp(date: String, url: String, ogpTitle: String?, ogpImageUrl: String?)
 }

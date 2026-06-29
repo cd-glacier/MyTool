@@ -3,6 +3,7 @@ package cdglacier.mytool.ui.screen.recipe
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cdglacier.mytool.data.repository.ObsidianRepository
+import cdglacier.mytool.data.repository.Ogp
 import cdglacier.mytool.data.repository.OgpRepository
 import cdglacier.mytool.data.repository.RecipeRepository
 import cdglacier.mytool.domain.usecase.ScanRecipesUseCase
@@ -11,6 +12,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -28,25 +30,29 @@ class RecipeViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(RecipeUiState())
     val uiState: StateFlow<RecipeUiState> = _uiState.asStateFlow()
 
+    private val ogpByUrl = MutableStateFlow<Map<String, Ogp>>(emptyMap())
     private val isScanning = AtomicBoolean(false)
 
     init {
         viewModelScope.launch {
-            recipeRepository.sections.collect { sections ->
-                val ui = sections.map { section ->
+            combine(recipeRepository.sections, ogpByUrl) { sections, ogpMap ->
+                sections.map { section ->
                     RecipeSectionUiModel(
                         date = section.date,
                         items = section.items.map { item ->
+                            val ogp = ogpMap[item.url]
                             RecipeItemUiModel(
                                 title = item.title,
                                 url = item.url,
-                                ogpTitle = item.ogpTitle,
-                                ogpImageUrl = item.ogpImageUrl,
+                                ogpTitle = ogp?.title,
+                                ogpImageUrl = ogp?.imageUrl,
                             )
                         },
                     )
                 }
+            }.collect { ui ->
                 _uiState.update { it.copy(sections = ui) }
+                launch { fetchMissingOgp(ui) }
             }
         }
     }
@@ -59,7 +65,6 @@ class RecipeViewModel @Inject constructor(
                 val uri = obsidianRepository.journalDirUri.first() ?: return@launch
                 val format = obsidianRepository.filenameFormat.first()
                 scanRecipesUseCase(uri.toString(), format)
-                fetchMissingOgp()
             } finally {
                 _uiState.update { it.copy(isLoading = false) }
                 isScanning.set(false)
@@ -67,17 +72,15 @@ class RecipeViewModel @Inject constructor(
         }
     }
 
-    private suspend fun fetchMissingOgp() {
-        val sections = recipeRepository.sections.first()
-        for (section in sections) {
-            for (item in section.items) {
-                if (item.ogpImageUrl != null || item.ogpTitle != null) continue
-                val ogp = runCatching { ogpRepository.fetch(item.url) }.getOrNull() ?: continue
-                if (ogp.imageUrl == null && ogp.title == null) continue
-                runCatching {
-                    recipeRepository.updateOgp(section.date, item.url, ogp.title, ogp.imageUrl)
-                }
-            }
+    private suspend fun fetchMissingOgp(sections: List<RecipeSectionUiModel>) {
+        val urls = sections.flatMap { it.items }
+            .map { it.url }
+            .distinct()
+            .filter { it !in ogpByUrl.value }
+        for (url in urls) {
+            if (url in ogpByUrl.value) continue
+            val ogp = runCatching { ogpRepository.fetch(url) }.getOrNull() ?: continue
+            ogpByUrl.update { it + (url to ogp) }
         }
     }
 }
