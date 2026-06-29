@@ -25,6 +25,7 @@ interface JournalRepository {
         dates: List<LocalDate>,
         filenameFormat: String,
     ): Map<LocalDate, Int>
+    suspend fun listJournalDates(journalDirUri: String, filenameFormat: String): List<LocalDate>
 }
 
 @Singleton
@@ -75,6 +76,19 @@ class JournalRepositoryImpl @Inject constructor(
             context.contentResolver.openOutputStream(file.uri, "wt")
                 ?.use { it.write(content.toByteArray()) }
                 ?: error("書き込めません")
+        }
+    }
+
+    override suspend fun listJournalDates(
+        journalDirUri: String,
+        filenameFormat: String,
+    ): List<LocalDate> = withContext(Dispatchers.IO) {
+        val formatter = DateTimeFormatter.ofPattern(filenameFormat)
+        val dir = DocumentFile.fromTreeUri(context, Uri.parse(journalDirUri)) ?: return@withContext emptyList()
+        dir.listFiles().mapNotNull { file ->
+            val name = file.name ?: return@mapNotNull null
+            if (!name.endsWith(".md")) return@mapNotNull null
+            runCatching { LocalDate.parse(name.removeSuffix(".md"), formatter) }.getOrNull()
         }
     }
 
