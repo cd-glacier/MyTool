@@ -36,3 +36,4 @@ google-services.json
 signing/*
 
 .claude/settings.local.json
+CLAUDE.local.md
