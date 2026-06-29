@@ -4,10 +4,11 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [LocationRecordEntity::class],
-    version = 1,
+    entities = [LocationRecordEntity::class, RecipeEntity::class],
+    version = 3,
     exportSchema = false,
 )
 abstract class MyToolDatabase : RoomDatabase() {
     abstract fun locationRecordDao(): LocationRecordDao
+    abstract fun recipeDao(): RecipeDao
 }

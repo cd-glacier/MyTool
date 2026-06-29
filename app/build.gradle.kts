@@ -80,6 +80,7 @@ dependencies {
     ksp(libs.androidx.room.compiler)
     implementation(libs.play.services.location)
     implementation(libs.osmdroid.android)
+    implementation(libs.coil.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
