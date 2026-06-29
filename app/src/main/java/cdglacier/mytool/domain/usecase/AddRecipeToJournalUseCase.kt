@@ -1,11 +1,14 @@
 package cdglacier.mytool.domain.usecase
 
 import cdglacier.mytool.data.repository.JournalRepository
+import cdglacier.mytool.data.repository.RecipeRepository
+import cdglacier.mytool.domain.model.Recipe
 import java.time.LocalDate
 import javax.inject.Inject
 
 class AddRecipeToJournalUseCase @Inject constructor(
     private val journalRepository: JournalRepository,
+    private val recipeRepository: RecipeRepository,
 ) {
     private val recipeHeading = Regex("""^#{1,6}\s+\[\[Recipe]]\s*$""")
     private val anyHeading = Regex("""^#{1,6}\s+.*$""")
@@ -21,6 +24,11 @@ class AddRecipeToJournalUseCase @Inject constructor(
         val item = "- [${title.trim()}]($url)"
         val updated = insertOrAppend(original, item)
         journalRepository.writeContent(journalDirUri, date, filenameFormat, updated).getOrThrow()
+        val existing = recipeRepository.getByDate(date)
+            .map { Recipe(title = it.title, url = it.url) }
+        if (existing.none { it.url == url }) {
+            recipeRepository.replaceForDate(date, existing + Recipe(title = title.trim(), url = url))
+        }
     }
 
     private fun insertOrAppend(content: String, item: String): String {
