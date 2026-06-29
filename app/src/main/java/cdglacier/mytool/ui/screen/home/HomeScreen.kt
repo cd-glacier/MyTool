@@ -420,7 +420,7 @@ private fun ExecCommandsSection(
     Spacer(modifier = Modifier.height(2.dp))
     CommandMenuItem(
         number = "05.",
-        label = "RECENT_RECIPES",
+        label = "RECIPES",
         onClick = onNavigateToRecipe,
     )
     Spacer(modifier = Modifier.height(2.dp))

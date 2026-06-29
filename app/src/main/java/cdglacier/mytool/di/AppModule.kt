@@ -22,6 +22,8 @@ import cdglacier.mytool.data.repository.ObsidianRepository
 import cdglacier.mytool.data.repository.ObsidianRepositoryImpl
 import cdglacier.mytool.data.repository.OgpRepository
 import cdglacier.mytool.data.repository.OgpRepositoryImpl
+import cdglacier.mytool.data.repository.RecipeRepository
+import cdglacier.mytool.data.repository.RecipeRepositoryImpl
 import cdglacier.mytool.data.repository.WidgetConfigRepository
 import cdglacier.mytool.data.repository.WidgetConfigRepositoryImpl
 import dagger.Binds
@@ -81,4 +83,8 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindOgpRepository(impl: OgpRepositoryImpl): OgpRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindRecipeRepository(impl: RecipeRepositoryImpl): RecipeRepository
 }

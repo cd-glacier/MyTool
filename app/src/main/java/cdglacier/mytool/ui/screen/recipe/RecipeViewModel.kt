@@ -4,7 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cdglacier.mytool.data.repository.ObsidianRepository
 import cdglacier.mytool.data.repository.OgpRepository
-import cdglacier.mytool.domain.usecase.GetRecentRecipesUseCase
+import cdglacier.mytool.data.repository.RecipeRepository
+import cdglacier.mytool.domain.usecase.ScanRecipesUseCase
 import cdglacier.mytool.ui.component.RecipeItemUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,57 +14,68 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
 @HiltViewModel
 class RecipeViewModel @Inject constructor(
     private val obsidianRepository: ObsidianRepository,
-    private val getRecentRecipesUseCase: GetRecentRecipesUseCase,
+    private val recipeRepository: RecipeRepository,
+    private val scanRecipesUseCase: ScanRecipesUseCase,
     private val ogpRepository: OgpRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RecipeUiState())
     val uiState: StateFlow<RecipeUiState> = _uiState.asStateFlow()
 
-    fun refresh() {
+    private val isScanning = AtomicBoolean(false)
+
+    init {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-            val uri = obsidianRepository.journalDirUri.first()
-            if (uri == null) {
-                _uiState.update { it.copy(isLoading = false, sections = emptyList()) }
-                return@launch
+            recipeRepository.sections.collect { sections ->
+                val ui = sections.map { section ->
+                    RecipeSectionUiModel(
+                        date = section.date,
+                        items = section.items.map { item ->
+                            RecipeItemUiModel(
+                                title = item.title,
+                                url = item.url,
+                                ogpTitle = item.ogpTitle,
+                                ogpImageUrl = item.ogpImageUrl,
+                            )
+                        },
+                    )
+                }
+                _uiState.update { it.copy(sections = ui) }
             }
-            val format = obsidianRepository.filenameFormat.first()
-            val grouped = getRecentRecipesUseCase(uri.toString(), format)
-            val sections = grouped.map { group ->
-                RecipeSectionUiModel(
-                    date = group.date,
-                    items = group.recipes.map { RecipeItemUiModel(title = it.title, url = it.url) },
-                )
-            }
-            _uiState.update { it.copy(isLoading = false, sections = sections) }
-            fetchOgpForAll(sections)
         }
     }
 
-    private fun fetchOgpForAll(sections: List<RecipeSectionUiModel>) {
-        sections.forEachIndexed { sectionIndex, section ->
-            section.items.forEachIndexed { itemIndex, item ->
-                viewModelScope.launch {
-                    val ogp = ogpRepository.fetch(item.url) ?: return@launch
-                    _uiState.update { state ->
-                        val newSections = state.sections.toMutableList()
-                        val target = newSections.getOrNull(sectionIndex) ?: return@update state
-                        val newItems = target.items.toMutableList()
-                        val current = newItems.getOrNull(itemIndex) ?: return@update state
-                        if (current.url != item.url) return@update state
-                        newItems[itemIndex] = current.copy(
-                            ogpImageUrl = ogp.imageUrl,
-                            ogpTitle = ogp.title,
-                        )
-                        newSections[sectionIndex] = target.copy(items = newItems)
-                        state.copy(sections = newSections)
-                    }
+    fun refresh() {
+        if (!isScanning.compareAndSet(false, true)) return
+        viewModelScope.launch {
+            try {
+                _uiState.update { it.copy(isLoading = true) }
+                val uri = obsidianRepository.journalDirUri.first() ?: return@launch
+                val format = obsidianRepository.filenameFormat.first()
+                scanRecipesUseCase(uri.toString(), format)
+                fetchMissingOgp()
+            } finally {
+                _uiState.update { it.copy(isLoading = false) }
+                isScanning.set(false)
+            }
+        }
+    }
+
+    private suspend fun fetchMissingOgp() {
+        val sections = recipeRepository.sections.first()
+        for (section in sections) {
+            for (item in section.items) {
+                if (item.ogpImageUrl != null || item.ogpTitle != null) continue
+                val ogp = runCatching { ogpRepository.fetch(item.url) }.getOrNull() ?: continue
+                if (ogp.imageUrl == null && ogp.title == null) continue
+                runCatching {
+                    recipeRepository.updateOgp(section.date, item.url, ogp.title, ogp.imageUrl)
                 }
             }
         }

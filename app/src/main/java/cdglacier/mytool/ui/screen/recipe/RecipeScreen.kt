@@ -65,7 +65,7 @@ fun RecipeScreen(
     onBack: () -> Unit,
 ) {
     Scaffold(
-        topBar = { GlacierTopBar(title = "RECENT_RECIPES", onBack = onBack) },
+        topBar = { GlacierTopBar(title = "RECIPES", onBack = onBack) },
         containerColor = GlacierBg,
     ) { innerPadding ->
         when {

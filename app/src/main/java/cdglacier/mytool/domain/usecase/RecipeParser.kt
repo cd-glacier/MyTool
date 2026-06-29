@@ -3,7 +3,8 @@ package cdglacier.mytool.domain.usecase
 import cdglacier.mytool.domain.model.Recipe
 
 object RecipeParser {
-    private val RECIPE_HEADING = Regex("""^#\s+Recipe\s*$""")
+    private val RECIPE_HEADING = Regex("""^\[\[Recipe]]\s*$""")
+    private val OTHER_WIKILINK = Regex("""^\[\[[^\[\]]+]]\s*$""")
     private val ITEM = Regex("""^-\s+\[(.+?)]\((https?://\S+?)\)\s*$""")
 
     fun parse(markdown: String): List<Recipe> {
@@ -16,7 +17,8 @@ object RecipeParser {
                 i++
                 while (i < lines.size) {
                     val trimmed = lines[i].trim()
-                    if (trimmed.startsWith("# ") && !trimmed.startsWith("##")) break
+                    if (trimmed.startsWith("#")) break
+                    if (OTHER_WIKILINK.matches(trimmed)) break
                     val item = ITEM.matchEntire(trimmed)
                     if (item != null) {
                         result.add(

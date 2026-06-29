@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import cdglacier.mytool.data.db.LocationRecordDao
 import cdglacier.mytool.data.db.MyToolDatabase
+import cdglacier.mytool.data.db.RecipeDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,8 +19,13 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): MyToolDatabase =
-        Room.databaseBuilder(context, MyToolDatabase::class.java, "mytool.db").build()
+        Room.databaseBuilder(context, MyToolDatabase::class.java, "mytool.db")
+            .fallbackToDestructiveMigration(dropAllTables = true)
+            .build()
 
     @Provides
     fun provideLocationRecordDao(db: MyToolDatabase): LocationRecordDao = db.locationRecordDao()
+
+    @Provides
+    fun provideRecipeDao(db: MyToolDatabase): RecipeDao = db.recipeDao()
 }
