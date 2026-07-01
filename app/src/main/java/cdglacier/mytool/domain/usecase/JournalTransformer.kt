@@ -5,6 +5,7 @@ object JournalTransformer {
     private val TODO_ITEM_ANY = Regex("""^-\s+\[( |x)]\s+.+$""")
     private val HABIT_HEADING = Regex("""^#\s+Habit\s*$""")
     private val POSITION_HEADING = Regex("""^#\s+Position Tracking\s*$""")
+    private val RECIPE_HEADING = Regex("""^#\s+\[\[Recipe]]\s*$""")
     private val TODO_HEADING = Regex("""^#\s+TODO\s*$""")
     private val TOP_HEADING = Regex("""^#\s+.+$""")
     private val CHECKED_MARK = Regex("""\[x]""")
@@ -17,7 +18,7 @@ object JournalTransformer {
             val line = lines[i]
             val trimmed = line.trim()
 
-            if (POSITION_HEADING.matches(trimmed)) {
+            if (POSITION_HEADING.matches(trimmed) || RECIPE_HEADING.matches(trimmed)) {
                 i++
                 while (i < lines.size && !TOP_HEADING.matches(lines[i].trim())) i++
                 continue
