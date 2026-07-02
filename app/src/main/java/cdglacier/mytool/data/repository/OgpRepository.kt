@@ -13,6 +13,7 @@ import javax.inject.Singleton
 data class Ogp(
     val title: String?,
     val imageUrl: String?,
+    val description: String? = null,
 )
 
 interface OgpRepository {
@@ -32,6 +33,9 @@ class OgpRepositoryImpl @Inject constructor() : OgpRepository {
         val ogp = Ogp(
             title = extractMeta(html, "og:title") ?: extractTitle(html),
             imageUrl = rawImage?.let { resolveUrl(finalUrl, it) },
+            description = extractMeta(html, "og:description")
+                ?: extractMeta(html, "description")
+                ?: extractMeta(html, "twitter:description"),
         )
         cache[url] = ogp
         ogp

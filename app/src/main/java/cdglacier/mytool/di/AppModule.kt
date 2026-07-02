@@ -22,8 +22,12 @@ import cdglacier.mytool.data.repository.ObsidianRepository
 import cdglacier.mytool.data.repository.ObsidianRepositoryImpl
 import cdglacier.mytool.data.repository.OgpRepository
 import cdglacier.mytool.data.repository.OgpRepositoryImpl
+import cdglacier.mytool.data.repository.RecipeEmbeddingRepository
+import cdglacier.mytool.data.repository.RecipeEmbeddingRepositoryImpl
 import cdglacier.mytool.data.repository.RecipeRepository
 import cdglacier.mytool.data.repository.RecipeRepositoryImpl
+import cdglacier.mytool.worker.RecipeEmbeddingScheduler
+import cdglacier.mytool.worker.RecipeEmbeddingSchedulerImpl
 import cdglacier.mytool.data.repository.WidgetConfigRepository
 import cdglacier.mytool.data.repository.WidgetConfigRepositoryImpl
 import dagger.Binds
@@ -87,4 +91,12 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindRecipeRepository(impl: RecipeRepositoryImpl): RecipeRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindRecipeEmbeddingRepository(impl: RecipeEmbeddingRepositoryImpl): RecipeEmbeddingRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindRecipeEmbeddingScheduler(impl: RecipeEmbeddingSchedulerImpl): RecipeEmbeddingScheduler
 }

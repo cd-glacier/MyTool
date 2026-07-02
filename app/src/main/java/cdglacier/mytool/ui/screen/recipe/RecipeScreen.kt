@@ -56,6 +56,7 @@ fun RecipeRoute(
     val context = LocalContext.current
     LifecycleResumeEffect(Unit) {
         viewModel.refresh()
+        viewModel.ensureEmbeddingsGenerated()
         onPauseOrDispose { }
     }
     LaunchedEffect(prefilledUrl) {
@@ -72,6 +73,7 @@ fun RecipeRoute(
         onAddTitleChange = viewModel::onAddTitleChange,
         onFetchTitle = viewModel::fetchAddTitle,
         onSubmitAdd = viewModel::submitAdd,
+        onSearchQueryChange = viewModel::onSearchQueryChange,
         onBack = onBack,
     )
 }
@@ -84,8 +86,10 @@ fun RecipeScreen(
     onAddTitleChange: (String) -> Unit,
     onFetchTitle: () -> Unit,
     onSubmitAdd: () -> Unit,
+    onSearchQueryChange: (String) -> Unit,
     onBack: () -> Unit,
 ) {
+    val isSearchMode = uiState.searchQuery.isNotBlank()
     Scaffold(
         topBar = { GlacierTopBar(title = "RECIPES", onBack = onBack) },
         containerColor = GlacierBg,
@@ -109,7 +113,30 @@ fun RecipeScreen(
                     onSubmit = onSubmitAdd,
                 )
             }
+            item(key = "search") {
+                SearchSection(
+                    query = uiState.searchQuery,
+                    isSearching = uiState.isSearching,
+                    progress = uiState.embeddingProgress,
+                    onQueryChange = onSearchQueryChange,
+                )
+            }
             when {
+                isSearchMode -> {
+                    when {
+                        uiState.isSearching && uiState.searchResults.isEmpty() -> {
+                            item { EmptyMessage(text = "SEARCHING...") }
+                        }
+                        uiState.searchResults.isEmpty() -> {
+                            item { EmptyMessage(text = "NO_MATCHES") }
+                        }
+                        else -> {
+                            items(items = uiState.searchResults, key = { "search-${it.url}" }) { item ->
+                                RecipeItem(uiModel = item, onClick = onRecipeClick)
+                            }
+                        }
+                    }
+                }
                 uiState.isLoading && uiState.sections.isEmpty() -> {
                     item { EmptyMessage(text = "LOADING...") }
                 }
@@ -185,6 +212,45 @@ private fun AddRecipeSection(
                 color = GlacierAmber,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 11.sp,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SearchSection(
+    query: String,
+    isSearching: Boolean,
+    progress: EmbeddingProgressUiModel?,
+    onQueryChange: (String) -> Unit,
+) {
+    GlacierSectionCard(title = "SEARCH") {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            TextInput(
+                value = query,
+                onChange = onQueryChange,
+                modifier = Modifier.weight(1f),
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            val status = when {
+                isSearching -> "[...]"
+                query.isNotBlank() -> "[Q]"
+                else -> "[~]"
+            }
+            Text(
+                text = status,
+                color = GlacierAmber,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 12.sp,
+            )
+        }
+        if (progress != null) {
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = "AI_INDEX: ${progress.processed}/${progress.total}",
+                color = GlacierMuted,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 10.sp,
             )
         }
     }

@@ -5,6 +5,7 @@ import androidx.room.Room
 import cdglacier.mytool.data.db.LocationRecordDao
 import cdglacier.mytool.data.db.MyToolDatabase
 import cdglacier.mytool.data.db.RecipeDao
+import cdglacier.mytool.data.db.RecipeEmbeddingDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -28,4 +29,7 @@ object DatabaseModule {
 
     @Provides
     fun provideRecipeDao(db: MyToolDatabase): RecipeDao = db.recipeDao()
+
+    @Provides
+    fun provideRecipeEmbeddingDao(db: MyToolDatabase): RecipeEmbeddingDao = db.recipeEmbeddingDao()
 }

@@ -7,6 +7,10 @@ data class RecipeUiState(
     val isLoading: Boolean = false,
     val sections: List<RecipeSectionUiModel> = emptyList(),
     val addForm: AddRecipeFormUiModel = AddRecipeFormUiModel(),
+    val searchQuery: String = "",
+    val isSearching: Boolean = false,
+    val searchResults: List<RecipeItemUiModel> = emptyList(),
+    val embeddingProgress: EmbeddingProgressUiModel? = null,
 )
 
 data class RecipeSectionUiModel(
@@ -20,4 +24,9 @@ data class AddRecipeFormUiModel(
     val isFetching: Boolean = false,
     val isSubmitting: Boolean = false,
     val error: String? = null,
+)
+
+data class EmbeddingProgressUiModel(
+    val processed: Int,
+    val total: Int,
 )
