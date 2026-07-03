@@ -30,6 +30,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -320,11 +322,12 @@ private fun HabitRow(habit: Habit, onToggle: () -> Unit) {
         ) {
             if (habit.isCompleted) {
                 Text(
-                    text = "x",
+                    text = "✓",
                     color = GlacierBg,
                     fontFamily = FontFamily.Monospace,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
+                    style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false)),
                 )
             }
         }
