@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import cdglacier.mytool.data.repository.AiAvailability
 import cdglacier.mytool.ui.component.GlacierSectionCard
 import cdglacier.mytool.ui.component.GlacierTopBar
 import cdglacier.mytool.ui.theme.GlacierAmber
@@ -115,6 +116,7 @@ fun SettingsRoute(
 
     LifecycleResumeEffect(Unit) {
         viewModel.refreshPermissions()
+        viewModel.refreshAiAvailability()
         onPauseOrDispose { }
     }
 
@@ -124,6 +126,7 @@ fun SettingsRoute(
         onPickJournalFolder = { journalFolderPickerLauncher.launch(uiState.journalDirUri) },
         onPickPagesFolder = { pagesFolderPickerLauncher.launch(uiState.pagesDirUri) },
         onFilenameFormatChange = viewModel::onFilenameFormatChange,
+        onDownloadAiModel = viewModel::downloadAiModel,
         onRequestCalendarPermission = {
             calendarPermissionLauncher.launch(Manifest.permission.READ_CALENDAR)
         },
@@ -151,6 +154,7 @@ fun SettingsScreen(
     onPickJournalFolder: () -> Unit,
     onPickPagesFolder: () -> Unit,
     onFilenameFormatChange: (String) -> Unit,
+    onDownloadAiModel: () -> Unit,
     onRequestCalendarPermission: () -> Unit,
     onRequestLocationPermission: () -> Unit,
     onRequestBackgroundLocationPermission: () -> Unit,
@@ -192,6 +196,22 @@ fun SettingsScreen(
                 FilenameFormatRow(
                     value = uiState.filenameFormat,
                     onValueChange = onFilenameFormatChange,
+                )
+            }
+
+            GlacierSectionCard(title = "AI_MODEL") {
+                val (label, color, action) = when (uiState.aiAvailability) {
+                    AiAvailability.AVAILABLE -> Triple("[READY]", GlacierTeal, null)
+                    AiAvailability.DOWNLOADING -> Triple("[DOWNLOADING...]", GlacierAmber, null)
+                    AiAvailability.DOWNLOADABLE -> Triple("[DOWNLOAD]", GlacierAmber, onDownloadAiModel)
+                    AiAvailability.UNAVAILABLE -> Triple("[UNAVAILABLE]", GlacierMuted, null)
+                    AiAvailability.UNKNOWN -> Triple("[CHECKING...]", GlacierMuted, null)
+                }
+                SettingRow(
+                    label = "GEMINI_NANO",
+                    value = label,
+                    valueColor = color,
+                    onClick = action,
                 )
             }
 

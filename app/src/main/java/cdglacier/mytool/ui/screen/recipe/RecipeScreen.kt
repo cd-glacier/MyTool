@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import cdglacier.mytool.data.repository.AiAvailability
 import cdglacier.mytool.ui.component.GlacierSectionCard
 import cdglacier.mytool.ui.component.GlacierTopBar
 import cdglacier.mytool.ui.component.RecipeItem
@@ -56,6 +57,7 @@ fun RecipeRoute(
     val context = LocalContext.current
     LifecycleResumeEffect(Unit) {
         viewModel.refresh()
+        viewModel.refreshAiAvailability()
         onPauseOrDispose { }
     }
     LaunchedEffect(prefilledUrl) {
@@ -72,6 +74,7 @@ fun RecipeRoute(
         onAddTitleChange = viewModel::onAddTitleChange,
         onFetchTitle = viewModel::fetchAddTitle,
         onSubmitAdd = viewModel::submitAdd,
+        onSearchQueryChange = viewModel::onSearchQueryChange,
         onBack = onBack,
     )
 }
@@ -84,6 +87,7 @@ fun RecipeScreen(
     onAddTitleChange: (String) -> Unit,
     onFetchTitle: () -> Unit,
     onSubmitAdd: () -> Unit,
+    onSearchQueryChange: (String) -> Unit,
     onBack: () -> Unit,
 ) {
     Scaffold(
@@ -109,7 +113,30 @@ fun RecipeScreen(
                     onSubmit = onSubmitAdd,
                 )
             }
+            item(key = "search") {
+                SearchSection(
+                    query = uiState.searchQuery,
+                    availability = uiState.aiAvailability,
+                    onQueryChange = onSearchQueryChange,
+                )
+            }
+            val isSearchMode = uiState.searchQuery.isNotBlank()
             when {
+                isSearchMode -> {
+                    when {
+                        uiState.isSearching && uiState.searchResults.isEmpty() -> {
+                            item { EmptyMessage(text = "SEARCHING...") }
+                        }
+                        uiState.searchResults.isEmpty() -> {
+                            item { EmptyMessage(text = "NO_MATCH") }
+                        }
+                        else -> {
+                            items(items = uiState.searchResults, key = { "search-${it.url}" }) { item ->
+                                RecipeItem(uiModel = item, onClick = onRecipeClick)
+                            }
+                        }
+                    }
+                }
                 uiState.isLoading && uiState.sections.isEmpty() -> {
                     item { EmptyMessage(text = "LOADING...") }
                 }
@@ -191,12 +218,39 @@ private fun AddRecipeSection(
 }
 
 @Composable
-private fun TextInput(value: String, onChange: (String) -> Unit, modifier: Modifier = Modifier) {
+private fun SearchSection(
+    query: String,
+    availability: AiAvailability,
+    onQueryChange: (String) -> Unit,
+) {
+    val isEnabled = availability == AiAvailability.AVAILABLE
+    GlacierSectionCard(title = "SEARCH") {
+        TextInput(
+            value = query,
+            onChange = onQueryChange,
+            enabled = isEnabled,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+@Composable
+private fun TextInput(
+    value: String,
+    onChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
     BasicTextField(
         value = value,
         onValueChange = onChange,
+        enabled = enabled,
         singleLine = true,
-        textStyle = TextStyle(color = GlacierOnSurface, fontFamily = FontFamily.Monospace, fontSize = 13.sp),
+        textStyle = TextStyle(
+            color = if (enabled) GlacierOnSurface else GlacierMuted,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 13.sp,
+        ),
         cursorBrush = SolidColor(GlacierAmber),
         modifier = modifier
             .background(GlacierSurface)

@@ -20,6 +20,9 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MyTool">
+        <uses-library
+            android:name="com.google.android.aicore"
+            android:required="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

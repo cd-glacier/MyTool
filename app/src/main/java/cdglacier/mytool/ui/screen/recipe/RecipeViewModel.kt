@@ -2,18 +2,25 @@ package cdglacier.mytool.ui.screen.recipe
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cdglacier.mytool.data.repository.AiRepository
 import cdglacier.mytool.data.repository.ObsidianRepository
 import cdglacier.mytool.data.repository.Ogp
 import cdglacier.mytool.data.repository.OgpRepository
+import cdglacier.mytool.data.repository.RecipeItem
 import cdglacier.mytool.data.repository.RecipeRepository
 import cdglacier.mytool.domain.usecase.AddRecipeToJournalUseCase
 import cdglacier.mytool.domain.usecase.ScanRecipesUseCase
+import cdglacier.mytool.domain.usecase.SearchRecipesUseCase
 import cdglacier.mytool.ui.component.RecipeItemUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -21,6 +28,7 @@ import java.time.LocalDate
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 
+@OptIn(FlowPreview::class)
 @HiltViewModel
 class RecipeViewModel @Inject constructor(
     private val obsidianRepository: ObsidianRepository,
@@ -28,13 +36,17 @@ class RecipeViewModel @Inject constructor(
     private val scanRecipesUseCase: ScanRecipesUseCase,
     private val ogpRepository: OgpRepository,
     private val addRecipeToJournalUseCase: AddRecipeToJournalUseCase,
+    private val searchRecipesUseCase: SearchRecipesUseCase,
+    private val aiRepository: AiRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RecipeUiState())
     val uiState: StateFlow<RecipeUiState> = _uiState.asStateFlow()
 
     private val ogpByUrl = MutableStateFlow<Map<String, Ogp>>(emptyMap())
+    private val searchQueryFlow = MutableStateFlow("")
     private val isScanning = AtomicBoolean(false)
+    private var searchJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -58,6 +70,16 @@ class RecipeViewModel @Inject constructor(
                 launch { fetchMissingOgp(ui) }
             }
         }
+        viewModelScope.launch {
+            aiRepository.availability.collect { availability ->
+                _uiState.update { it.copy(aiAvailability = availability) }
+            }
+        }
+        viewModelScope.launch {
+            searchQueryFlow.drop(1).debounce(400).collect { query ->
+                runSearch(query)
+            }
+        }
     }
 
     fun refresh() {
@@ -72,6 +94,38 @@ class RecipeViewModel @Inject constructor(
                 _uiState.update { it.copy(isLoading = false) }
                 isScanning.set(false)
             }
+        }
+    }
+
+    fun refreshAiAvailability() {
+        viewModelScope.launch { aiRepository.refreshAvailability() }
+    }
+
+    fun onSearchQueryChange(query: String) {
+        _uiState.update { it.copy(searchQuery = query) }
+        searchQueryFlow.value = query
+        if (query.isBlank()) {
+            searchJob?.cancel()
+            _uiState.update { it.copy(isSearching = false, searchResults = emptyList()) }
+        }
+    }
+
+    private fun runSearch(query: String) {
+        searchJob?.cancel()
+        if (query.isBlank()) {
+            _uiState.update { it.copy(isSearching = false, searchResults = emptyList()) }
+            return
+        }
+        searchJob = viewModelScope.launch {
+            _uiState.update { it.copy(isSearching = true) }
+            val allItems = _uiState.value.sections.flatMap { it.items }
+            val recipeItems = allItems.map { RecipeItem(title = it.title, url = it.url) }
+            val ranked = runCatching {
+                searchRecipesUseCase(query, recipeItems)
+            }.getOrDefault(emptyList())
+            val uiByUrl = allItems.associateBy { it.url }
+            val ordered = ranked.mapNotNull { uiByUrl[it.url] }
+            _uiState.update { it.copy(isSearching = false, searchResults = ordered) }
         }
     }
 

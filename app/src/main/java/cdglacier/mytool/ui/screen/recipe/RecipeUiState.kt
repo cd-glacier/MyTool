@@ -1,5 +1,6 @@
 package cdglacier.mytool.ui.screen.recipe
 
+import cdglacier.mytool.data.repository.AiAvailability
 import cdglacier.mytool.ui.component.RecipeItemUiModel
 import java.time.LocalDate
 
@@ -7,6 +8,10 @@ data class RecipeUiState(
     val isLoading: Boolean = false,
     val sections: List<RecipeSectionUiModel> = emptyList(),
     val addForm: AddRecipeFormUiModel = AddRecipeFormUiModel(),
+    val searchQuery: String = "",
+    val isSearching: Boolean = false,
+    val searchResults: List<RecipeItemUiModel> = emptyList(),
+    val aiAvailability: AiAvailability = AiAvailability.UNKNOWN,
 )
 
 data class RecipeSectionUiModel(
