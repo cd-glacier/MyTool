@@ -226,13 +226,6 @@ private fun SearchSection(
     onQueryChange: (String) -> Unit,
 ) {
     val isEnabled = availability == GeminiNanoAvailability.AVAILABLE
-    val statusLabel = when (availability) {
-        GeminiNanoAvailability.AVAILABLE -> if (isSearching) "[...]" else "[AI:READY]"
-        GeminiNanoAvailability.DOWNLOADING -> "[AI:DL...]"
-        GeminiNanoAvailability.DOWNLOADABLE -> "[NO_MODEL]"
-        GeminiNanoAvailability.UNAVAILABLE -> "[AI:N/A]"
-        GeminiNanoAvailability.UNKNOWN -> "[AI:?]"
-    }
     GlacierSectionCard(title = "SEARCH") {
         Row(verticalAlignment = Alignment.CenterVertically) {
             TextInput(
@@ -241,13 +234,15 @@ private fun SearchSection(
                 enabled = isEnabled,
                 modifier = Modifier.weight(1f),
             )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = statusLabel,
-                color = if (isEnabled) GlacierMuted else GlacierAmber,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 11.sp,
-            )
+            if (isSearching) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "[...]",
+                    color = GlacierMuted,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 11.sp,
+                )
+            }
         }
     }
 }
