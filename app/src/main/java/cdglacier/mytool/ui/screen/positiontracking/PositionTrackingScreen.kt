@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -84,12 +85,13 @@ fun PositionTrackingScreen(
         topBar = { GlacierTopBar(title = "POSITION_TRACKING", onBack = onBack) },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = GlacierBg,
+        contentWindowInsets = WindowInsets(0),
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp, vertical = 16.dp),
+                .padding(start = 16.dp, end = 16.dp, top = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             GlacierSectionCard(title = "BG_TRACKING") {
@@ -103,6 +105,29 @@ fun PositionTrackingScreen(
                             color = if (uiState.trackingEnabled) GlacierTeal else GlacierMuted,
                             fontFamily = FontFamily.Monospace,
                             fontSize = 13.sp,
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "PRECISION: ",
+                                color = GlacierMuted,
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 12.sp,
+                            )
+                            Text(
+                                text = uiState.precisionLabel,
+                                color = if (uiState.trackingEnabled) GlacierTeal else GlacierMuted,
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = uiState.precisionDetail,
+                            color = GlacierMuted,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 11.sp,
                         )
                         if (!uiState.permissionsReady) {
                             Spacer(modifier = Modifier.height(4.dp))

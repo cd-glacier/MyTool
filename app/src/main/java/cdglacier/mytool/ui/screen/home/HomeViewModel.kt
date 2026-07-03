@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cdglacier.mytool.data.repository.HabitHistoryRepository
 import cdglacier.mytool.data.repository.ObsidianRepository
-import cdglacier.mytool.data.repository.TrackingStateRepository
 import cdglacier.mytool.domain.usecase.DailyActivity
 import cdglacier.mytool.domain.usecase.GetActivityRatesUseCase
 import cdglacier.mytool.domain.usecase.GetTodayHabitCompletionRateUseCase
@@ -24,7 +23,6 @@ class HomeViewModel @Inject constructor(
     private val habitHistoryRepository: HabitHistoryRepository,
     private val getTodayHabitCompletionRateUseCase: GetTodayHabitCompletionRateUseCase,
     private val getActivityRatesUseCase: GetActivityRatesUseCase,
-    private val trackingStateRepository: TrackingStateRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -38,16 +36,6 @@ class HomeViewModel @Inject constructor(
                 val today = _uiState.value.todayCompletionRate
                 val activities = computeActivities(history, today)
                 _uiState.update { it.copy(dailyActivities = activities) }
-            }
-        }
-        viewModelScope.launch {
-            trackingStateRepository.trackingEnabled.collect { enabled ->
-                _uiState.update { it.copy(trackingEnabled = enabled) }
-            }
-        }
-        viewModelScope.launch {
-            trackingStateRepository.mode.collect { mode ->
-                _uiState.update { it.copy(trackingMode = mode) }
             }
         }
     }
@@ -69,12 +57,7 @@ class HomeViewModel @Inject constructor(
     fun refresh() {
         viewModelScope.launch {
             val uri = obsidianRepository.journalDirUri.first()
-            _uiState.update {
-                it.copy(
-                    journalDirUri = uri,
-                    isLoading = !hasLoadedOnce && uri != null,
-                )
-            }
+            _uiState.update { it.copy(isLoading = !hasLoadedOnce && uri != null) }
             if (uri == null) return@launch
             val format = obsidianRepository.filenameFormat.first()
             val today = LocalDate.now()
