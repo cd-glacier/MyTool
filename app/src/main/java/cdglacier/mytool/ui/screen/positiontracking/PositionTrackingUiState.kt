@@ -22,4 +22,18 @@ data class PositionTrackingUiState(
 
     val canExport: Boolean
         get() = journalDirUri != null && !isExporting
+
+    val precisionLabel: String
+        get() = when {
+            !trackingEnabled -> "OFF"
+            trackingMode == TrackingMode.MOVING -> "HIGH"
+            else -> "BALANCED"
+        }
+
+    val precisionDetail: String
+        get() = when {
+            !trackingEnabled -> "記録は停止しています"
+            trackingMode == TrackingMode.MOVING -> "GPS高精度 / 5秒間隔"
+            else -> "省電力 / 30秒間隔"
+        }
 }

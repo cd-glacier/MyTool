@@ -29,7 +29,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import cdglacier.mytool.data.repository.TrackingMode
 import cdglacier.mytool.ui.component.GlacierButton
 import cdglacier.mytool.ui.component.GlacierSectionCard
 import cdglacier.mytool.ui.component.GlacierSwitch
@@ -105,12 +104,6 @@ fun PositionTrackingScreen(
                             fontFamily = FontFamily.Monospace,
                             fontSize = 13.sp,
                         )
-                        val (precisionLabel, precisionDetail) = when {
-                            !uiState.trackingEnabled -> "OFF" to "記録は停止しています"
-                            uiState.trackingMode == TrackingMode.MOVING -> "HIGH" to "GPS高精度 / 5秒間隔"
-                            else -> "BALANCED" to "省電力 / 30秒間隔"
-                        }
-                        val precisionColor = if (uiState.trackingEnabled) GlacierTeal else GlacierMuted
                         Spacer(modifier = Modifier.height(6.dp))
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
@@ -120,8 +113,8 @@ fun PositionTrackingScreen(
                                 fontSize = 12.sp,
                             )
                             Text(
-                                text = precisionLabel,
-                                color = precisionColor,
+                                text = uiState.precisionLabel,
+                                color = if (uiState.trackingEnabled) GlacierTeal else GlacierMuted,
                                 fontFamily = FontFamily.Monospace,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp,
@@ -129,7 +122,7 @@ fun PositionTrackingScreen(
                         }
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = precisionDetail,
+                            text = uiState.precisionDetail,
                             color = GlacierMuted,
                             fontFamily = FontFamily.Monospace,
                             fontSize = 11.sp,

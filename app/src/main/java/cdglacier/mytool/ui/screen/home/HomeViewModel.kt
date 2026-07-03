@@ -57,12 +57,7 @@ class HomeViewModel @Inject constructor(
     fun refresh() {
         viewModelScope.launch {
             val uri = obsidianRepository.journalDirUri.first()
-            _uiState.update {
-                it.copy(
-                    journalDirUri = uri,
-                    isLoading = !hasLoadedOnce && uri != null,
-                )
-            }
+            _uiState.update { it.copy(isLoading = !hasLoadedOnce && uri != null) }
             if (uri == null) return@launch
             val format = obsidianRepository.filenameFormat.first()
             val today = LocalDate.now()
