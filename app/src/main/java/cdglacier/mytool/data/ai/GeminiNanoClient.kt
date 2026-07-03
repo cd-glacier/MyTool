@@ -1,17 +1,14 @@
 package cdglacier.mytool.data.ai
 
-import android.content.Context
 import com.google.mlkit.genai.common.DownloadStatus
 import com.google.mlkit.genai.common.FeatureStatus
 import com.google.mlkit.genai.prompt.Generation
 import com.google.mlkit.genai.prompt.GenerativeModel
-import com.google.mlkit.genai.prompt.content.TextPart
+import com.google.mlkit.genai.prompt.TextPart
 import com.google.mlkit.genai.prompt.generateContentRequest
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
@@ -26,9 +23,7 @@ enum class GeminiNanoAvailability {
 }
 
 @Singleton
-class GeminiNanoClient @Inject constructor(
-    @ApplicationContext private val context: Context,
-) {
+class GeminiNanoClient @Inject constructor() {
     private val mutex = Mutex()
     private var cachedModel: GenerativeModel? = null
 
@@ -36,7 +31,7 @@ class GeminiNanoClient @Inject constructor(
     val availability: StateFlow<GeminiNanoAvailability> = _availability.asStateFlow()
 
     private suspend fun getModel(): GenerativeModel = mutex.withLock {
-        cachedModel ?: Generation.getClient(context).also { cachedModel = it }
+        cachedModel ?: Generation.getClient().also { cachedModel = it }
     }
 
     suspend fun refreshAvailability(): GeminiNanoAvailability {
@@ -46,7 +41,7 @@ class GeminiNanoClient @Inject constructor(
             FeatureStatus.DOWNLOADABLE -> GeminiNanoAvailability.DOWNLOADABLE
             FeatureStatus.DOWNLOADING -> GeminiNanoAvailability.DOWNLOADING
             FeatureStatus.UNAVAILABLE -> GeminiNanoAvailability.UNAVAILABLE
-            null -> GeminiNanoAvailability.UNAVAILABLE
+            else -> GeminiNanoAvailability.UNAVAILABLE
         }
         _availability.value = mapped
         return mapped
@@ -57,11 +52,8 @@ class GeminiNanoClient @Inject constructor(
         if (status == GeminiNanoAvailability.AVAILABLE) return true
         if (status != GeminiNanoAvailability.DOWNLOADABLE) return false
         return runCatching {
-            getModel().download().collect { s ->
-                if (s is DownloadStatus.DownloadProgress || s is DownloadStatus.DownloadStarted) {
-                    _availability.value = GeminiNanoAvailability.DOWNLOADING
-                }
-            }
+            _availability.value = GeminiNanoAvailability.DOWNLOADING
+            getModel().download().collect { _: DownloadStatus -> }
             refreshAvailability() == GeminiNanoAvailability.AVAILABLE
         }.getOrDefault(false)
     }
