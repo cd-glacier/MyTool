@@ -98,9 +98,9 @@ class RecipeViewModel @Inject constructor(
         }
     }
 
-    fun ensureAiReady() {
+    fun refreshAiAvailability() {
         viewModelScope.launch {
-            geminiNanoClient.ensureDownloaded()
+            geminiNanoClient.refreshAvailability()
         }
     }
 

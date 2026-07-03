@@ -3,6 +3,7 @@ package cdglacier.mytool.ui.screen.settings
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cdglacier.mytool.data.ai.GeminiNanoClient
 import cdglacier.mytool.data.repository.CalendarPermissionRepository
 import cdglacier.mytool.data.repository.LocationPermissionRepository
 import cdglacier.mytool.data.repository.ObsidianRepository
@@ -19,6 +20,7 @@ class SettingsViewModel @Inject constructor(
     private val obsidianRepository: ObsidianRepository,
     private val locationPermissionRepository: LocationPermissionRepository,
     private val calendarPermissionRepository: CalendarPermissionRepository,
+    private val geminiNanoClient: GeminiNanoClient,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
@@ -60,11 +62,24 @@ class SettingsViewModel @Inject constructor(
                 _uiState.update { it.copy(backgroundLocationGranted = granted) }
             }
         }
+        viewModelScope.launch {
+            geminiNanoClient.availability.collect { availability ->
+                _uiState.update { it.copy(aiAvailability = availability) }
+            }
+        }
     }
 
     fun refreshPermissions() {
         calendarPermissionRepository.refresh()
         locationPermissionRepository.refresh()
+    }
+
+    fun refreshAiAvailability() {
+        viewModelScope.launch { geminiNanoClient.refreshAvailability() }
+    }
+
+    fun downloadAiModel() {
+        viewModelScope.launch { geminiNanoClient.ensureDownloaded() }
     }
 
     fun onVaultUriPicked(uri: Uri) {

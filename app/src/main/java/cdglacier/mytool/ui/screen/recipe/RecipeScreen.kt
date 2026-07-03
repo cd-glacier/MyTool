@@ -57,7 +57,7 @@ fun RecipeRoute(
     val context = LocalContext.current
     LifecycleResumeEffect(Unit) {
         viewModel.refresh()
-        viewModel.ensureAiReady()
+        viewModel.refreshAiAvailability()
         onPauseOrDispose { }
     }
     LaunchedEffect(prefilledUrl) {
@@ -225,10 +225,11 @@ private fun SearchSection(
     availability: GeminiNanoAvailability,
     onQueryChange: (String) -> Unit,
 ) {
-    val aiLabel = when (availability) {
-        GeminiNanoAvailability.AVAILABLE -> "[AI:READY]"
+    val isEnabled = availability == GeminiNanoAvailability.AVAILABLE
+    val statusLabel = when (availability) {
+        GeminiNanoAvailability.AVAILABLE -> if (isSearching) "[...]" else "[AI:READY]"
         GeminiNanoAvailability.DOWNLOADING -> "[AI:DL...]"
-        GeminiNanoAvailability.DOWNLOADABLE -> "[AI:DL?]"
+        GeminiNanoAvailability.DOWNLOADABLE -> "[NO_MODEL]"
         GeminiNanoAvailability.UNAVAILABLE -> "[AI:N/A]"
         GeminiNanoAvailability.UNKNOWN -> "[AI:?]"
     }
@@ -237,12 +238,13 @@ private fun SearchSection(
             TextInput(
                 value = query,
                 onChange = onQueryChange,
+                enabled = isEnabled,
                 modifier = Modifier.weight(1f),
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = if (isSearching) "[...]" else aiLabel,
-                color = GlacierMuted,
+                text = statusLabel,
+                color = if (isEnabled) GlacierMuted else GlacierAmber,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 11.sp,
             )
@@ -251,12 +253,22 @@ private fun SearchSection(
 }
 
 @Composable
-private fun TextInput(value: String, onChange: (String) -> Unit, modifier: Modifier = Modifier) {
+private fun TextInput(
+    value: String,
+    onChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
     BasicTextField(
         value = value,
         onValueChange = onChange,
+        enabled = enabled,
         singleLine = true,
-        textStyle = TextStyle(color = GlacierOnSurface, fontFamily = FontFamily.Monospace, fontSize = 13.sp),
+        textStyle = TextStyle(
+            color = if (enabled) GlacierOnSurface else GlacierMuted,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 13.sp,
+        ),
         cursorBrush = SolidColor(GlacierAmber),
         modifier = modifier
             .background(GlacierSurface)
