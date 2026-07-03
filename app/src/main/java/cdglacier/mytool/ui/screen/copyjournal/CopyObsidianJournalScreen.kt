@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -103,6 +104,7 @@ fun CopyObsidianJournalScreen(
         topBar = { GlacierTopBar(title = "COPY_JOURNAL", onBack = onBack) },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = GlacierBg,
+        contentWindowInsets = WindowInsets(0),
     ) { innerPadding ->
         Column(
             modifier = Modifier

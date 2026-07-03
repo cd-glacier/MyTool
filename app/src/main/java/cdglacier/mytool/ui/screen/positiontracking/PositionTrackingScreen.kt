@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -84,6 +85,7 @@ fun PositionTrackingScreen(
         topBar = { GlacierTopBar(title = "POSITION_TRACKING", onBack = onBack) },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = GlacierBg,
+        contentWindowInsets = WindowInsets(0),
     ) { innerPadding ->
         Column(
             modifier = Modifier
