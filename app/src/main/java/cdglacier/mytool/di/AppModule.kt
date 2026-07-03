@@ -1,5 +1,7 @@
 package cdglacier.mytool.di
 
+import cdglacier.mytool.data.repository.AiRepository
+import cdglacier.mytool.data.repository.AiRepositoryImpl
 import cdglacier.mytool.data.repository.AutoCopyJournalScheduler
 import cdglacier.mytool.data.repository.AutoCopyJournalSchedulerImpl
 import cdglacier.mytool.data.repository.CalendarPermissionRepository
@@ -87,4 +89,8 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindRecipeRepository(impl: RecipeRepositoryImpl): RecipeRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAiRepository(impl: AiRepositoryImpl): AiRepository
 }

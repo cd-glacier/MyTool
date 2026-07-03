@@ -2,8 +2,7 @@ package cdglacier.mytool.ui.screen.recipe
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cdglacier.mytool.data.ai.GeminiNanoAvailability
-import cdglacier.mytool.data.ai.GeminiNanoClient
+import cdglacier.mytool.data.repository.AiRepository
 import cdglacier.mytool.data.repository.ObsidianRepository
 import cdglacier.mytool.data.repository.Ogp
 import cdglacier.mytool.data.repository.OgpRepository
@@ -38,7 +37,7 @@ class RecipeViewModel @Inject constructor(
     private val ogpRepository: OgpRepository,
     private val addRecipeToJournalUseCase: AddRecipeToJournalUseCase,
     private val searchRecipesUseCase: SearchRecipesUseCase,
-    private val geminiNanoClient: GeminiNanoClient,
+    private val aiRepository: AiRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RecipeUiState())
@@ -72,7 +71,7 @@ class RecipeViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
-            geminiNanoClient.availability.collect { availability ->
+            aiRepository.availability.collect { availability ->
                 _uiState.update { it.copy(aiAvailability = availability) }
             }
         }
@@ -99,9 +98,7 @@ class RecipeViewModel @Inject constructor(
     }
 
     fun refreshAiAvailability() {
-        viewModelScope.launch {
-            geminiNanoClient.refreshAvailability()
-        }
+        viewModelScope.launch { aiRepository.refreshAvailability() }
     }
 
     fun onSearchQueryChange(query: String) {

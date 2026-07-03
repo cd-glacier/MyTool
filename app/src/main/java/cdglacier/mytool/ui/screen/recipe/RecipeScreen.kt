@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import cdglacier.mytool.data.ai.GeminiNanoAvailability
+import cdglacier.mytool.data.repository.AiAvailability
 import cdglacier.mytool.ui.component.GlacierSectionCard
 import cdglacier.mytool.ui.component.GlacierTopBar
 import cdglacier.mytool.ui.component.RecipeItem
@@ -220,10 +220,10 @@ private fun AddRecipeSection(
 @Composable
 private fun SearchSection(
     query: String,
-    availability: GeminiNanoAvailability,
+    availability: AiAvailability,
     onQueryChange: (String) -> Unit,
 ) {
-    val isEnabled = availability == GeminiNanoAvailability.AVAILABLE
+    val isEnabled = availability == AiAvailability.AVAILABLE
     GlacierSectionCard(title = "SEARCH") {
         TextInput(
             value = query,

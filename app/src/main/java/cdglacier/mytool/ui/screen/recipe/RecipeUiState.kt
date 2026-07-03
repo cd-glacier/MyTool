@@ -1,6 +1,6 @@
 package cdglacier.mytool.ui.screen.recipe
 
-import cdglacier.mytool.data.ai.GeminiNanoAvailability
+import cdglacier.mytool.data.repository.AiAvailability
 import cdglacier.mytool.ui.component.RecipeItemUiModel
 import java.time.LocalDate
 
@@ -11,7 +11,7 @@ data class RecipeUiState(
     val searchQuery: String = "",
     val isSearching: Boolean = false,
     val searchResults: List<RecipeItemUiModel> = emptyList(),
-    val aiAvailability: GeminiNanoAvailability = GeminiNanoAvailability.UNKNOWN,
+    val aiAvailability: AiAvailability = AiAvailability.UNKNOWN,
 )
 
 data class RecipeSectionUiModel(

@@ -1,7 +1,7 @@
 package cdglacier.mytool.ui.screen.settings
 
 import android.net.Uri
-import cdglacier.mytool.data.ai.GeminiNanoAvailability
+import cdglacier.mytool.data.repository.AiAvailability
 
 data class SettingsUiState(
     val vaultUri: Uri? = null,
@@ -11,5 +11,5 @@ data class SettingsUiState(
     val calendarPermissionGranted: Boolean = false,
     val fineLocationGranted: Boolean = false,
     val backgroundLocationGranted: Boolean = false,
-    val aiAvailability: GeminiNanoAvailability = GeminiNanoAvailability.UNKNOWN,
+    val aiAvailability: AiAvailability = AiAvailability.UNKNOWN,
 )

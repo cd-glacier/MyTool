@@ -1,16 +1,16 @@
 package cdglacier.mytool.domain.usecase
 
-import cdglacier.mytool.data.ai.GeminiNanoClient
+import cdglacier.mytool.data.repository.AiRepository
 import cdglacier.mytool.data.repository.RecipeItem
 import javax.inject.Inject
 
 class SearchRecipesUseCase @Inject constructor(
-    private val geminiNanoClient: GeminiNanoClient,
+    private val aiRepository: AiRepository,
 ) {
     suspend operator fun invoke(query: String, recipes: List<RecipeItem>, topN: Int = 20): List<RecipeItem> {
         if (query.isBlank() || recipes.isEmpty()) return emptyList()
         val prompt = buildPrompt(query, recipes)
-        val response = geminiNanoClient.generate(prompt) ?: return emptyList()
+        val response = aiRepository.generate(prompt) ?: return emptyList()
         val indices = parseIndices(response)
         return indices
             .mapNotNull { recipes.getOrNull(it - 1) }

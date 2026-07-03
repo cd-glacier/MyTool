@@ -37,7 +37,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import cdglacier.mytool.data.ai.GeminiNanoAvailability
+import cdglacier.mytool.data.repository.AiAvailability
 import cdglacier.mytool.ui.component.GlacierSectionCard
 import cdglacier.mytool.ui.component.GlacierTopBar
 import cdglacier.mytool.ui.theme.GlacierAmber
@@ -201,11 +201,11 @@ fun SettingsScreen(
 
             GlacierSectionCard(title = "AI_MODEL") {
                 val (label, color, action) = when (uiState.aiAvailability) {
-                    GeminiNanoAvailability.AVAILABLE -> Triple("[READY]", GlacierTeal, null)
-                    GeminiNanoAvailability.DOWNLOADING -> Triple("[DOWNLOADING...]", GlacierAmber, null)
-                    GeminiNanoAvailability.DOWNLOADABLE -> Triple("[DOWNLOAD]", GlacierAmber, onDownloadAiModel)
-                    GeminiNanoAvailability.UNAVAILABLE -> Triple("[UNAVAILABLE]", GlacierMuted, null)
-                    GeminiNanoAvailability.UNKNOWN -> Triple("[CHECKING...]", GlacierMuted, null)
+                    AiAvailability.AVAILABLE -> Triple("[READY]", GlacierTeal, null)
+                    AiAvailability.DOWNLOADING -> Triple("[DOWNLOADING...]", GlacierAmber, null)
+                    AiAvailability.DOWNLOADABLE -> Triple("[DOWNLOAD]", GlacierAmber, onDownloadAiModel)
+                    AiAvailability.UNAVAILABLE -> Triple("[UNAVAILABLE]", GlacierMuted, null)
+                    AiAvailability.UNKNOWN -> Triple("[CHECKING...]", GlacierMuted, null)
                 }
                 SettingRow(
                     label = "GEMINI_NANO",
