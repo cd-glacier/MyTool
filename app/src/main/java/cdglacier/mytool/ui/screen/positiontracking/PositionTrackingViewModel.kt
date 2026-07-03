@@ -44,6 +44,11 @@ class PositionTrackingViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
+            trackingStateRepository.mode.collect { mode ->
+                _uiState.update { it.copy(trackingMode = mode) }
+            }
+        }
+        viewModelScope.launch {
             locationPermissionRepository.fineLocationGranted.collect { granted ->
                 _uiState.update { it.copy(foregroundLocationGranted = granted) }
             }
