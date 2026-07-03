@@ -116,7 +116,6 @@ fun RecipeScreen(
             item(key = "search") {
                 SearchSection(
                     query = uiState.searchQuery,
-                    isSearching = uiState.isSearching,
                     availability = uiState.aiAvailability,
                     onQueryChange = onSearchQueryChange,
                 )
@@ -221,29 +220,17 @@ private fun AddRecipeSection(
 @Composable
 private fun SearchSection(
     query: String,
-    isSearching: Boolean,
     availability: GeminiNanoAvailability,
     onQueryChange: (String) -> Unit,
 ) {
     val isEnabled = availability == GeminiNanoAvailability.AVAILABLE
     GlacierSectionCard(title = "SEARCH") {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            TextInput(
-                value = query,
-                onChange = onQueryChange,
-                enabled = isEnabled,
-                modifier = Modifier.weight(1f),
-            )
-            if (isSearching) {
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "[...]",
-                    color = GlacierMuted,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 11.sp,
-                )
-            }
-        }
+        TextInput(
+            value = query,
+            onChange = onQueryChange,
+            enabled = isEnabled,
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
 
