@@ -178,7 +178,7 @@ class JournalTodoWidgetConfigActivity : ComponentActivity() {
                         }
 
                         GlacierButton(
-                            label = "保存",
+                            label = "SAVE",
                             onClick = {
                                 val vUri = vaultDirUri ?: return@GlacierButton
                                 val jUri = journalDirUri ?: return@GlacierButton

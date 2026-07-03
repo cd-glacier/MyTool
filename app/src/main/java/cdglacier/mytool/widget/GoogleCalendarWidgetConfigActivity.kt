@@ -214,7 +214,7 @@ private fun CalendarWidgetConfigScreen(
             )
 
             GlacierButton(
-                label = "保存",
+                label = "SAVE",
                 onClick = {
                     val ids = checkedState.filterValues { it }.keys.toSet()
                     scope.launch {
@@ -276,7 +276,7 @@ private fun CalendarRow(
         ) {
             if (checked) {
                 Text(
-                    text = "x",
+                    text = "✓",
                     color = GlacierBg,
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Bold,
