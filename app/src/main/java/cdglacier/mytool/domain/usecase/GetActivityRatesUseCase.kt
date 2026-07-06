@@ -7,6 +7,7 @@ import javax.inject.Inject
 data class DailyActivity(
     val habitRate: Float?,
     val distanceMeters: Double,
+    val householdHusbandPoints: Int,
     val activityRate: Float?,
 )
 
@@ -23,7 +24,7 @@ class GetActivityRatesUseCase @Inject constructor() {
                 else (s.habitRate ?: 0f) * HABIT_WEIGHT +
                     distanceRatio * DISTANCE_WEIGHT +
                     householdRatio * HOUSEHOLD_WEIGHT
-            DailyActivity(s.habitRate, s.distanceMeters, activity)
+            DailyActivity(s.habitRate, s.distanceMeters, s.householdHusbandPoints, activity)
         }
     }
 

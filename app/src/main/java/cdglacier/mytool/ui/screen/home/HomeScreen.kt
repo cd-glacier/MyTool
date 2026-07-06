@@ -245,6 +245,12 @@ private fun ActivityBreakdown(
             fontSize = 12.sp,
         )
         Text(
+            text = "HOUSEHOLD: ${activity?.householdHusbandPoints ?: 0}pt",
+            color = GlacierOnSurface,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 12.sp,
+        )
+        Text(
             text = "ACTIVITY: $activityPercent%",
             color = GlacierTeal,
             fontFamily = FontFamily.Monospace,
