@@ -30,7 +30,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -47,7 +49,6 @@ import cdglacier.mytool.ui.theme.GlacierAmber
 import cdglacier.mytool.ui.theme.GlacierBg
 import cdglacier.mytool.ui.theme.GlacierCyan
 import cdglacier.mytool.ui.theme.GlacierMuted
-import cdglacier.mytool.ui.theme.GlacierOnPrimary
 import cdglacier.mytool.ui.theme.GlacierOnSurface
 import cdglacier.mytool.ui.theme.GlacierSurface
 import cdglacier.mytool.ui.theme.GlacierSurfaceLow
@@ -581,9 +582,14 @@ private fun NumberField(value: String, onChange: (String) -> Unit, allowSign: Bo
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = keyboard),
             textStyle = TextStyle(
-                color = GlacierOnPrimary,
+                color = GlacierOnSurface,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 13.sp,
+                platformStyle = PlatformTextStyle(includeFontPadding = false),
+                lineHeightStyle = LineHeightStyle(
+                    alignment = LineHeightStyle.Alignment.Center,
+                    trim = LineHeightStyle.Trim.Both,
+                ),
             ),
             cursorBrush = SolidColor(GlacierAmber),
             modifier = Modifier.fillMaxWidth(),
