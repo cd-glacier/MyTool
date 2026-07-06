@@ -22,6 +22,9 @@ data object PositionTrackingRoute : NavKey
 data object HouseholdRoute : NavKey
 
 @Serializable
+data object HouseholdPointsRoute : NavKey
+
+@Serializable
 data object MoneyRoute : NavKey
 
 @Serializable

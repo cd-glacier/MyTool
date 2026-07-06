@@ -57,6 +57,7 @@ import cdglacier.mytool.ui.theme.SpaceGroteskFamily
 @Composable
 fun HouseholdRoute(
     onBack: () -> Unit,
+    onNavigateToPoints: () -> Unit,
     viewModel: HouseholdViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -80,18 +81,13 @@ fun HouseholdRoute(
         onBack = onBack,
         onPeriodChange = viewModel::onPeriodChange,
         onOpenRecord = viewModel::onOpenRecordDialog,
-        onOpenPoints = viewModel::onOpenPointsDialog,
+        onNavigateToPoints = onNavigateToPoints,
         onCloseRecord = viewModel::onCloseRecordDialog,
         onRecordNameChange = viewModel::onRecordNameChange,
         onRecordAssigneeChange = viewModel::onRecordAssigneeChange,
         onRecordCountChange = viewModel::onRecordCountChange,
         onRecordAdjustmentChange = viewModel::onRecordAdjustmentChange,
         onSubmitRecord = viewModel::onSubmitRecord,
-        onClosePoints = viewModel::onClosePointsDialog,
-        onNewPointNameChange = viewModel::onNewPointNameChange,
-        onNewPointValueChange = viewModel::onNewPointValueChange,
-        onAddPoint = viewModel::onAddPoint,
-        onDeletePoint = viewModel::onDeletePoint,
     )
 }
 
@@ -102,18 +98,13 @@ fun HouseholdScreen(
     onBack: () -> Unit,
     onPeriodChange: (HouseholdPeriod) -> Unit,
     onOpenRecord: () -> Unit,
-    onOpenPoints: () -> Unit,
+    onNavigateToPoints: () -> Unit,
     onCloseRecord: () -> Unit,
     onRecordNameChange: (String) -> Unit,
     onRecordAssigneeChange: (Assignee) -> Unit,
     onRecordCountChange: (String) -> Unit,
     onRecordAdjustmentChange: (String) -> Unit,
     onSubmitRecord: () -> Unit,
-    onClosePoints: () -> Unit,
-    onNewPointNameChange: (String) -> Unit,
-    onNewPointValueChange: (String) -> Unit,
-    onAddPoint: () -> Unit,
-    onDeletePoint: (String) -> Unit,
 ) {
     Scaffold(
         topBar = { HouseholdTopBar(onBack) },
@@ -144,7 +135,7 @@ fun HouseholdScreen(
                     Spacer(Modifier.height(16.dp))
                     BreakdownSection(uiState.summary)
                     Spacer(Modifier.height(24.dp))
-                    ActionButtons(onOpenRecord, onOpenPoints)
+                    ActionButtons(onOpenRecord, onNavigateToPoints)
                 }
             }
         }
@@ -163,16 +154,6 @@ fun HouseholdScreen(
         )
     }
 
-    uiState.pointsDialog?.let { dialog ->
-        PointsDialog(
-            state = dialog,
-            onDismiss = onClosePoints,
-            onNewNameChange = onNewPointNameChange,
-            onNewValueChange = onNewPointValueChange,
-            onAdd = onAddPoint,
-            onDelete = onDeletePoint,
-        )
-    }
 }
 
 @Composable
@@ -533,89 +514,6 @@ private fun AssigneeSelector(current: Assignee, onChange: (Assignee) -> Unit) {
 }
 
 @Composable
-private fun PointsDialog(
-    state: PointsDialogState,
-    onDismiss: () -> Unit,
-    onNewNameChange: (String) -> Unit,
-    onNewValueChange: (String) -> Unit,
-    onAdd: () -> Unit,
-    onDelete: (String) -> Unit,
-) {
-    Dialog(onDismissRequest = onDismiss) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(GlacierBg)
-                .padding(20.dp)
-        ) {
-            DialogTitle("MANAGE_POINTS")
-            Spacer(Modifier.height(12.dp))
-            if (state.points.isEmpty()) {
-                Text(
-                    "-- 家事が未登録です --",
-                    color = GlacierMuted,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 12.sp,
-                )
-            } else {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    state.points.forEach { p ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(GlacierSurface)
-                                .padding(horizontal = 12.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                p.name,
-                                modifier = Modifier.weight(1f),
-                                color = GlacierOnSurface,
-                                fontFamily = FontFamily.Monospace,
-                                fontSize = 13.sp,
-                            )
-                            Text(
-                                "${p.points}pt",
-                                color = GlacierTeal,
-                                fontFamily = FontFamily.Monospace,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                            )
-                            Spacer(Modifier.width(12.dp))
-                            Box(
-                                modifier = Modifier
-                                    .background(GlacierBg)
-                                    .clickable { onDelete(p.name) }
-                                    .padding(horizontal = 8.dp, vertical = 4.dp),
-                            ) {
-                                Text(
-                                    "×",
-                                    color = GlacierAmber,
-                                    fontFamily = FontFamily.Monospace,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold,
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-            Spacer(Modifier.height(16.dp))
-            FieldLabel("NEW_TASK")
-            TextField(state.newName, onNewNameChange, placeholder = "家事名")
-            Spacer(Modifier.height(8.dp))
-            FieldLabel("POINTS")
-            NumberField(state.newPointsText, onNewValueChange)
-            Spacer(Modifier.height(12.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                PrimaryButton("CLOSE", GlacierSurface, Modifier.weight(1f), onDismiss)
-                PrimaryButton("+ ADD", GlacierAmber, Modifier.weight(1f), onAdd)
-            }
-        }
-    }
-}
-
-@Composable
 private fun DialogTitle(text: String) {
     Text(
         text,
@@ -638,37 +536,6 @@ private fun FieldLabel(text: String) {
         letterSpacing = 2.sp,
     )
     Spacer(Modifier.height(4.dp))
-}
-
-@Composable
-private fun TextField(value: String, onChange: (String) -> Unit, placeholder: String = "") {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(GlacierSurface)
-            .padding(horizontal = 12.dp, vertical = 12.dp)
-    ) {
-        if (value.isEmpty()) {
-            Text(
-                placeholder,
-                color = GlacierMuted,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 13.sp,
-            )
-        }
-        BasicTextField(
-            value = value,
-            onValueChange = onChange,
-            singleLine = true,
-            textStyle = TextStyle(
-                color = GlacierOnPrimary,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 13.sp,
-            ),
-            cursorBrush = SolidColor(GlacierAmber),
-            modifier = Modifier.fillMaxWidth(),
-        )
-    }
 }
 
 @Composable

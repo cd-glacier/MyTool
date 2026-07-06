@@ -16,7 +16,6 @@ data class HouseholdUiState(
     val points: List<HouseholdPoint> = emptyList(),
     val summary: HouseholdSummary = HouseholdSummary(0, 0, emptyMap()),
     val recordDialog: RecordDialogState? = null,
-    val pointsDialog: PointsDialogState? = null,
     val errorMessage: String? = null,
 )
 
@@ -25,10 +24,4 @@ data class RecordDialogState(
     val assignee: Assignee = Assignee.HUSBAND,
     val countText: String = "1",
     val adjustmentText: String = "0",
-)
-
-data class PointsDialogState(
-    val points: List<HouseholdPoint> = emptyList(),
-    val newName: String = "",
-    val newPointsText: String = "",
 )

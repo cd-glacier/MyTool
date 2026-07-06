@@ -24,6 +24,7 @@ import cdglacier.mytool.navigation.CopyObsidianJournalRoute as CopyObsidianJourn
 import cdglacier.mytool.navigation.HabitTrackingRoute as HabitTrackingNav
 import cdglacier.mytool.navigation.HomeRoute as HomeNav
 import cdglacier.mytool.navigation.HouseholdRoute as HouseholdNav
+import cdglacier.mytool.navigation.HouseholdPointsRoute as HouseholdPointsNav
 import cdglacier.mytool.navigation.MoneyChartRoute as MoneyChartNav
 import cdglacier.mytool.navigation.MoneyRoute as MoneyNav
 import cdglacier.mytool.navigation.PositionTrackingRoute as PositionTrackingNav
@@ -33,6 +34,7 @@ import cdglacier.mytool.ui.screen.copyjournal.CopyObsidianJournalRoute
 import cdglacier.mytool.ui.screen.habit.HabitTrackingRoute
 import cdglacier.mytool.ui.screen.home.HomeRoute
 import cdglacier.mytool.ui.screen.household.HouseholdRoute
+import cdglacier.mytool.ui.screen.householdpoints.HouseholdPointsRoute
 import cdglacier.mytool.ui.screen.money.MoneyRoute
 import cdglacier.mytool.ui.screen.money.chart.MoneyChartRoute
 import cdglacier.mytool.ui.screen.positiontracking.PositionTrackingRoute
@@ -120,7 +122,13 @@ class MainActivity : ComponentActivity() {
                                 PositionTrackingRoute(onBack = { backStack.removeLastOrNull() })
                             }
                             entry<HouseholdNav> {
-                                HouseholdRoute(onBack = { backStack.removeLastOrNull() })
+                                HouseholdRoute(
+                                    onBack = { backStack.removeLastOrNull() },
+                                    onNavigateToPoints = { backStack.add(HouseholdPointsNav) },
+                                )
+                            }
+                            entry<HouseholdPointsNav> {
+                                HouseholdPointsRoute(onBack = { backStack.removeLastOrNull() })
                             }
                             entry<RecipeNav> { route ->
                                 RecipeRoute(

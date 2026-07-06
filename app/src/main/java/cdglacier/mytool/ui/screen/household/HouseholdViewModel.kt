@@ -5,11 +5,9 @@ import androidx.lifecycle.viewModelScope
 import cdglacier.mytool.data.repository.ObsidianRepository
 import cdglacier.mytool.domain.model.Assignee
 import cdglacier.mytool.domain.model.HouseholdEntry
-import cdglacier.mytool.domain.model.HouseholdPoint
 import cdglacier.mytool.domain.usecase.GetHouseholdPointsUseCase
 import cdglacier.mytool.domain.usecase.GetHouseholdSummaryUseCase
 import cdglacier.mytool.domain.usecase.RecordHouseholdEntryUseCase
-import cdglacier.mytool.domain.usecase.SaveHouseholdPointsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,7 +24,6 @@ import javax.inject.Inject
 class HouseholdViewModel @Inject constructor(
     private val obsidianRepository: ObsidianRepository,
     private val getHouseholdPointsUseCase: GetHouseholdPointsUseCase,
-    private val saveHouseholdPointsUseCase: SaveHouseholdPointsUseCase,
     private val recordHouseholdEntryUseCase: RecordHouseholdEntryUseCase,
     private val getHouseholdSummaryUseCase: GetHouseholdSummaryUseCase,
 ) : ViewModel() {
@@ -116,70 +113,6 @@ class HouseholdViewModel @Inject constructor(
             } else {
                 _uiState.update { it.copy(recordDialog = null) }
                 refresh()
-            }
-        }
-    }
-
-    fun onOpenPointsDialog() {
-        _uiState.update {
-            it.copy(pointsDialog = PointsDialogState(points = it.points))
-        }
-    }
-
-    fun onClosePointsDialog() {
-        _uiState.update { it.copy(pointsDialog = null) }
-    }
-
-    fun onNewPointNameChange(name: String) {
-        _uiState.update { it.copy(pointsDialog = it.pointsDialog?.copy(newName = name)) }
-    }
-
-    fun onNewPointValueChange(text: String) {
-        _uiState.update { it.copy(pointsDialog = it.pointsDialog?.copy(newPointsText = text)) }
-    }
-
-    fun onAddPoint() {
-        val dialog = _uiState.value.pointsDialog ?: return
-        val name = dialog.newName.trim()
-        val points = dialog.newPointsText.toIntOrNull()
-        if (name.isEmpty() || points == null) {
-            _uiState.update { it.copy(errorMessage = "家事名とポイントを入力してください") }
-            return
-        }
-        if (dialog.points.any { it.name == name }) {
-            _uiState.update { it.copy(errorMessage = "同名の家事が既に存在します") }
-            return
-        }
-        val updated = dialog.points + HouseholdPoint(name, points)
-        persistPoints(updated) {
-            _uiState.update {
-                it.copy(pointsDialog = it.pointsDialog?.copy(
-                    points = updated,
-                    newName = "",
-                    newPointsText = "",
-                ))
-            }
-        }
-    }
-
-    fun onDeletePoint(name: String) {
-        val dialog = _uiState.value.pointsDialog ?: return
-        val updated = dialog.points.filterNot { it.name == name }
-        persistPoints(updated) {
-            _uiState.update {
-                it.copy(pointsDialog = it.pointsDialog?.copy(points = updated))
-            }
-        }
-    }
-
-    private fun persistPoints(updated: List<HouseholdPoint>, onSuccess: () -> Unit) {
-        viewModelScope.launch {
-            val result = saveHouseholdPointsUseCase(updated)
-            if (result.isFailure) {
-                _uiState.update { it.copy(errorMessage = result.exceptionOrNull()?.message) }
-            } else {
-                _uiState.update { it.copy(points = updated) }
-                onSuccess()
             }
         }
     }
