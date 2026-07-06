@@ -6,7 +6,7 @@ import cdglacier.mytool.domain.model.HouseholdSummary
 import java.time.LocalDate
 
 data class HouseholdUiState(
-    val today: LocalDate = LocalDate.now(),
+    val date: LocalDate = LocalDate.now(),
     val isLoading: Boolean = true,
     val journalConfigured: Boolean = true,
     val pagesConfigured: Boolean = true,

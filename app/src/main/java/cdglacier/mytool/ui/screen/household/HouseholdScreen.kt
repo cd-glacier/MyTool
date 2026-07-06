@@ -80,6 +80,8 @@ fun HouseholdRoute(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
         onBack = onBack,
+        onPrevDate = viewModel::onPrevDate,
+        onNextDate = viewModel::onNextDate,
         onOpenRecord = viewModel::onOpenRecordDialog,
         onNavigateToPoints = onNavigateToPoints,
         onCloseRecord = viewModel::onCloseRecordDialog,
@@ -96,6 +98,8 @@ fun HouseholdScreen(
     uiState: HouseholdUiState,
     snackbarHostState: SnackbarHostState,
     onBack: () -> Unit,
+    onPrevDate: () -> Unit,
+    onNextDate: () -> Unit,
     onOpenRecord: () -> Unit,
     onNavigateToPoints: () -> Unit,
     onCloseRecord: () -> Unit,
@@ -146,7 +150,7 @@ fun HouseholdScreen(
                 else -> {
                     ManagePointsLink(onClick = onNavigateToPoints)
                     Spacer(Modifier.height(16.dp))
-                    DateHeader(uiState.today)
+                    DateHeader(uiState.date, onPrevDate, onNextDate)
                     Spacer(Modifier.height(12.dp))
                     SummaryCard(uiState.summary)
                     Spacer(Modifier.height(16.dp))
@@ -211,15 +215,36 @@ private fun HouseholdTopBar(onBack: () -> Unit) {
 }
 
 @Composable
-private fun DateHeader(date: java.time.LocalDate) {
-    Text(
-        "DATE :: ${date}",
-        color = GlacierMuted,
-        fontFamily = SpaceGroteskFamily,
-        fontWeight = FontWeight.Bold,
-        fontSize = 12.sp,
-        letterSpacing = 2.sp,
-    )
+private fun DateHeader(date: java.time.LocalDate, onPrev: () -> Unit, onNext: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        ArrowButton("<", onPrev)
+        Spacer(Modifier.width(12.dp))
+        Text(
+            text = date.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd (E)")),
+            color = GlacierCyan,
+            fontFamily = SpaceGroteskFamily,
+            fontWeight = FontWeight.Black,
+            fontSize = 20.sp,
+            modifier = Modifier.weight(1f),
+        )
+        ArrowButton(">", onNext)
+    }
+}
+
+@Composable
+private fun ArrowButton(label: String, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(32.dp)
+            .background(GlacierSurface)
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(label, color = GlacierAmber, fontFamily = FontFamily.Monospace, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+    }
 }
 
 @Composable

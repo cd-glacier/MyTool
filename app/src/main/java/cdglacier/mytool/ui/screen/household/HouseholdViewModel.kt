@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 import javax.inject.Inject
 
 @HiltViewModel
@@ -35,20 +34,29 @@ class HouseholdViewModel @Inject constructor(
             val journalConfigured = obsidianRepository.journalDirUri.first() != null
             val pagesConfigured = obsidianRepository.pagesDirUri.first() != null
             val points = if (pagesConfigured) getHouseholdPointsUseCase() else emptyList()
-            val today = LocalDate.now()
-            val summary = if (journalConfigured) getHouseholdSummaryUseCase(today..today)
+            val date = _uiState.value.date
+            val summary = if (journalConfigured) getHouseholdSummaryUseCase(date..date)
             else HouseholdUiState().summary
             _uiState.update {
                 it.copy(
                     isLoading = false,
                     journalConfigured = journalConfigured,
                     pagesConfigured = pagesConfigured,
-                    today = today,
                     points = points,
                     summary = summary,
                 )
             }
         }
+    }
+
+    fun onPrevDate() = shiftDate(-1)
+    fun onNextDate() = shiftDate(1)
+
+    private fun shiftDate(days: Long) {
+        _uiState.update {
+            it.copy(date = it.date.plusDays(days), isLoading = true, summary = HouseholdUiState().summary)
+        }
+        refresh()
     }
 
     fun onOpenRecordDialog() {
@@ -96,7 +104,7 @@ class HouseholdViewModel @Inject constructor(
         _uiState.update { it.copy(recordDialog = it.recordDialog?.copy(isSubmitting = true)) }
         viewModelScope.launch {
             val entry = HouseholdEntry(name, dialog.assignee, count, adjustment)
-            val result = recordHouseholdEntryUseCase(_uiState.value.today, entry)
+            val result = recordHouseholdEntryUseCase(_uiState.value.date, entry)
             if (result.isFailure) {
                 _uiState.update {
                     it.copy(
