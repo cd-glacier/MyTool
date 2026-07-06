@@ -175,15 +175,28 @@ private fun ObsidianStatusCard(uiState: HomeUiState, onSelectDate: (LocalDate) -
             }
             .padding(start = 20.dp, end = 16.dp, top = 16.dp, bottom = 16.dp)
     ) {
-        Text(
-            text = "ACTIVITY",
-            color = GlacierMuted,
-            fontFamily = SpaceGroteskFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize = 12.sp,
-            letterSpacing = 2.sp,
+        Row(
             modifier = Modifier.fillMaxWidth(),
-        )
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = "ACTIVITY",
+                color = GlacierMuted,
+                fontFamily = SpaceGroteskFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp,
+                letterSpacing = 2.sp,
+                modifier = Modifier.weight(1f),
+            )
+            if (uiState.isLoading) {
+                Text(
+                    text = "LOADING...",
+                    color = GlacierMuted,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 10.sp,
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(12.dp))
 

@@ -49,8 +49,6 @@ import cdglacier.mytool.ui.theme.GlacierSurface
 import cdglacier.mytool.ui.theme.GlacierSurfaceLow
 import cdglacier.mytool.ui.theme.GlacierTeal
 import cdglacier.mytool.ui.theme.SpaceGroteskFamily
-import java.time.Instant
-import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -77,7 +75,6 @@ fun HabitTrackingRoute(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
         onHabitToggle = viewModel::onHabitToggle,
-        onSyncHistory = viewModel::onSyncHistory,
         onBack = onBack,
     )
 }
@@ -87,7 +84,6 @@ fun HabitTrackingScreen(
     uiState: HabitTrackingUiState,
     snackbarHostState: SnackbarHostState,
     onHabitToggle: (Habit) -> Unit,
-    onSyncHistory: () -> Unit,
     onBack: () -> Unit,
 ) {
     Scaffold(
@@ -117,73 +113,6 @@ fun HabitTrackingScreen(
                 )
                 else -> HabitList(uiState.habits, onHabitToggle)
             }
-            Spacer(modifier = Modifier.height(24.dp))
-            SyncHistorySection(
-                uiState = uiState,
-                onSync = onSyncHistory,
-            )
-        }
-    }
-}
-
-@Composable
-private fun SyncHistorySection(
-    uiState: HabitTrackingUiState,
-    onSync: () -> Unit,
-) {
-    val syncedAtText = uiState.lastSyncedAtEpochMillis?.let { millis ->
-        val fmt = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm")
-        Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDateTime().format(fmt)
-    } ?: "NEVER"
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(GlacierSurfaceLow)
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "HISTORY_CACHE",
-            color = GlacierMuted,
-            fontFamily = SpaceGroteskFamily,
-            fontWeight = FontWeight.Bold,
-            fontSize = 12.sp,
-            letterSpacing = 2.sp,
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "LAST_SYNC: $syncedAtText",
-            color = GlacierOnSurface,
-            fontFamily = FontFamily.Monospace,
-            fontSize = 12.sp,
-        )
-        Text(
-            text = "CACHED_DAYS: ${uiState.historyDayCount}",
-            color = GlacierOnSurface,
-            fontFamily = FontFamily.Monospace,
-            fontSize = 12.sp,
-        )
-        Spacer(modifier = Modifier.height(12.dp))
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    if (uiState.isSyncingHistory) GlacierSurface else GlacierAmber
-                )
-                .clickable(enabled = !uiState.isSyncingHistory && uiState.journalConfigured) {
-                    onSync()
-                }
-                .padding(vertical = 14.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = if (uiState.isSyncingHistory) "SYNCING..." else "SYNC_HISTORY",
-                color = if (uiState.isSyncingHistory) GlacierMuted else GlacierBg,
-                fontFamily = SpaceGroteskFamily,
-                fontWeight = FontWeight.Black,
-                fontSize = 14.sp,
-                letterSpacing = 1.sp,
-            )
         }
     }
 }
