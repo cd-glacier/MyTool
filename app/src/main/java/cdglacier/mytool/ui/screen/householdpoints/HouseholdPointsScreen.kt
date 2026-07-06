@@ -111,6 +111,39 @@ fun HouseholdPointsScreen(
                 )
                 return@Column
             }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(GlacierSurfaceLow)
+                    .padding(16.dp),
+            ) {
+                SectionLabel("NEW_TASK")
+                Spacer(Modifier.height(8.dp))
+                FieldLabel("NAME")
+                TextInput(uiState.newName, onNewNameChange, placeholder = "家事名")
+                Spacer(Modifier.height(12.dp))
+                FieldLabel("POINTS")
+                NumberInput(uiState.newPointsText, onNewValueChange)
+                Spacer(Modifier.height(16.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(GlacierAmber)
+                        .clickable { onAdd() }
+                        .padding(vertical = 14.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        "+ ADD",
+                        color = GlacierBg,
+                        fontFamily = SpaceGroteskFamily,
+                        fontWeight = FontWeight.Black,
+                        fontSize = 13.sp,
+                        letterSpacing = 1.sp,
+                    )
+                }
+            }
+            Spacer(Modifier.height(24.dp))
             SectionLabel("REGISTERED_TASKS")
             Spacer(Modifier.height(8.dp))
             if (uiState.points.isEmpty()) {
@@ -162,39 +195,6 @@ fun HouseholdPointsScreen(
                             }
                         }
                     }
-                }
-            }
-            Spacer(Modifier.height(24.dp))
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(GlacierSurfaceLow)
-                    .padding(16.dp),
-            ) {
-                SectionLabel("NEW_TASK")
-                Spacer(Modifier.height(8.dp))
-                FieldLabel("NAME")
-                TextInput(uiState.newName, onNewNameChange, placeholder = "家事名")
-                Spacer(Modifier.height(12.dp))
-                FieldLabel("POINTS")
-                NumberInput(uiState.newPointsText, onNewValueChange)
-                Spacer(Modifier.height(16.dp))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(GlacierAmber)
-                        .clickable { onAdd() }
-                        .padding(vertical = 14.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        "+ ADD",
-                        color = GlacierBg,
-                        fontFamily = SpaceGroteskFamily,
-                        fontWeight = FontWeight.Black,
-                        fontSize = 13.sp,
-                        letterSpacing = 1.sp,
-                    )
                 }
             }
         }
