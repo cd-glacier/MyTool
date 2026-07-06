@@ -129,13 +129,15 @@ fun HouseholdScreen(
                     "SYS_SETTINGS から pages フォルダを設定してください。",
                 )
                 else -> {
+                    ManagePointsLink(onClick = onNavigateToPoints)
+                    Spacer(Modifier.height(12.dp))
                     PeriodSelector(uiState.period, onPeriodChange)
                     Spacer(Modifier.height(16.dp))
                     SummaryCard(uiState.summary)
                     Spacer(Modifier.height(16.dp))
                     BreakdownSection(uiState.summary)
                     Spacer(Modifier.height(24.dp))
-                    ActionButtons(onOpenRecord, onNavigateToPoints)
+                    PrimaryButton("+ RECORD", GlacierAmber, Modifier.fillMaxWidth(), onOpenRecord)
                 }
             }
         }
@@ -360,10 +362,31 @@ private fun BreakdownSection(summary: HouseholdSummary) {
 }
 
 @Composable
-private fun ActionButtons(onOpenRecord: () -> Unit, onOpenPoints: () -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        PrimaryButton("+ RECORD", GlacierAmber, Modifier.weight(1f), onOpenRecord)
-        PrimaryButton("MANAGE POINTS", GlacierSurface, Modifier.weight(1f), onOpenPoints)
+private fun ManagePointsLink(onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(GlacierSurface)
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            "MANAGE_POINTS",
+            modifier = Modifier.weight(1f),
+            color = GlacierOnSurface,
+            fontFamily = SpaceGroteskFamily,
+            fontWeight = FontWeight.Bold,
+            fontSize = 12.sp,
+            letterSpacing = 2.sp,
+        )
+        Text(
+            ">",
+            color = GlacierAmber,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+        )
     }
 }
 
