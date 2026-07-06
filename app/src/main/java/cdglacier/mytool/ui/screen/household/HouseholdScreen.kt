@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -536,31 +537,80 @@ private fun NameSelector(points: List<HouseholdPoint>, selected: String, onSelec
         )
         return
     }
-    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        points.forEach { p ->
-            val isSelected = p.name == selected
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(if (isSelected) GlacierAmber else GlacierSurface)
-                    .clickable { onSelect(p.name) }
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
+    var expanded by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    val current = points.firstOrNull { it.name == selected }
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(GlacierSurface)
+                .clickable { expanded = !expanded }
+                .padding(horizontal = 12.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                current?.name ?: "SELECT",
+                modifier = Modifier.weight(1f),
+                color = GlacierOnSurface,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+            )
+            if (current != null) {
                 Text(
-                    p.name,
-                    modifier = Modifier.weight(1f),
-                    color = if (isSelected) GlacierBg else GlacierOnSurface,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    "${p.points}pt",
-                    color = if (isSelected) GlacierBg else GlacierMuted,
+                    "${current.points}pt",
+                    color = GlacierMuted,
                     fontFamily = FontFamily.Monospace,
                     fontSize = 12.sp,
                 )
+                Spacer(Modifier.width(8.dp))
+            }
+            Text(
+                if (expanded) "^" else "v",
+                color = GlacierAmber,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+        if (expanded) {
+            Spacer(Modifier.height(2.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 200.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                points.forEach { p ->
+                    val isSelected = p.name == selected
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(if (isSelected) GlacierAmber else GlacierSurface)
+                            .clickable {
+                                onSelect(p.name)
+                                expanded = false
+                            }
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            p.name,
+                            modifier = Modifier.weight(1f),
+                            color = if (isSelected) GlacierBg else GlacierOnSurface,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Text(
+                            "${p.points}pt",
+                            color = if (isSelected) GlacierBg else GlacierMuted,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 12.sp,
+                        )
+                    }
+                }
             }
         }
     }
