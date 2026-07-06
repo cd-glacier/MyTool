@@ -10,7 +10,7 @@ enum class HouseholdPeriod { WEEK, MONTH }
 data class HouseholdUiState(
     val period: HouseholdPeriod = HouseholdPeriod.WEEK,
     val today: LocalDate = LocalDate.now(),
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val journalConfigured: Boolean = true,
     val pagesConfigured: Boolean = true,
     val points: List<HouseholdPoint> = emptyList(),

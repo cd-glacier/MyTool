@@ -27,7 +27,6 @@ class HouseholdPointsViewModel @Inject constructor(
 
     fun refresh() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
             val pagesConfigured = obsidianRepository.pagesDirUri.first() != null
             val points = if (pagesConfigured) getHouseholdPointsUseCase() else emptyList()
             _uiState.update {

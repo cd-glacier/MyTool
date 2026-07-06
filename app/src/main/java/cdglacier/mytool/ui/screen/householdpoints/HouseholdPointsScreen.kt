@@ -19,6 +19,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -43,6 +44,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cdglacier.mytool.ui.theme.GlacierAmber
 import cdglacier.mytool.ui.theme.GlacierBg
+import cdglacier.mytool.ui.theme.GlacierCyan
 import cdglacier.mytool.ui.theme.GlacierMuted
 import cdglacier.mytool.ui.theme.GlacierOnSurface
 import cdglacier.mytool.ui.theme.GlacierSurface
@@ -97,6 +99,17 @@ fun HouseholdPointsScreen(
         containerColor = GlacierBg,
         contentWindowInsets = WindowInsets(0),
     ) { innerPadding ->
+        if (uiState.isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator(color = GlacierCyan)
+            }
+            return@Scaffold
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
