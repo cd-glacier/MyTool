@@ -81,7 +81,6 @@ fun HouseholdRoute(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
         onBack = onBack,
-        onPeriodChange = viewModel::onPeriodChange,
         onOpenRecord = viewModel::onOpenRecordDialog,
         onNavigateToPoints = onNavigateToPoints,
         onCloseRecord = viewModel::onCloseRecordDialog,
@@ -98,7 +97,6 @@ fun HouseholdScreen(
     uiState: HouseholdUiState,
     snackbarHostState: SnackbarHostState,
     onBack: () -> Unit,
-    onPeriodChange: (HouseholdPeriod) -> Unit,
     onOpenRecord: () -> Unit,
     onNavigateToPoints: () -> Unit,
     onCloseRecord: () -> Unit,
@@ -143,9 +141,9 @@ fun HouseholdScreen(
                 )
                 else -> {
                     ManagePointsLink(onClick = onNavigateToPoints)
-                    Spacer(Modifier.height(12.dp))
-                    PeriodSelector(uiState.period, onPeriodChange)
                     Spacer(Modifier.height(16.dp))
+                    DateHeader(uiState.today)
+                    Spacer(Modifier.height(12.dp))
                     SummaryCard(uiState.summary)
                     Spacer(Modifier.height(16.dp))
                     BreakdownSection(uiState.summary)
@@ -209,29 +207,15 @@ private fun HouseholdTopBar(onBack: () -> Unit) {
 }
 
 @Composable
-private fun PeriodSelector(current: HouseholdPeriod, onChange: (HouseholdPeriod) -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-        HouseholdPeriod.entries.forEach { p ->
-            val selected = p == current
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .background(if (selected) GlacierAmber else GlacierSurface)
-                    .clickable { onChange(p) }
-                    .padding(vertical = 12.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    p.name,
-                    color = if (selected) GlacierBg else GlacierOnSurface,
-                    fontFamily = SpaceGroteskFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp,
-                    letterSpacing = 2.sp,
-                )
-            }
-        }
-    }
+private fun DateHeader(date: java.time.LocalDate) {
+    Text(
+        "DATE :: ${date}",
+        color = GlacierMuted,
+        fontFamily = SpaceGroteskFamily,
+        fontWeight = FontWeight.Bold,
+        fontSize = 12.sp,
+        letterSpacing = 2.sp,
+    )
 }
 
 @Composable

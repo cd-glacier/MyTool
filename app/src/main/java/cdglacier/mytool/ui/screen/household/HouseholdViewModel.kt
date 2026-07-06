@@ -16,9 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.DayOfWeek
 import java.time.LocalDate
-import java.time.temporal.TemporalAdjusters
 import javax.inject.Inject
 
 @HiltViewModel
@@ -38,8 +36,7 @@ class HouseholdViewModel @Inject constructor(
             val pagesConfigured = obsidianRepository.pagesDirUri.first() != null
             val points = if (pagesConfigured) getHouseholdPointsUseCase() else emptyList()
             val today = LocalDate.now()
-            val range = rangeFor(today, _uiState.value.period)
-            val summary = if (journalConfigured) getHouseholdSummaryUseCase(range)
+            val summary = if (journalConfigured) getHouseholdSummaryUseCase(today..today)
             else HouseholdUiState().summary
             _uiState.update {
                 it.copy(
@@ -51,16 +48,6 @@ class HouseholdViewModel @Inject constructor(
                     summary = summary,
                 )
             }
-        }
-    }
-
-    fun onPeriodChange(period: HouseholdPeriod) {
-        _uiState.update { it.copy(period = period) }
-        viewModelScope.launch {
-            val range = rangeFor(_uiState.value.today, period)
-            val summary = runCatching { getHouseholdSummaryUseCase(range) }
-                .getOrDefault(HouseholdUiState().summary)
-            _uiState.update { it.copy(summary = summary) }
         }
     }
 
@@ -157,16 +144,4 @@ class HouseholdViewModel @Inject constructor(
     fun onErrorShown() {
         _uiState.update { it.copy(errorMessage = null) }
     }
-
-    private fun rangeFor(today: LocalDate, period: HouseholdPeriod): ClosedRange<LocalDate> =
-        when (period) {
-            HouseholdPeriod.WEEK -> {
-                val start = today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-                start..start.plusDays(6)
-            }
-            HouseholdPeriod.MONTH -> {
-                val start = today.withDayOfMonth(1)
-                start..today.with(TemporalAdjusters.lastDayOfMonth())
-            }
-        }
 }

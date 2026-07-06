@@ -5,10 +5,7 @@ import cdglacier.mytool.domain.model.HouseholdPoint
 import cdglacier.mytool.domain.model.HouseholdSummary
 import java.time.LocalDate
 
-enum class HouseholdPeriod { WEEK, MONTH }
-
 data class HouseholdUiState(
-    val period: HouseholdPeriod = HouseholdPeriod.WEEK,
     val today: LocalDate = LocalDate.now(),
     val isLoading: Boolean = true,
     val journalConfigured: Boolean = true,
