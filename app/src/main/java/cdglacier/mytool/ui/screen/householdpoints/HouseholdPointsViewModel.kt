@@ -65,8 +65,48 @@ class HouseholdPointsViewModel @Inject constructor(
         }
     }
 
-    fun onDeletePoint(name: String) {
+    fun onRequestDelete(name: String) {
+        _uiState.update { it.copy(pendingDeleteName = name) }
+    }
+
+    fun onCancelDelete() {
+        _uiState.update { it.copy(pendingDeleteName = null) }
+    }
+
+    fun onConfirmDelete() {
+        val name = _uiState.value.pendingDeleteName ?: return
         val updated = _uiState.value.points.filterNot { it.name == name }
+        _uiState.update { it.copy(pendingDeleteName = null) }
+        persist(updated) {}
+    }
+
+    fun onRequestEdit(name: String) {
+        val target = _uiState.value.points.firstOrNull { it.name == name } ?: return
+        _uiState.update {
+            it.copy(editingName = target.name, editingPointsText = target.points.toString())
+        }
+    }
+
+    fun onEditValueChange(text: String) {
+        _uiState.update { it.copy(editingPointsText = text) }
+    }
+
+    fun onCancelEdit() {
+        _uiState.update { it.copy(editingName = null, editingPointsText = "") }
+    }
+
+    fun onConfirmEdit() {
+        val state = _uiState.value
+        val name = state.editingName ?: return
+        val points = state.editingPointsText.toIntOrNull()
+        if (points == null) {
+            _uiState.update { it.copy(errorMessage = "ポイントを入力してください") }
+            return
+        }
+        val updated = state.points.map {
+            if (it.name == name) HouseholdPoint(it.name, points) else it
+        }
+        _uiState.update { it.copy(editingName = null, editingPointsText = "") }
         persist(updated) {}
     }
 

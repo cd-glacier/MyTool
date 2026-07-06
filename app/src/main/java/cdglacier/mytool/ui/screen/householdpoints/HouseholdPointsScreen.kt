@@ -77,7 +77,13 @@ fun HouseholdPointsRoute(
         onNewNameChange = viewModel::onNewNameChange,
         onNewValueChange = viewModel::onNewValueChange,
         onAdd = viewModel::onAddPoint,
-        onDelete = viewModel::onDeletePoint,
+        onRequestDelete = viewModel::onRequestDelete,
+        onCancelDelete = viewModel::onCancelDelete,
+        onConfirmDelete = viewModel::onConfirmDelete,
+        onRequestEdit = viewModel::onRequestEdit,
+        onEditValueChange = viewModel::onEditValueChange,
+        onCancelEdit = viewModel::onCancelEdit,
+        onConfirmEdit = viewModel::onConfirmEdit,
     )
 }
 
@@ -89,7 +95,13 @@ fun HouseholdPointsScreen(
     onNewNameChange: (String) -> Unit,
     onNewValueChange: (String) -> Unit,
     onAdd: () -> Unit,
-    onDelete: (String) -> Unit,
+    onRequestDelete: (String) -> Unit,
+    onCancelDelete: () -> Unit,
+    onConfirmDelete: () -> Unit,
+    onRequestEdit: (String) -> Unit,
+    onEditValueChange: (String) -> Unit,
+    onCancelEdit: () -> Unit,
+    onConfirmEdit: () -> Unit,
 ) {
     Scaffold(
         topBar = { TopBar(onBack) },
@@ -198,7 +210,23 @@ fun HouseholdPointsScreen(
                             Box(
                                 modifier = Modifier
                                     .background(GlacierBg)
-                                    .clickable { onDelete(p.name) }
+                                    .clickable { onRequestEdit(p.name) }
+                                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                            ) {
+                                Text(
+                                    "EDIT",
+                                    color = GlacierTeal,
+                                    fontFamily = SpaceGroteskFamily,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 1.sp,
+                                )
+                            }
+                            Spacer(Modifier.width(6.dp))
+                            Box(
+                                modifier = Modifier
+                                    .background(GlacierBg)
+                                    .clickable { onRequestDelete(p.name) }
                                     .padding(horizontal = 10.dp, vertical = 4.dp),
                             ) {
                                 Text(
@@ -214,6 +242,124 @@ fun HouseholdPointsScreen(
                 }
             }
         }
+    }
+    if (uiState.pendingDeleteName != null) {
+        ConfirmDeleteDialog(
+            name = uiState.pendingDeleteName,
+            onConfirm = onConfirmDelete,
+            onDismiss = onCancelDelete,
+        )
+    }
+    if (uiState.editingName != null) {
+        EditPointDialog(
+            name = uiState.editingName,
+            pointsText = uiState.editingPointsText,
+            onValueChange = onEditValueChange,
+            onConfirm = onConfirmEdit,
+            onDismiss = onCancelEdit,
+        )
+    }
+}
+
+@Composable
+private fun ConfirmDeleteDialog(name: String, onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(GlacierBg)
+                .padding(20.dp)
+        ) {
+            Text(
+                "DELETE_TASK",
+                color = GlacierAmber,
+                fontFamily = SpaceGroteskFamily,
+                fontWeight = FontWeight.Black,
+                fontSize = 16.sp,
+                letterSpacing = 2.sp,
+            )
+            Spacer(Modifier.height(12.dp))
+            Text(
+                "「$name」を削除しますか？",
+                color = GlacierOnSurface,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 13.sp,
+            )
+            Spacer(Modifier.height(20.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                DialogButton("CANCEL", GlacierSurface, GlacierOnSurface, Modifier.weight(1f), onDismiss)
+                DialogButton("DELETE", GlacierAmber, GlacierBg, Modifier.weight(1f), onConfirm)
+            }
+        }
+    }
+}
+
+@Composable
+private fun EditPointDialog(
+    name: String,
+    pointsText: String,
+    onValueChange: (String) -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(GlacierBg)
+                .padding(20.dp)
+        ) {
+            Text(
+                "EDIT_POINTS",
+                color = GlacierTeal,
+                fontFamily = SpaceGroteskFamily,
+                fontWeight = FontWeight.Black,
+                fontSize = 16.sp,
+                letterSpacing = 2.sp,
+            )
+            Spacer(Modifier.height(12.dp))
+            Text(
+                name,
+                color = GlacierOnSurface,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+            )
+            Spacer(Modifier.height(12.dp))
+            FieldLabel("POINTS")
+            NumberInput(pointsText, onValueChange)
+            Spacer(Modifier.height(20.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                DialogButton("CANCEL", GlacierSurface, GlacierOnSurface, Modifier.weight(1f), onDismiss)
+                DialogButton("SAVE", GlacierAmber, GlacierBg, Modifier.weight(1f), onConfirm)
+            }
+        }
+    }
+}
+
+@Composable
+private fun DialogButton(
+    label: String,
+    bg: androidx.compose.ui.graphics.Color,
+    fg: androidx.compose.ui.graphics.Color,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
+    Box(
+        modifier = modifier
+            .background(bg)
+            .clickable { onClick() }
+            .padding(vertical = 14.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            label,
+            color = fg,
+            fontFamily = SpaceGroteskFamily,
+            fontWeight = FontWeight.Black,
+            fontSize = 13.sp,
+            letterSpacing = 1.sp,
+        )
     }
 }
 
