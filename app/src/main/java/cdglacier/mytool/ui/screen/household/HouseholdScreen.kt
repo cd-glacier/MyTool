@@ -390,6 +390,15 @@ private fun BreakdownSection(summary: HouseholdSummary) {
                                 fontFamily = FontFamily.Monospace,
                                 fontSize = 12.sp,
                             )
+                            if (b.adjustment != 0) {
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    if (b.adjustment > 0) "+${b.adjustment}" else b.adjustment.toString(),
+                                    color = GlacierAmber,
+                                    fontFamily = FontFamily.Monospace,
+                                    fontSize = 12.sp,
+                                )
+                            }
                             Spacer(Modifier.width(12.dp))
                             Text(
                                 b.effectivePoints.toString(),

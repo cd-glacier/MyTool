@@ -30,6 +30,7 @@ data class HouseholdSummary(
     data class Breakdown(
         val name: String,
         val count: Int,
+        val adjustment: Int,
         val effectivePoints: Int,
     )
 }

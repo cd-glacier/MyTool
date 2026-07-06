@@ -36,6 +36,7 @@ class GetHouseholdSummaryUseCase @Inject constructor(
                 forAssignee[entry.name] = HouseholdSummary.Breakdown(
                     name = entry.name,
                     count = (prev?.count ?: 0) + entry.count,
+                    adjustment = (prev?.adjustment ?: 0) + entry.adjustment,
                     effectivePoints = (prev?.effectivePoints ?: 0) + effective,
                 )
             }

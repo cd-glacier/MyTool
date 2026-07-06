@@ -134,11 +134,12 @@ class HouseholdViewModel @Inject constructor(
             existing.map { b ->
                 if (b.name == entry.name) b.copy(
                     count = b.count + entry.count,
+                    adjustment = b.adjustment + entry.adjustment,
                     effectivePoints = b.effectivePoints + delta,
                 ) else b
             }
         } else {
-            existing + HouseholdSummary.Breakdown(entry.name, entry.count, delta)
+            existing + HouseholdSummary.Breakdown(entry.name, entry.count, entry.adjustment, delta)
         }.sortedByDescending { it.effectivePoints }
         val perAssignee = summary.perAssignee.toMutableMap().apply {
             this[entry.assignee] = merged
