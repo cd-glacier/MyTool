@@ -6,6 +6,7 @@ import cdglacier.mytool.data.repository.HabitHistoryRepository
 import cdglacier.mytool.data.repository.ObsidianRepository
 import cdglacier.mytool.domain.usecase.DailyActivity
 import cdglacier.mytool.domain.usecase.GetActivityRatesUseCase
+import cdglacier.mytool.domain.usecase.GetHouseholdHusbandDailyPointsUseCase
 import cdglacier.mytool.domain.usecase.GetTodayHabitCompletionRateUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,6 +24,7 @@ class HomeViewModel @Inject constructor(
     private val habitHistoryRepository: HabitHistoryRepository,
     private val getTodayHabitCompletionRateUseCase: GetTodayHabitCompletionRateUseCase,
     private val getActivityRatesUseCase: GetActivityRatesUseCase,
+    private val getHouseholdHusbandDailyPointsUseCase: GetHouseholdHusbandDailyPointsUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -46,7 +48,9 @@ class HomeViewModel @Inject constructor(
     ): Map<LocalDate, DailyActivity> {
         val today = LocalDate.now()
         val from = today.minusDays(GRAPH_RANGE_DAYS)
-        return getActivityRatesUseCase(history, todayRate, from, today)
+        val household = runCatching { getHouseholdHusbandDailyPointsUseCase(from..today) }
+            .getOrDefault(emptyMap())
+        return getActivityRatesUseCase(history, todayRate, household, from, today)
     }
 
     fun onSelectDate(date: LocalDate) {
