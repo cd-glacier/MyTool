@@ -138,7 +138,7 @@ fun HouseholdScreen(
                     Spacer(Modifier.height(16.dp))
                     BreakdownSection(uiState.summary)
                     Spacer(Modifier.height(24.dp))
-                    PrimaryButton("+ RECORD", GlacierAmber, Modifier.fillMaxWidth(), onOpenRecord)
+                    PrimaryButton("+ RECORD", GlacierAmber, Modifier.fillMaxWidth(), onClick = onOpenRecord)
                 }
             }
         }
