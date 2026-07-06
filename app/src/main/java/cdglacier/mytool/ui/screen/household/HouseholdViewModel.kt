@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import cdglacier.mytool.data.repository.ObsidianRepository
 import cdglacier.mytool.domain.model.Assignee
 import cdglacier.mytool.domain.model.HouseholdEntry
+import cdglacier.mytool.domain.model.HouseholdSummary
 import cdglacier.mytool.domain.usecase.GetHouseholdPointsUseCase
 import cdglacier.mytool.domain.usecase.GetHouseholdSummaryUseCase
 import cdglacier.mytool.domain.usecase.RecordHouseholdEntryUseCase
@@ -118,10 +119,40 @@ class HouseholdViewModel @Inject constructor(
                     )
                 }
             } else {
-                _uiState.update { it.copy(recordDialog = null) }
+                _uiState.update { state ->
+                    state.copy(
+                        recordDialog = null,
+                        summary = applyOptimistic(state, entry),
+                    )
+                }
                 refresh()
             }
         }
+    }
+
+    private fun applyOptimistic(state: HouseholdUiState, entry: HouseholdEntry): HouseholdSummary {
+        val base = state.points.firstOrNull { it.name == entry.name }?.points ?: 0
+        val delta = base * entry.count + entry.adjustment
+        val summary = state.summary
+        val existing = summary.perAssignee[entry.assignee].orEmpty()
+        val merged = if (existing.any { it.name == entry.name }) {
+            existing.map { b ->
+                if (b.name == entry.name) b.copy(
+                    count = b.count + entry.count,
+                    effectivePoints = b.effectivePoints + delta,
+                ) else b
+            }
+        } else {
+            existing + HouseholdSummary.Breakdown(entry.name, entry.count, delta)
+        }.sortedByDescending { it.effectivePoints }
+        val perAssignee = summary.perAssignee.toMutableMap().apply {
+            this[entry.assignee] = merged
+        }
+        return summary.copy(
+            husbandTotal = summary.husbandTotal + if (entry.assignee == Assignee.HUSBAND) delta else 0,
+            wifeTotal = summary.wifeTotal + if (entry.assignee == Assignee.WIFE) delta else 0,
+            perAssignee = perAssignee,
+        )
     }
 
     fun onErrorShown() {
