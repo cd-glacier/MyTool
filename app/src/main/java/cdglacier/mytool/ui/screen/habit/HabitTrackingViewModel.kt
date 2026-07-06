@@ -2,11 +2,11 @@ package cdglacier.mytool.ui.screen.habit
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cdglacier.mytool.data.repository.HabitHistoryRepository
+import cdglacier.mytool.data.repository.DailySummaryRepository
 import cdglacier.mytool.data.repository.ObsidianRepository
 import cdglacier.mytool.domain.model.Habit
 import cdglacier.mytool.domain.usecase.GetTodayHabitsUseCase
-import cdglacier.mytool.domain.usecase.SyncHabitHistoryUseCase
+import cdglacier.mytool.domain.usecase.SyncDailySummariesUseCase
 import cdglacier.mytool.domain.usecase.ToggleHabitUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,10 +22,10 @@ import javax.inject.Inject
 @HiltViewModel
 class HabitTrackingViewModel @Inject constructor(
     private val obsidianRepository: ObsidianRepository,
-    private val habitHistoryRepository: HabitHistoryRepository,
+    private val dailySummaryRepository: DailySummaryRepository,
     private val getTodayHabitsUseCase: GetTodayHabitsUseCase,
     private val toggleHabitUseCase: ToggleHabitUseCase,
-    private val syncHabitHistoryUseCase: SyncHabitHistoryUseCase,
+    private val syncDailySummariesUseCase: SyncDailySummariesUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HabitTrackingUiState())
@@ -36,13 +36,13 @@ class HabitTrackingViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             combine(
-                habitHistoryRepository.history,
-                habitHistoryRepository.lastSyncedAtEpochMillis,
-            ) { history, syncedAt -> Pair(history, syncedAt) }
-                .collect { (history, syncedAt) ->
+                dailySummaryRepository.summaries,
+                dailySummaryRepository.lastSyncedAtEpochMillis,
+            ) { summaries, syncedAt -> Pair(summaries, syncedAt) }
+                .collect { (summaries, syncedAt) ->
                     _uiState.update {
                         it.copy(
-                            historyDayCount = history.size,
+                            historyDayCount = summaries.count { (_, s) -> s.habitRate != null },
                             lastSyncedAtEpochMillis = syncedAt,
                         )
                     }
@@ -61,12 +61,10 @@ class HabitTrackingViewModel @Inject constructor(
 
     fun onSyncHistory() {
         viewModelScope.launch {
-            val uri = obsidianRepository.journalDirUri.first()?.toString() ?: return@launch
-            val format = obsidianRepository.filenameFormat.first()
             _uiState.update { it.copy(isSyncingHistory = true) }
             val today = LocalDate.now()
-            val dates = (0 until 182).map { today.minusDays(it.toLong()) }
-            val result = syncHabitHistoryUseCase(uri, format, dates)
+            val from = today.minusDays(HISTORY_RANGE_DAYS)
+            val result = syncDailySummariesUseCase(from..today, forceAll = true)
             _uiState.update {
                 it.copy(
                     isSyncingHistory = false,
@@ -133,5 +131,9 @@ class HabitTrackingViewModel @Inject constructor(
                 journalExists = true,
             )
         }
+    }
+
+    companion object {
+        private const val HISTORY_RANGE_DAYS: Long = 182
     }
 }
