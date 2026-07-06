@@ -24,4 +24,5 @@ data class RecordDialogState(
     val assignee: Assignee = Assignee.HUSBAND,
     val countText: String = "1",
     val adjustmentText: String = "0",
+    val isSubmitting: Boolean = false,
 )

@@ -96,6 +96,7 @@ class HouseholdViewModel @Inject constructor(
 
     fun onSubmitRecord() {
         val dialog = _uiState.value.recordDialog ?: return
+        if (dialog.isSubmitting) return
         val name = dialog.selectedName.trim()
         val count = dialog.countText.toIntOrNull()
         val adjustment = dialog.adjustmentText.trim().let {
@@ -105,11 +106,17 @@ class HouseholdViewModel @Inject constructor(
             _uiState.update { it.copy(errorMessage = "入力を確認してください") }
             return
         }
+        _uiState.update { it.copy(recordDialog = it.recordDialog?.copy(isSubmitting = true)) }
         viewModelScope.launch {
             val entry = HouseholdEntry(name, dialog.assignee, count, adjustment)
             val result = recordHouseholdEntryUseCase(_uiState.value.today, entry)
             if (result.isFailure) {
-                _uiState.update { it.copy(errorMessage = result.exceptionOrNull()?.message) }
+                _uiState.update {
+                    it.copy(
+                        recordDialog = it.recordDialog?.copy(isSubmitting = false),
+                        errorMessage = result.exceptionOrNull()?.message,
+                    )
+                }
             } else {
                 _uiState.update { it.copy(recordDialog = null) }
                 refresh()

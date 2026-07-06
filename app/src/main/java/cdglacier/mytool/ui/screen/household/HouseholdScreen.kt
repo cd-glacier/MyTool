@@ -396,18 +396,19 @@ private fun PrimaryButton(
     label: String,
     bg: androidx.compose.ui.graphics.Color,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     onClick: () -> Unit,
 ) {
     Box(
         modifier = modifier
             .background(bg)
-            .clickable { onClick() }
+            .clickable(enabled = enabled) { onClick() }
             .padding(vertical = 14.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             label,
-            color = if (bg == GlacierAmber) GlacierBg else GlacierOnSurface,
+            color = if (bg == GlacierAmber) GlacierBg else if (enabled) GlacierOnSurface else GlacierMuted,
             fontFamily = SpaceGroteskFamily,
             fontWeight = FontWeight.Black,
             fontSize = 12.sp,
@@ -441,7 +442,8 @@ private fun RecordDialog(
     onAdjustmentChange: (String) -> Unit,
     onSubmit: () -> Unit,
 ) {
-    Dialog(onDismissRequest = onDismiss) {
+    val submitting = state.isSubmitting
+    Dialog(onDismissRequest = { if (!submitting) onDismiss() }) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -463,8 +465,20 @@ private fun RecordDialog(
             NumberField(state.adjustmentText, onAdjustmentChange, allowSign = true)
             Spacer(Modifier.height(20.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                PrimaryButton("CANCEL", GlacierSurface, Modifier.weight(1f), onDismiss)
-                PrimaryButton("SAVE", GlacierAmber, Modifier.weight(1f), onSubmit)
+                PrimaryButton(
+                    label = "CANCEL",
+                    bg = GlacierSurface,
+                    modifier = Modifier.weight(1f),
+                    enabled = !submitting,
+                    onClick = onDismiss,
+                )
+                PrimaryButton(
+                    label = if (submitting) "SAVING..." else "SAVE",
+                    bg = if (submitting) GlacierSurface else GlacierAmber,
+                    modifier = Modifier.weight(1f),
+                    enabled = !submitting,
+                    onClick = onSubmit,
+                )
             }
         }
     }
