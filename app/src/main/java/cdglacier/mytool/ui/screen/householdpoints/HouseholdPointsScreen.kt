@@ -272,7 +272,19 @@ private fun TextInput(value: String, onChange: (String) -> Unit, placeholder: St
             .padding(horizontal = 12.dp, vertical = 12.dp),
     ) {
         if (value.isEmpty()) {
-            Text(placeholder, color = GlacierMuted, fontFamily = FontFamily.Monospace, fontSize = 13.sp)
+            Text(
+                placeholder,
+                color = GlacierMuted,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 13.sp,
+                style = TextStyle(
+                    platformStyle = PlatformTextStyle(includeFontPadding = false),
+                    lineHeightStyle = LineHeightStyle(
+                        alignment = LineHeightStyle.Alignment.Center,
+                        trim = LineHeightStyle.Trim.Both,
+                    ),
+                ),
+            )
         }
         BasicTextField(
             value = value,
