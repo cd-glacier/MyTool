@@ -2,17 +2,14 @@ package cdglacier.mytool.ui.screen.habit
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cdglacier.mytool.data.repository.DailySummaryRepository
 import cdglacier.mytool.data.repository.ObsidianRepository
 import cdglacier.mytool.domain.model.Habit
 import cdglacier.mytool.domain.usecase.GetTodayHabitsUseCase
-import cdglacier.mytool.domain.usecase.SyncDailySummariesUseCase
 import cdglacier.mytool.domain.usecase.ToggleHabitUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -22,10 +19,8 @@ import javax.inject.Inject
 @HiltViewModel
 class HabitTrackingViewModel @Inject constructor(
     private val obsidianRepository: ObsidianRepository,
-    private val dailySummaryRepository: DailySummaryRepository,
     private val getTodayHabitsUseCase: GetTodayHabitsUseCase,
     private val toggleHabitUseCase: ToggleHabitUseCase,
-    private val syncDailySummariesUseCase: SyncDailySummariesUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HabitTrackingUiState())
@@ -33,44 +28,12 @@ class HabitTrackingViewModel @Inject constructor(
 
     private var hasLoadedOnce = false
 
-    init {
-        viewModelScope.launch {
-            combine(
-                dailySummaryRepository.summaries,
-                dailySummaryRepository.lastSyncedAtEpochMillis,
-            ) { summaries, syncedAt -> Pair(summaries, syncedAt) }
-                .collect { (summaries, syncedAt) ->
-                    _uiState.update {
-                        it.copy(
-                            historyDayCount = summaries.count { (_, s) -> s.habitRate != null },
-                            lastSyncedAtEpochMillis = syncedAt,
-                        )
-                    }
-                }
-        }
-    }
-
     fun refresh() {
         viewModelScope.launch {
             val uri = obsidianRepository.journalDirUri.first()?.toString()
             val format = obsidianRepository.filenameFormat.first()
             loadHabits(uri, format, showLoading = !hasLoadedOnce)
             hasLoadedOnce = true
-        }
-    }
-
-    fun onSyncHistory() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isSyncingHistory = true) }
-            val today = LocalDate.now()
-            val from = today.minusDays(HISTORY_RANGE_DAYS)
-            val result = syncDailySummariesUseCase(from..today, forceAll = true)
-            _uiState.update {
-                it.copy(
-                    isSyncingHistory = false,
-                    errorMessage = result.exceptionOrNull()?.message,
-                )
-            }
         }
     }
 
@@ -131,9 +94,5 @@ class HabitTrackingViewModel @Inject constructor(
                 journalExists = true,
             )
         }
-    }
-
-    companion object {
-        private const val HISTORY_RANGE_DAYS: Long = 182
     }
 }
