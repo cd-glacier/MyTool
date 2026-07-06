@@ -8,6 +8,7 @@ import java.time.LocalDate
 data class HouseholdUiState(
     val date: LocalDate = LocalDate.now(),
     val isLoading: Boolean = true,
+    val isSummaryLoading: Boolean = false,
     val journalConfigured: Boolean = true,
     val pagesConfigured: Boolean = true,
     val points: List<HouseholdPoint> = emptyList(),

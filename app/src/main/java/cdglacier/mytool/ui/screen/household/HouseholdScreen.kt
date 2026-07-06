@@ -152,11 +152,27 @@ fun HouseholdScreen(
                     Spacer(Modifier.height(16.dp))
                     DateHeader(uiState.date, onPrevDate, onNextDate)
                     Spacer(Modifier.height(12.dp))
-                    SummaryCard(uiState.summary)
-                    Spacer(Modifier.height(16.dp))
-                    BreakdownSection(uiState.summary)
-                    Spacer(Modifier.height(24.dp))
-                    PrimaryButton("+ RECORD", GlacierAmber, Modifier.fillMaxWidth(), onClick = onOpenRecord)
+                    if (uiState.isSummaryLoading) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 48.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                "LOADING...",
+                                color = GlacierMuted,
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 13.sp,
+                            )
+                        }
+                    } else {
+                        SummaryCard(uiState.summary)
+                        Spacer(Modifier.height(16.dp))
+                        BreakdownSection(uiState.summary)
+                        Spacer(Modifier.height(24.dp))
+                        PrimaryButton("+ RECORD", GlacierAmber, Modifier.fillMaxWidth(), onClick = onOpenRecord)
+                    }
                 }
             }
         }

@@ -40,6 +40,7 @@ class HouseholdViewModel @Inject constructor(
             _uiState.update {
                 it.copy(
                     isLoading = false,
+                    isSummaryLoading = false,
                     journalConfigured = journalConfigured,
                     pagesConfigured = pagesConfigured,
                     points = points,
@@ -54,7 +55,7 @@ class HouseholdViewModel @Inject constructor(
 
     private fun shiftDate(days: Long) {
         _uiState.update {
-            it.copy(date = it.date.plusDays(days), isLoading = true, summary = HouseholdUiState().summary)
+            it.copy(date = it.date.plusDays(days), isSummaryLoading = true, summary = HouseholdUiState().summary)
         }
         refresh()
     }
