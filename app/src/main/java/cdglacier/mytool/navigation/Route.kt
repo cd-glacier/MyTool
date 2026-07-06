@@ -19,6 +19,9 @@ data object SettingsRoute : NavKey
 data object PositionTrackingRoute : NavKey
 
 @Serializable
+data object HouseholdRoute : NavKey
+
+@Serializable
 data object MoneyRoute : NavKey
 
 @Serializable

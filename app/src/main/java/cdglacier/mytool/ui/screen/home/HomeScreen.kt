@@ -61,6 +61,7 @@ fun HomeRoute(
     onNavigateToPositionTracking: () -> Unit,
     onNavigateToMoney: () -> Unit,
     onNavigateToRecipe: () -> Unit,
+    onNavigateToHousehold: () -> Unit,
     onNavigateToSettings: () -> Unit,
     viewModel: HomeViewModel = viewModel(),
 ) {
@@ -77,6 +78,7 @@ fun HomeRoute(
         onNavigateToPositionTracking = onNavigateToPositionTracking,
         onNavigateToMoney = onNavigateToMoney,
         onNavigateToRecipe = onNavigateToRecipe,
+        onNavigateToHousehold = onNavigateToHousehold,
         onNavigateToSettings = onNavigateToSettings,
     )
 }
@@ -90,6 +92,7 @@ fun HomeScreen(
     onNavigateToPositionTracking: () -> Unit,
     onNavigateToMoney: () -> Unit,
     onNavigateToRecipe: () -> Unit,
+    onNavigateToHousehold: () -> Unit,
     onNavigateToSettings: () -> Unit,
 ) {
     Scaffold(
@@ -112,6 +115,7 @@ fun HomeScreen(
                 onNavigateToPositionTracking = onNavigateToPositionTracking,
                 onNavigateToMoney = onNavigateToMoney,
                 onNavigateToRecipe = onNavigateToRecipe,
+                onNavigateToHousehold = onNavigateToHousehold,
                 onNavigateToSettings = onNavigateToSettings,
             )
         }
@@ -302,6 +306,7 @@ private fun ExecCommandsSection(
     onNavigateToPositionTracking: () -> Unit,
     onNavigateToMoney: () -> Unit,
     onNavigateToRecipe: () -> Unit,
+    onNavigateToHousehold: () -> Unit,
     onNavigateToSettings: () -> Unit,
 ) {
     Row(
@@ -357,6 +362,12 @@ private fun ExecCommandsSection(
     Spacer(modifier = Modifier.height(2.dp))
     CommandMenuItem(
         number = "06.",
+        label = "HOUSEHOLD",
+        onClick = onNavigateToHousehold,
+    )
+    Spacer(modifier = Modifier.height(2.dp))
+    CommandMenuItem(
+        number = "07.",
         label = "SYS_SETTINGS",
         onClick = onNavigateToSettings,
     )

@@ -23,6 +23,7 @@ import androidx.navigation3.ui.NavDisplay
 import cdglacier.mytool.navigation.CopyObsidianJournalRoute as CopyObsidianJournalNav
 import cdglacier.mytool.navigation.HabitTrackingRoute as HabitTrackingNav
 import cdglacier.mytool.navigation.HomeRoute as HomeNav
+import cdglacier.mytool.navigation.HouseholdRoute as HouseholdNav
 import cdglacier.mytool.navigation.MoneyChartRoute as MoneyChartNav
 import cdglacier.mytool.navigation.MoneyRoute as MoneyNav
 import cdglacier.mytool.navigation.PositionTrackingRoute as PositionTrackingNav
@@ -31,6 +32,7 @@ import cdglacier.mytool.navigation.SettingsRoute as SettingsNav
 import cdglacier.mytool.ui.screen.copyjournal.CopyObsidianJournalRoute
 import cdglacier.mytool.ui.screen.habit.HabitTrackingRoute
 import cdglacier.mytool.ui.screen.home.HomeRoute
+import cdglacier.mytool.ui.screen.household.HouseholdRoute
 import cdglacier.mytool.ui.screen.money.MoneyRoute
 import cdglacier.mytool.ui.screen.money.chart.MoneyChartRoute
 import cdglacier.mytool.ui.screen.positiontracking.PositionTrackingRoute
@@ -86,6 +88,7 @@ class MainActivity : ComponentActivity() {
                                     onNavigateToPositionTracking = { backStack.add(PositionTrackingNav) },
                                     onNavigateToMoney = { backStack.add(MoneyNav) },
                                     onNavigateToRecipe = { backStack.add(RecipeNav()) },
+                                    onNavigateToHousehold = { backStack.add(HouseholdNav) },
                                     onNavigateToSettings = { backStack.add(SettingsNav) },
                                 )
                             }
@@ -115,6 +118,9 @@ class MainActivity : ComponentActivity() {
                             }
                             entry<PositionTrackingNav> {
                                 PositionTrackingRoute(onBack = { backStack.removeLastOrNull() })
+                            }
+                            entry<HouseholdNav> {
+                                HouseholdRoute(onBack = { backStack.removeLastOrNull() })
                             }
                             entry<RecipeNav> { route ->
                                 RecipeRoute(
