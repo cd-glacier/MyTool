@@ -2,16 +2,14 @@ package cdglacier.mytool.ui.screen.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cdglacier.mytool.data.repository.HabitHistoryRepository
-import cdglacier.mytool.data.repository.ObsidianRepository
+import cdglacier.mytool.data.repository.DailySummaryRepository
 import cdglacier.mytool.domain.usecase.DailyActivity
 import cdglacier.mytool.domain.usecase.GetActivityRatesUseCase
-import cdglacier.mytool.domain.usecase.GetTodayHabitCompletionRateUseCase
+import cdglacier.mytool.domain.usecase.SyncDailySummariesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -19,9 +17,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val obsidianRepository: ObsidianRepository,
-    private val habitHistoryRepository: HabitHistoryRepository,
-    private val getTodayHabitCompletionRateUseCase: GetTodayHabitCompletionRateUseCase,
+    private val dailySummaryRepository: DailySummaryRepository,
+    private val syncDailySummariesUseCase: SyncDailySummariesUseCase,
     private val getActivityRatesUseCase: GetActivityRatesUseCase,
 ) : ViewModel() {
 
@@ -32,21 +29,14 @@ class HomeViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            habitHistoryRepository.history.collect { history ->
-                val today = _uiState.value.todayCompletionRate
-                val activities = computeActivities(history, today)
-                _uiState.update { it.copy(dailyActivities = activities) }
+            dailySummaryRepository.summaries.collect { summaries ->
+                val activities = getActivityRatesUseCase(summaries)
+                val todayRate = summaries[LocalDate.now()]?.habitRate
+                _uiState.update {
+                    it.copy(dailyActivities = activities, todayCompletionRate = todayRate)
+                }
             }
         }
-    }
-
-    private suspend fun computeActivities(
-        history: Map<LocalDate, Float>,
-        todayRate: Float?,
-    ): Map<LocalDate, DailyActivity> {
-        val today = LocalDate.now()
-        val from = today.minusDays(GRAPH_RANGE_DAYS)
-        return getActivityRatesUseCase(history, todayRate, from, today)
     }
 
     fun onSelectDate(date: LocalDate) {
@@ -56,23 +46,11 @@ class HomeViewModel @Inject constructor(
 
     fun refresh() {
         viewModelScope.launch {
-            val uri = obsidianRepository.journalDirUri.first()
-            _uiState.update { it.copy(isLoading = !hasLoadedOnce && uri != null) }
-            if (uri == null) return@launch
-            val format = obsidianRepository.filenameFormat.first()
+            _uiState.update { it.copy(isLoading = !hasLoadedOnce) }
             val today = LocalDate.now()
-            val todayRate = runCatching {
-                getTodayHabitCompletionRateUseCase(uri.toString(), format, today)
-            }.getOrNull()
-            val history = habitHistoryRepository.history.first()
-            val activities = computeActivities(history, todayRate)
-            _uiState.update {
-                it.copy(
-                    todayCompletionRate = todayRate,
-                    dailyActivities = activities,
-                    isLoading = false,
-                )
-            }
+            val from = today.minusDays(GRAPH_RANGE_DAYS)
+            syncDailySummariesUseCase(from..today)
+            _uiState.update { it.copy(isLoading = false) }
             hasLoadedOnce = true
         }
     }
