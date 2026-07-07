@@ -15,6 +15,7 @@ data class HouseholdUiState(
     val summary: HouseholdSummary = HouseholdSummary(0, 0, emptyMap()),
     val recordDialog: RecordDialogState? = null,
     val errorMessage: String? = null,
+    val lastAssignee: Assignee = Assignee.HUSBAND,
 )
 
 data class RecordDialogState(

@@ -62,12 +62,29 @@ class HouseholdViewModel @Inject constructor(
 
     fun onOpenRecordDialog() {
         _uiState.update {
+            val sorted = sortPointsByUsage(it.points, it.summary)
             it.copy(
                 recordDialog = RecordDialogState(
-                    selectedName = it.points.firstOrNull()?.name.orEmpty(),
+                    selectedName = sorted.firstOrNull()?.name.orEmpty(),
+                    assignee = it.lastAssignee,
                 ),
             )
         }
+    }
+
+    private fun sortPointsByUsage(
+        points: List<cdglacier.mytool.domain.model.HouseholdPoint>,
+        summary: HouseholdSummary,
+    ): List<cdglacier.mytool.domain.model.HouseholdPoint> {
+        val usage = mutableMapOf<String, Int>()
+        summary.perAssignee.values.forEach { list ->
+            list.forEach { b -> usage[b.name] = (usage[b.name] ?: 0) + b.count }
+        }
+        return points.withIndex().sortedWith(
+            compareByDescending<IndexedValue<cdglacier.mytool.domain.model.HouseholdPoint>> {
+                usage[it.value.name] ?: 0
+            }.thenBy { it.index }
+        ).map { it.value }
     }
 
     fun onCloseRecordDialog() {
@@ -79,7 +96,12 @@ class HouseholdViewModel @Inject constructor(
     }
 
     fun onRecordAssigneeChange(assignee: Assignee) {
-        _uiState.update { it.copy(recordDialog = it.recordDialog?.copy(assignee = assignee)) }
+        _uiState.update {
+            it.copy(
+                recordDialog = it.recordDialog?.copy(assignee = assignee),
+                lastAssignee = assignee,
+            )
+        }
     }
 
     fun onRecordCountChange(text: String) {
