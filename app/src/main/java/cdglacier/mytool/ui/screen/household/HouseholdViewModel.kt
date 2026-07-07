@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import cdglacier.mytool.data.repository.ObsidianRepository
 import cdglacier.mytool.domain.model.Assignee
 import cdglacier.mytool.domain.model.HouseholdEntry
+import cdglacier.mytool.domain.model.HouseholdPoint
 import cdglacier.mytool.domain.model.HouseholdSummary
 import cdglacier.mytool.domain.usecase.GetHouseholdPointsUseCase
 import cdglacier.mytool.domain.usecase.GetHouseholdSummaryUseCase
@@ -44,6 +45,7 @@ class HouseholdViewModel @Inject constructor(
                     journalConfigured = journalConfigured,
                     pagesConfigured = pagesConfigured,
                     points = points,
+                    pointsSortedByUsage = sortPointsByUsage(points, summary),
                     summary = summary,
                 )
             }
@@ -62,10 +64,9 @@ class HouseholdViewModel @Inject constructor(
 
     fun onOpenRecordDialog() {
         _uiState.update {
-            val sorted = sortPointsByUsage(it.points, it.summary)
             it.copy(
                 recordDialog = RecordDialogState(
-                    selectedName = sorted.firstOrNull()?.name.orEmpty(),
+                    selectedName = it.pointsSortedByUsage.firstOrNull()?.name.orEmpty(),
                     assignee = it.lastAssignee,
                 ),
             )
@@ -73,18 +74,19 @@ class HouseholdViewModel @Inject constructor(
     }
 
     private fun sortPointsByUsage(
-        points: List<cdglacier.mytool.domain.model.HouseholdPoint>,
+        points: List<HouseholdPoint>,
         summary: HouseholdSummary,
-    ): List<cdglacier.mytool.domain.model.HouseholdPoint> {
+    ): List<HouseholdPoint> {
         val usage = mutableMapOf<String, Int>()
         summary.perAssignee.values.forEach { list ->
             list.forEach { b -> usage[b.name] = (usage[b.name] ?: 0) + b.count }
         }
-        return points.withIndex().sortedWith(
-            compareByDescending<IndexedValue<cdglacier.mytool.domain.model.HouseholdPoint>> {
-                usage[it.value.name] ?: 0
-            }.thenBy { it.index }
-        ).map { it.value }
+        return points.withIndex()
+            .sortedWith(
+                compareByDescending<IndexedValue<HouseholdPoint>> { usage[it.value.name] ?: 0 }
+                    .thenBy { it.index }
+            )
+            .map { it.value }
     }
 
     fun onCloseRecordDialog() {

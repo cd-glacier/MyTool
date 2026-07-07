@@ -182,21 +182,9 @@ fun HouseholdScreen(
     }
 
     uiState.recordDialog?.let { dialog ->
-        val sortedPoints = remember(uiState.points, uiState.summary) {
-            val usage = mutableMapOf<String, Int>()
-            uiState.summary.perAssignee.values.forEach { list ->
-                list.forEach { b -> usage[b.name] = (usage[b.name] ?: 0) + b.count }
-            }
-            uiState.points.withIndex()
-                .sortedWith(
-                    compareByDescending<IndexedValue<HouseholdPoint>> { usage[it.value.name] ?: 0 }
-                        .thenBy { it.index }
-                )
-                .map { it.value }
-        }
         RecordDialog(
             state = dialog,
-            points = sortedPoints,
+            points = uiState.pointsSortedByUsage,
             onDismiss = onCloseRecord,
             onNameChange = onRecordNameChange,
             onAssigneeChange = onRecordAssigneeChange,
