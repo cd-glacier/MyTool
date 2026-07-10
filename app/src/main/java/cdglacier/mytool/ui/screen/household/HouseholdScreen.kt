@@ -184,7 +184,7 @@ fun HouseholdScreen(
     uiState.recordDialog?.let { dialog ->
         RecordDialog(
             state = dialog,
-            points = uiState.points,
+            points = uiState.pointsSortedByUsage,
             onDismiss = onCloseRecord,
             onNameChange = onRecordNameChange,
             onAssigneeChange = onRecordAssigneeChange,

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import cdglacier.mytool.data.repository.ObsidianRepository
 import cdglacier.mytool.domain.model.Assignee
 import cdglacier.mytool.domain.model.HouseholdEntry
+import cdglacier.mytool.domain.model.HouseholdPoint
 import cdglacier.mytool.domain.model.HouseholdSummary
 import cdglacier.mytool.domain.usecase.GetHouseholdPointsUseCase
 import cdglacier.mytool.domain.usecase.GetHouseholdSummaryUseCase
@@ -44,6 +45,7 @@ class HouseholdViewModel @Inject constructor(
                     journalConfigured = journalConfigured,
                     pagesConfigured = pagesConfigured,
                     points = points,
+                    pointsSortedByUsage = sortPointsByUsage(points, summary),
                     summary = summary,
                 )
             }
@@ -64,10 +66,27 @@ class HouseholdViewModel @Inject constructor(
         _uiState.update {
             it.copy(
                 recordDialog = RecordDialogState(
-                    selectedName = it.points.firstOrNull()?.name.orEmpty(),
+                    selectedName = it.pointsSortedByUsage.firstOrNull()?.name.orEmpty(),
+                    assignee = it.lastAssignee,
                 ),
             )
         }
+    }
+
+    private fun sortPointsByUsage(
+        points: List<HouseholdPoint>,
+        summary: HouseholdSummary,
+    ): List<HouseholdPoint> {
+        val usage = mutableMapOf<String, Int>()
+        summary.perAssignee.values.forEach { list ->
+            list.forEach { b -> usage[b.name] = (usage[b.name] ?: 0) + b.count }
+        }
+        return points.withIndex()
+            .sortedWith(
+                compareByDescending<IndexedValue<HouseholdPoint>> { usage[it.value.name] ?: 0 }
+                    .thenBy { it.index }
+            )
+            .map { it.value }
     }
 
     fun onCloseRecordDialog() {
@@ -79,7 +98,12 @@ class HouseholdViewModel @Inject constructor(
     }
 
     fun onRecordAssigneeChange(assignee: Assignee) {
-        _uiState.update { it.copy(recordDialog = it.recordDialog?.copy(assignee = assignee)) }
+        _uiState.update {
+            it.copy(
+                recordDialog = it.recordDialog?.copy(assignee = assignee),
+                lastAssignee = assignee,
+            )
+        }
     }
 
     fun onRecordCountChange(text: String) {

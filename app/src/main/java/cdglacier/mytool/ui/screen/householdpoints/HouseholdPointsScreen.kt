@@ -478,7 +478,10 @@ private fun NumberInput(value: String, onChange: (String) -> Unit) {
     ) {
         BasicTextField(
             value = value,
-            onValueChange = { new -> onChange(new.filter { it.isDigit() }) },
+            onValueChange = { new ->
+                val sign = if (new.startsWith("-")) "-" else ""
+                onChange(sign + new.filter { it.isDigit() })
+            },
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             textStyle = TextStyle(

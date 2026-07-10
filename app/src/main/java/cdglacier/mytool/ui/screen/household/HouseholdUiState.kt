@@ -12,9 +12,11 @@ data class HouseholdUiState(
     val journalConfigured: Boolean = true,
     val pagesConfigured: Boolean = true,
     val points: List<HouseholdPoint> = emptyList(),
+    val pointsSortedByUsage: List<HouseholdPoint> = emptyList(),
     val summary: HouseholdSummary = HouseholdSummary(0, 0, emptyMap()),
     val recordDialog: RecordDialogState? = null,
     val errorMessage: String? = null,
+    val lastAssignee: Assignee = Assignee.HUSBAND,
 )
 
 data class RecordDialogState(
