@@ -10,6 +10,8 @@ import cdglacier.mytool.data.repository.GoogleCalendarRepository
 import cdglacier.mytool.data.repository.GoogleCalendarRepositoryImpl
 import cdglacier.mytool.data.repository.DailySummaryRepository
 import cdglacier.mytool.data.repository.DailySummaryRepositoryImpl
+import cdglacier.mytool.data.repository.HealthRepository
+import cdglacier.mytool.data.repository.HealthRepositoryImpl
 import cdglacier.mytool.data.repository.HouseholdRepository
 import cdglacier.mytool.data.repository.HouseholdRepositoryImpl
 import cdglacier.mytool.data.repository.LocationPermissionRepository
@@ -99,4 +101,8 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindHouseholdRepository(impl: HouseholdRepositoryImpl): HouseholdRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindHealthRepository(impl: HealthRepositoryImpl): HealthRepository
 }

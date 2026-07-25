@@ -21,6 +21,7 @@ osmdroid = "6.1.20"
 coil = "2.7.0"
 mlkitGenaiPrompt = "1.0.0-beta2"
 kotlinxCoroutinesPlayServices = "1.8.1"
+healthConnect = "1.1.0-rc03"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -57,6 +58,7 @@ osmdroid-android = { group = "org.osmdroid", name = "osmdroid-android", version.
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 mlkit-genai-prompt = { group = "com.google.mlkit", name = "genai-prompt", version.ref = "mlkitGenaiPrompt" }
 kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "kotlinxCoroutinesPlayServices" }
+androidx-health-connect-client = { group = "androidx.health.connect", name = "connect-client", version.ref = "healthConnect" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

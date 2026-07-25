@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cdglacier.mytool.data.repository.AiRepository
 import cdglacier.mytool.data.repository.CalendarPermissionRepository
+import cdglacier.mytool.data.repository.HealthRepository
 import cdglacier.mytool.data.repository.LocationPermissionRepository
 import cdglacier.mytool.data.repository.ObsidianRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,7 +22,10 @@ class SettingsViewModel @Inject constructor(
     private val locationPermissionRepository: LocationPermissionRepository,
     private val calendarPermissionRepository: CalendarPermissionRepository,
     private val aiRepository: AiRepository,
+    private val healthRepository: HealthRepository,
 ) : ViewModel() {
+
+    val healthRequiredPermissions: Set<String> = healthRepository.requiredPermissions
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
@@ -67,11 +71,21 @@ class SettingsViewModel @Inject constructor(
                 _uiState.update { it.copy(aiAvailability = availability) }
             }
         }
+        viewModelScope.launch {
+            healthRepository.permissionsGranted.collect { granted ->
+                _uiState.update { it.copy(healthPermissionsGranted = granted) }
+            }
+        }
+        _uiState.update { it.copy(healthConnectAvailable = healthRepository.isAvailable) }
     }
 
     fun refreshPermissions() {
         calendarPermissionRepository.refresh()
         locationPermissionRepository.refresh()
+        viewModelScope.launch {
+            healthRepository.refreshPermissions()
+            _uiState.update { it.copy(healthConnectAvailable = healthRepository.isAvailable) }
+        }
     }
 
     fun refreshAiAvailability() {

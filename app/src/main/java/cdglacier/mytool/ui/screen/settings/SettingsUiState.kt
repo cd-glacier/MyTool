@@ -12,4 +12,6 @@ data class SettingsUiState(
     val fineLocationGranted: Boolean = false,
     val backgroundLocationGranted: Boolean = false,
     val aiAvailability: AiAvailability = AiAvailability.UNKNOWN,
+    val healthConnectAvailable: Boolean = false,
+    val healthPermissionsGranted: Boolean = false,
 )
