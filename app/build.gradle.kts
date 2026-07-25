@@ -85,6 +85,7 @@ dependencies {
     implementation(libs.mlkit.genai.prompt)
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.health.connect.client)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

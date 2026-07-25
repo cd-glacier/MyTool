@@ -39,6 +39,7 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cdglacier.mytool.data.repository.AiAvailability
+import cdglacier.mytool.data.repository.HealthPermissions
 import cdglacier.mytool.ui.component.GlacierSectionCard
 import cdglacier.mytool.ui.component.GlacierTopBar
 import cdglacier.mytool.ui.theme.GlacierAmber
@@ -115,6 +116,12 @@ fun SettingsRoute(
         viewModel.refreshPermissions()
     }
 
+    val healthPermissionLauncher = rememberLauncherForActivityResult(
+        HealthPermissions.createRequestPermissionResultContract()
+    ) { _ ->
+        viewModel.refreshPermissions()
+    }
+
     LifecycleResumeEffect(Unit) {
         viewModel.refreshPermissions()
         viewModel.refreshAiAvailability()
@@ -144,6 +151,9 @@ fun SettingsRoute(
                 context.startActivity(intent)
             }
         },
+        onRequestHealthPermission = {
+            healthPermissionLauncher.launch(viewModel.healthRequiredPermissions)
+        },
         onBack = onBack,
     )
 }
@@ -159,6 +169,7 @@ fun SettingsScreen(
     onRequestCalendarPermission: () -> Unit,
     onRequestLocationPermission: () -> Unit,
     onRequestBackgroundLocationPermission: () -> Unit,
+    onRequestHealthPermission: () -> Unit,
     onBack: () -> Unit,
 ) {
     Scaffold(
@@ -240,6 +251,23 @@ fun SettingsScreen(
                     value = if (bg) "[GRANTED]" else "[DENIED]",
                     valueColor = if (bg) GlacierTeal else GlacierAmber,
                     onClick = if (bg) null else onRequestBackgroundLocationPermission,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                val health = uiState.healthPermissionsGranted
+                val healthAvailable = uiState.healthConnectAvailable
+                SettingRow(
+                    label = "HEALTH_CONNECT",
+                    value = when {
+                        !healthAvailable -> "[UNAVAILABLE]"
+                        health -> "[GRANTED]"
+                        else -> "[DENIED]"
+                    },
+                    valueColor = when {
+                        !healthAvailable -> GlacierMuted
+                        health -> GlacierTeal
+                        else -> GlacierAmber
+                    },
+                    onClick = if (healthAvailable && !health) onRequestHealthPermission else null,
                 )
             }
         }
