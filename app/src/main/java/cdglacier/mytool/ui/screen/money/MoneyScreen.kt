@@ -182,6 +182,7 @@ fun MoneyScreen(
             EditableMoneyItemSection(
                 title = "INCOMES",
                 items = uiState.currentMonth.incomes,
+                prevAmountOf = prevAmountLookup(uiState.previousMonth.incomes),
                 onAdd = onAddIncome,
                 onUpdate = onUpdateIncome,
                 onRequestRemove = { i, name -> requestRemove("INCOME: $name") { onRemoveIncome(i) } },
@@ -190,6 +191,7 @@ fun MoneyScreen(
             EditableMoneyItemSection(
                 title = "CARD_2M_AGO",
                 items = uiState.currentMonth.cardExpenses,
+                prevAmountOf = prevAmountLookup(uiState.previousMonth.cardExpenses),
                 onAdd = onAddCard,
                 onUpdate = onUpdateCard,
                 onRequestRemove = { i, name -> requestRemove("CARD: $name") { onRemoveCard(i) } },
@@ -197,6 +199,7 @@ fun MoneyScreen(
             )
             EditableBudgetSection(
                 groups = uiState.budgetGroups,
+                prevAmountOf = prevAmountLookup(uiState.previousMonth.budgets),
                 onAdd = onAddBudget,
                 onUpdate = onUpdateBudget,
                 onRequestRemove = { i, name -> requestRemove("BUDGET: $name") { onRemoveBudget(i) } },
@@ -205,6 +208,7 @@ fun MoneyScreen(
             )
             EditableSavingsSection(
                 groups = uiState.savingsGroups,
+                prevAmountOf = uiState.previousMonth.savings.associate { it.name to it.amount },
                 onAdd = onAddSavings,
                 onUpdate = onUpdateSavings,
                 onRequestRemove = { i, name -> requestRemove("SAVINGS: $name") { onRemoveSavings(i) } },
@@ -214,6 +218,7 @@ fun MoneyScreen(
             EditableMoneyItemSection(
                 title = "EXTRA",
                 items = uiState.currentMonth.extras,
+                prevAmountOf = prevAmountLookup(uiState.previousMonth.extras),
                 onAdd = onAddExtra,
                 onUpdate = onUpdateExtra,
                 onRequestRemove = { i, name -> requestRemove("EXTRA: $name") { onRemoveExtra(i) } },
@@ -316,6 +321,7 @@ private fun SummaryRow(label: String, amount: Long, highlight: Color? = null) {
 private fun EditableMoneyItemSection(
     title: String,
     items: List<MoneyItem>,
+    prevAmountOf: Map<String, Long>,
     onAdd: (String) -> Unit,
     onUpdate: (Int, MoneyItem) -> Unit,
     onRequestRemove: (Int, String) -> Unit,
@@ -331,11 +337,9 @@ private fun EditableMoneyItemSection(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    text = item.name,
-                    color = GlacierOnSurface,
-                    fontFamily = FontFamily.Monospace,
-                    fontSize = 13.sp,
+                ItemNameWithPrev(
+                    name = item.name,
+                    prevAmount = prevAmountOf[item.name],
                     modifier = Modifier.weight(1f),
                 )
                 AmountInput(
@@ -360,6 +364,7 @@ private fun EditableMoneyItemSection(
 @Composable
 private fun EditableBudgetSection(
     groups: List<Pair<String, List<IndexedValue<MoneyItem>>>>,
+    prevAmountOf: Map<String, Long>,
     onAdd: (String, String) -> Unit,
     onUpdate: (Int, MoneyItem) -> Unit,
     onRequestRemove: (Int, String) -> Unit,
@@ -408,11 +413,9 @@ private fun EditableBudgetSection(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(
-                        text = item.name,
-                        color = GlacierOnSurface,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 13.sp,
+                    ItemNameWithPrev(
+                        name = item.name,
+                        prevAmount = prevAmountOf[item.name],
                         modifier = Modifier.weight(1f),
                     )
                     AmountInput(
@@ -438,6 +441,7 @@ private fun EditableBudgetSection(
 @Composable
 private fun EditableSavingsSection(
     groups: List<Pair<String, List<IndexedValue<SavingsItem>>>>,
+    prevAmountOf: Map<String, Long>,
     onAdd: (String, String) -> Unit,
     onUpdate: (Int, SavingsItem) -> Unit,
     onRequestRemove: (Int, String) -> Unit,
@@ -486,11 +490,9 @@ private fun EditableSavingsSection(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(
-                        text = item.name,
-                        color = GlacierOnSurface,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 13.sp,
+                    ItemNameWithPrev(
+                        name = item.name,
+                        prevAmount = prevAmountOf[item.name],
                         modifier = Modifier.weight(1f),
                     )
                     val flagLabel = if (item.toLifeAccount) "[L]" else "[ ]"
@@ -824,6 +826,30 @@ private fun SectionSubtotal(amount: Long) {
         fontSize = 12.sp,
     )
 }
+
+@Composable
+private fun ItemNameWithPrev(name: String, prevAmount: Long?, modifier: Modifier = Modifier) {
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = name,
+            color = GlacierOnSurface,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 13.sp,
+        )
+        if (prevAmount != null) {
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = "(${formatYen(prevAmount)})",
+                color = GlacierMuted,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 10.sp,
+            )
+        }
+    }
+}
+
+private fun prevAmountLookup(items: List<MoneyItem>): Map<String, Long> =
+    items.associate { it.name to it.amount }
 
 private fun formatYen(amount: Long): String {
     val sign = if (amount < 0) "-" else ""
