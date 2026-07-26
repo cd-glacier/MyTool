@@ -493,6 +493,7 @@ private fun EditableSavingsSection(
                     ItemNameWithPrev(
                         name = item.name,
                         prevAmount = prevAmountOf[item.name],
+                        stacked = true,
                         modifier = Modifier.weight(1f),
                     )
                     val flagLabel = if (item.toLifeAccount) "[L]" else "[ ]"
@@ -828,22 +829,42 @@ private fun SectionSubtotal(amount: Long) {
 }
 
 @Composable
-private fun ItemNameWithPrev(name: String, prevAmount: Long?, modifier: Modifier = Modifier) {
-    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+private fun ItemNameWithPrev(
+    name: String,
+    prevAmount: Long?,
+    modifier: Modifier = Modifier,
+    stacked: Boolean = false,
+) {
+    val nameText: @Composable () -> Unit = {
         Text(
             text = name,
             color = GlacierOnSurface,
             fontFamily = FontFamily.Monospace,
             fontSize = 13.sp,
         )
+    }
+    val prevText: @Composable () -> Unit = {
         if (prevAmount != null) {
-            Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = "(${formatYen(prevAmount)})",
                 color = GlacierMuted,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 10.sp,
             )
+        }
+    }
+    if (stacked) {
+        Column(modifier = modifier) {
+            nameText()
+            prevText()
+        }
+    } else {
+        Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+            nameText()
+            if (prevAmount != null) {
+                Spacer(modifier = Modifier.width(4.dp))
+                prevText()
+            }
         }
     }
 }

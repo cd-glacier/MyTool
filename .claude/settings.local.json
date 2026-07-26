@@ -3,7 +3,11 @@
     "allow": [
       "Bash(~/obsidian/ai_journals/2026-03-16.md:*)",
       "Read(//Users/glacier/obsidian/ai_journals/**)",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(gh pr create --title 'MoneyBook: 各科目に先月額を併記' --body ' *)",
+      "Bash(git add *)"
     ]
   }
 }
