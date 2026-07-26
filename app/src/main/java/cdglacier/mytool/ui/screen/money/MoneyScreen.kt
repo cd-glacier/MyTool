@@ -841,6 +841,7 @@ private fun ItemNameWithPrev(
             color = GlacierOnSurface,
             fontFamily = FontFamily.Monospace,
             fontSize = 13.sp,
+            lineHeight = 14.sp,
         )
     }
     val prevText: @Composable () -> Unit = {
@@ -850,6 +851,7 @@ private fun ItemNameWithPrev(
                 color = GlacierMuted,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 10.sp,
+                lineHeight = 11.sp,
             )
         }
     }
