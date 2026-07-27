@@ -18,6 +18,9 @@ data class MoneyUiState(
     val currentMonth: MonthlyMoney
         get() = book.monthOrEmpty(displayedMonth)
 
+    val previousMonth: MonthlyMoney
+        get() = book.monthOrEmpty(displayedMonth.minusMonths(1))
+
     val services: List<AnnualService> get() = book.services
 
     /** UI 表示用: アーカイブ済みを除外し、元 index を保持 */
