@@ -1,9 +1,18 @@
 package cdglacier.mytool.domain.usecase
 
 import cdglacier.mytool.data.repository.HealthRepository
+import java.time.Duration
 import java.time.LocalDate
 import java.time.ZoneId
 import javax.inject.Inject
+
+data class HealthData(
+    val sleep: Duration? = null,
+    val steps: Long? = null,
+) {
+    val hasAny: Boolean
+        get() = sleep != null || (steps != null && steps > 0)
+}
 
 class GetHealthDataForDateUseCase @Inject constructor(
     private val healthRepository: HealthRepository,
