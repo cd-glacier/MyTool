@@ -19,6 +19,9 @@ data object SettingsRoute : NavKey
 data object PositionTrackingRoute : NavKey
 
 @Serializable
+data object HealthConnectRoute : NavKey
+
+@Serializable
 data object HouseholdRoute : NavKey
 
 @Serializable

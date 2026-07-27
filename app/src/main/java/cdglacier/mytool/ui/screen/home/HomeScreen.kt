@@ -62,6 +62,7 @@ fun HomeRoute(
     onNavigateToMoney: () -> Unit,
     onNavigateToRecipe: () -> Unit,
     onNavigateToHousehold: () -> Unit,
+    onNavigateToHealthConnect: () -> Unit,
     onNavigateToSettings: () -> Unit,
     viewModel: HomeViewModel = viewModel(),
 ) {
@@ -79,6 +80,7 @@ fun HomeRoute(
         onNavigateToMoney = onNavigateToMoney,
         onNavigateToRecipe = onNavigateToRecipe,
         onNavigateToHousehold = onNavigateToHousehold,
+        onNavigateToHealthConnect = onNavigateToHealthConnect,
         onNavigateToSettings = onNavigateToSettings,
     )
 }
@@ -93,6 +95,7 @@ fun HomeScreen(
     onNavigateToMoney: () -> Unit,
     onNavigateToRecipe: () -> Unit,
     onNavigateToHousehold: () -> Unit,
+    onNavigateToHealthConnect: () -> Unit,
     onNavigateToSettings: () -> Unit,
 ) {
     Scaffold(
@@ -116,6 +119,7 @@ fun HomeScreen(
                 onNavigateToMoney = onNavigateToMoney,
                 onNavigateToRecipe = onNavigateToRecipe,
                 onNavigateToHousehold = onNavigateToHousehold,
+                onNavigateToHealthConnect = onNavigateToHealthConnect,
                 onNavigateToSettings = onNavigateToSettings,
             )
         }
@@ -326,6 +330,7 @@ private fun ExecCommandsSection(
     onNavigateToMoney: () -> Unit,
     onNavigateToRecipe: () -> Unit,
     onNavigateToHousehold: () -> Unit,
+    onNavigateToHealthConnect: () -> Unit,
     onNavigateToSettings: () -> Unit,
 ) {
     Row(
@@ -387,6 +392,12 @@ private fun ExecCommandsSection(
     Spacer(modifier = Modifier.height(2.dp))
     CommandMenuItem(
         number = "07.",
+        label = "HEALTH_CONNECT",
+        onClick = onNavigateToHealthConnect,
+    )
+    Spacer(modifier = Modifier.height(2.dp))
+    CommandMenuItem(
+        number = "08.",
         label = "SYS_SETTINGS",
         onClick = onNavigateToSettings,
     )
