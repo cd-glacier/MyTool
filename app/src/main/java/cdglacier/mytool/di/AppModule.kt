@@ -22,6 +22,8 @@ import cdglacier.mytool.data.repository.MoneyRepository
 import cdglacier.mytool.data.repository.MoneyRepositoryImpl
 import cdglacier.mytool.data.repository.TrackingStateRepository
 import cdglacier.mytool.data.repository.TrackingStateRepositoryImpl
+import cdglacier.mytool.data.repository.JournalLocationRepository
+import cdglacier.mytool.data.repository.JournalLocationRepositoryImpl
 import cdglacier.mytool.data.repository.JournalRepository
 import cdglacier.mytool.data.repository.JournalRepositoryImpl
 import cdglacier.mytool.data.repository.ObsidianRepository
@@ -93,6 +95,10 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindRecipeRepository(impl: RecipeRepositoryImpl): RecipeRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindJournalLocationRepository(impl: JournalLocationRepositoryImpl): JournalLocationRepository
 
     @Binds
     @Singleton
