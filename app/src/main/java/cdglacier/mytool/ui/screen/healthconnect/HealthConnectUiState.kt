@@ -5,8 +5,7 @@ import java.time.Duration
 import java.time.LocalDate
 
 data class HealthConnectUiState(
-    val sourceDate: LocalDate = LocalDate.now().minusDays(1),
-    val targetDate: LocalDate = LocalDate.now(),
+    val date: LocalDate = LocalDate.now().minusDays(1),
     val steps: Long? = null,
     val sleep: Duration? = null,
     val isLoading: Boolean = false,

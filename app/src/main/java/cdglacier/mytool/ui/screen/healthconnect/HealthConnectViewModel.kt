@@ -57,7 +57,7 @@ class HealthConnectViewModel @Inject constructor(
                     healthConnectAvailable = healthRepository.isAvailable,
                 )
             }
-            val data = runCatching { getHealthDataForDateUseCase(_uiState.value.sourceDate) }
+            val data = runCatching { getHealthDataForDateUseCase(_uiState.value.date) }
                 .getOrDefault(HealthData())
             _uiState.update {
                 it.copy(
@@ -69,15 +69,10 @@ class HealthConnectViewModel @Inject constructor(
         }
     }
 
-    fun onSourceDateChange(delta: Long) {
-        val newDate = _uiState.value.sourceDate.plusDays(delta)
-        _uiState.update { it.copy(sourceDate = newDate, steps = null, sleep = null) }
+    fun onDateChange(delta: Long) {
+        val newDate = _uiState.value.date.plusDays(delta)
+        _uiState.update { it.copy(date = newDate, steps = null, sleep = null) }
         refresh()
-    }
-
-    fun onTargetDateChange(delta: Long) {
-        val newDate = _uiState.value.targetDate.plusDays(delta)
-        _uiState.update { it.copy(targetDate = newDate) }
     }
 
     fun onWriteToJournal() {
@@ -88,7 +83,7 @@ class HealthConnectViewModel @Inject constructor(
             _uiState.update { it.copy(isWriting = true) }
             val result = writeHealthSectionToJournalUseCase(
                 journalDirUri = dirUri.toString(),
-                date = state.targetDate,
+                date = state.date,
                 filenameFormat = state.filenameFormat,
                 health = HealthData(sleep = state.sleep, steps = state.steps),
             )
@@ -96,7 +91,7 @@ class HealthConnectViewModel @Inject constructor(
                 it.copy(
                     isWriting = false,
                     snackbarMessage = result.fold(
-                        onSuccess = { "JOURNALに Health セクションを挿入しました" },
+                        onSuccess = { "JOURNALに出力しました" },
                         onFailure = { e -> "エラー: ${e.message}" },
                     ),
                 )

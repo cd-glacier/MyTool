@@ -7,11 +7,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Scaffold
@@ -39,6 +37,7 @@ import cdglacier.mytool.ui.theme.GlacierAmber
 import cdglacier.mytool.ui.theme.GlacierBg
 import cdglacier.mytool.ui.theme.GlacierMuted
 import cdglacier.mytool.ui.theme.GlacierOnSurface
+import cdglacier.mytool.ui.theme.GlacierSurface
 import cdglacier.mytool.ui.theme.GlacierTeal
 import java.time.Duration
 import java.time.format.DateTimeFormatter
@@ -74,8 +73,7 @@ fun HealthConnectRoute(
         onRequestPermission = {
             healthPermissionLauncher.launch(viewModel.healthRequiredPermissions)
         },
-        onSourceDateChange = viewModel::onSourceDateChange,
-        onTargetDateChange = viewModel::onTargetDateChange,
+        onDateChange = viewModel::onDateChange,
         onWriteToJournal = viewModel::onWriteToJournal,
         onBack = onBack,
     )
@@ -86,8 +84,7 @@ fun HealthConnectScreen(
     uiState: HealthConnectUiState,
     snackbarHostState: SnackbarHostState,
     onRequestPermission: () -> Unit,
-    onSourceDateChange: (Long) -> Unit,
-    onTargetDateChange: (Long) -> Unit,
+    onDateChange: (Long) -> Unit,
     onWriteToJournal: () -> Unit,
     onBack: () -> Unit,
 ) {
@@ -104,82 +101,69 @@ fun HealthConnectScreen(
                 .padding(start = 16.dp, end = 16.dp, top = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            GlacierSectionCard(title = "SOURCE_DATE") {
-                DateNavRow(
-                    dateText = uiState.sourceDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
-                    caption = "取得元の日付",
-                    onPrev = { onSourceDateChange(-1) },
-                    onNext = { onSourceDateChange(1) },
-                )
-            }
-
             GlacierSectionCard(title = "DATA") {
                 when {
-                    !uiState.healthConnectAvailable -> Text(
-                        text = "! Health Connect が利用できません",
+                    !uiState.healthConnectAvailable -> StatusText(
+                        text = "! HEALTH_CONNECT UNAVAILABLE",
                         color = GlacierAmber,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 12.sp,
                     )
                     !uiState.permissionsGranted -> Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(
-                            text = "! Health Connect の権限が未許可です",
+                        StatusText(
+                            text = "! PERMISSION_DENIED",
                             color = GlacierAmber,
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 12.sp,
                         )
                         GlacierButton(
-                            label = "権限をリクエスト",
+                            label = "REQUEST_PERMISSION",
                             onClick = onRequestPermission,
                         )
                     }
-                    uiState.isLoading -> Text(
-                        text = "LOADING...",
-                        color = GlacierMuted,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 12.sp,
-                    )
-                    !uiState.hasAnyData -> Text(
-                        text = "NO_DATA",
-                        color = GlacierMuted,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 12.sp,
-                    )
+                    uiState.isLoading -> StatusText(text = "LOADING...", color = GlacierMuted)
+                    !uiState.hasAnyData -> StatusText(text = "NO_DATA", color = GlacierMuted)
                     else -> Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         DataRow(label = "SLEEP", value = uiState.sleep?.let(::formatSleep) ?: "--")
-                        DataRow(label = "STEPS", value = uiState.steps?.let { "$it steps" } ?: "--")
+                        DataRow(label = "STEPS", value = uiState.steps?.let { "$it" } ?: "--")
                     }
                 }
             }
 
-            GlacierSectionCard(title = "TARGET_JOURNAL") {
+            GlacierSectionCard(title = "EXPORT") {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    DateNavRow(
-                        dateText = uiState.targetDate.format(DateTimeFormatter.ISO_LOCAL_DATE),
-                        caption = "挿入先の Journal 日付",
-                        onPrev = { onTargetDateChange(-1) },
-                        onNext = { onTargetDateChange(1) },
-                    )
                     Text(
                         text = if (uiState.journalDirUri == null)
                             "! SETTINGS で Journal フォルダを設定してください"
                         else
-                            "選択中の日付の Journal に # Health セクションを挿入します",
+                            "選択中の日付の Health を JOURNAL に出力します",
                         color = if (uiState.journalDirUri == null) GlacierAmber else GlacierMuted,
                         fontFamily = FontFamily.Monospace,
                         fontSize = 11.sp,
                     )
                     GlacierButton(
-                        label = "JOURNALへ挿入",
+                        label = "JOURNALへ出力",
                         onClick = onWriteToJournal,
                         enabled = uiState.canWrite,
                         loading = uiState.isWriting,
-                        loadingLabel = "WRITING...",
+                        loadingLabel = "EXPORTING...",
                     )
                 }
             }
+
+            DateNavRow(
+                dateText = uiState.date.format(DateTimeFormatter.ISO_LOCAL_DATE),
+                onPrev = { onDateChange(-1) },
+                onNext = { onDateChange(1) },
+            )
         }
     }
+}
+
+@Composable
+private fun StatusText(text: String, color: androidx.compose.ui.graphics.Color) {
+    Text(
+        text = text,
+        color = color,
+        fontFamily = FontFamily.Monospace,
+        fontSize = 12.sp,
+    )
 }
 
 @Composable
@@ -208,19 +192,19 @@ private fun DataRow(label: String, value: String) {
 @Composable
 private fun DateNavRow(
     dateText: String,
-    caption: String,
     onPrev: () -> Unit,
     onNext: () -> Unit,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(GlacierSurface)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         ArrowButton(label = "<", onClick = onPrev)
         Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = 12.dp),
+            modifier = Modifier.weight(1f),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
@@ -229,12 +213,6 @@ private fun DateNavRow(
                 fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
-            )
-            Text(
-                text = caption,
-                color = GlacierMuted,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 10.sp,
             )
         }
         ArrowButton(label = ">", onClick = onNext)
