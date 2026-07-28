@@ -101,6 +101,12 @@ fun HealthConnectScreen(
                 .padding(start = 16.dp, end = 16.dp, top = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            DateNavRow(
+                dateText = uiState.date.format(DateTimeFormatter.ISO_LOCAL_DATE),
+                onPrev = { onDateChange(-1) },
+                onNext = { onDateChange(1) },
+            )
+
             GlacierSectionCard(title = "DATA") {
                 when {
                     !uiState.healthConnectAvailable -> StatusText(
@@ -117,11 +123,23 @@ fun HealthConnectScreen(
                             onClick = onRequestPermission,
                         )
                     }
-                    uiState.isLoading -> StatusText(text = "LOADING...", color = GlacierMuted)
-                    !uiState.hasAnyData -> StatusText(text = "NO_DATA", color = GlacierMuted)
                     else -> Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        DataRow(label = "SLEEP", value = uiState.sleep?.let(::formatSleep) ?: "--")
-                        DataRow(label = "STEPS", value = uiState.steps?.let { "$it" } ?: "--")
+                        DataRow(
+                            label = "SLEEP",
+                            value = when {
+                                uiState.sleep != null -> formatSleep(uiState.sleep)
+                                uiState.isLoading -> "..."
+                                else -> "--"
+                            },
+                        )
+                        DataRow(
+                            label = "STEPS",
+                            value = when {
+                                uiState.steps != null -> "${uiState.steps}"
+                                uiState.isLoading -> "..."
+                                else -> "--"
+                            },
+                        )
                     }
                 }
             }
@@ -146,12 +164,6 @@ fun HealthConnectScreen(
                     )
                 }
             }
-
-            DateNavRow(
-                dateText = uiState.date.format(DateTimeFormatter.ISO_LOCAL_DATE),
-                onPrev = { onDateChange(-1) },
-                onNext = { onDateChange(1) },
-            )
         }
     }
 }

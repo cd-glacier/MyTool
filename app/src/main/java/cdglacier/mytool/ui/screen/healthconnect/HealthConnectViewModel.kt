@@ -71,7 +71,7 @@ class HealthConnectViewModel @Inject constructor(
 
     fun onDateChange(delta: Long) {
         val newDate = _uiState.value.date.plusDays(delta)
-        _uiState.update { it.copy(date = newDate, steps = null, sleep = null) }
+        _uiState.update { it.copy(date = newDate) }
         refresh()
     }
 
