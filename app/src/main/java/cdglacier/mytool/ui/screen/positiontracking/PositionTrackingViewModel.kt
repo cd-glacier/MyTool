@@ -2,12 +2,15 @@ package cdglacier.mytool.ui.screen.positiontracking
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import cdglacier.mytool.data.db.JournalLocationEntity
 import cdglacier.mytool.data.db.LocationRecordEntity
+import cdglacier.mytool.data.repository.JournalLocationRepository
 import cdglacier.mytool.data.repository.LocationPermissionRepository
 import cdglacier.mytool.data.repository.ObsidianRepository
 import cdglacier.mytool.data.repository.TrackingStateRepository
 import cdglacier.mytool.domain.usecase.ExportPositionTrackingToJournalUseCase
 import cdglacier.mytool.domain.usecase.ObserveLocationRecordsByDateUseCase
+import cdglacier.mytool.domain.usecase.ScanJournalLocationsUseCase
 import cdglacier.mytool.domain.usecase.ToggleLocationTrackingUseCase
 import cdglacier.mytool.ui.component.LocationPointUiModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,6 +18,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -26,9 +31,11 @@ class PositionTrackingViewModel @Inject constructor(
     private val toggleLocationTrackingUseCase: ToggleLocationTrackingUseCase,
     private val observeLocationRecordsByDateUseCase: ObserveLocationRecordsByDateUseCase,
     private val exportPositionTrackingToJournalUseCase: ExportPositionTrackingToJournalUseCase,
+    private val scanJournalLocationsUseCase: ScanJournalLocationsUseCase,
     private val trackingStateRepository: TrackingStateRepository,
     private val locationPermissionRepository: LocationPermissionRepository,
     private val obsidianRepository: ObsidianRepository,
+    private val journalLocationRepository: JournalLocationRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PositionTrackingUiState())
@@ -69,6 +76,7 @@ class PositionTrackingViewModel @Inject constructor(
             }
         }
         observeRecords(_uiState.value.date)
+        viewModelScope.launch { scanJournals() }
         viewModelScope.launch {
             while (true) {
                 delay(DATE_CHECK_INTERVAL_MS)
@@ -126,10 +134,31 @@ class PositionTrackingViewModel @Inject constructor(
     private fun observeRecords(date: LocalDate) {
         recordsJob?.cancel()
         recordsJob = viewModelScope.launch {
-            observeLocationRecordsByDateUseCase(date).collect { list ->
-                _uiState.update { it.copy(points = list.map { e -> e.toUiModel() }) }
+            combine(
+                observeLocationRecordsByDateUseCase(date),
+                journalLocationRepository.observeByDate(date),
+            ) { dbRecords, journalRecords ->
+                mergePoints(dbRecords, journalRecords)
+            }.collect { points ->
+                _uiState.update { it.copy(points = points) }
             }
         }
+    }
+
+    private fun mergePoints(
+        dbRecords: List<LocationRecordEntity>,
+        journalRecords: List<JournalLocationEntity>,
+    ): List<LocationPointUiModel> {
+        val dbTimestamps = dbRecords.map { it.timestamp }.toHashSet()
+        val merged = dbRecords.map { it.toUiModel() } +
+            journalRecords.filter { it.timestamp !in dbTimestamps }.map { it.toUiModel() }
+        return merged.sortedBy { it.timestampMillis }
+    }
+
+    private suspend fun scanJournals() {
+        val uri = obsidianRepository.journalDirUri.first()?.toString() ?: return
+        val format = obsidianRepository.filenameFormat.first()
+        runCatching { scanJournalLocationsUseCase(uri, format) }
     }
 
     companion object {
@@ -142,5 +171,15 @@ class PositionTrackingViewModel @Inject constructor(
         accuracy = accuracy,
         batteryLevel = batteryLevel,
         sameLocationCount = sameLocationCount,
+        timestampMillis = timestamp,
+    )
+
+    private fun JournalLocationEntity.toUiModel() = LocationPointUiModel(
+        latitude = latitude,
+        longitude = longitude,
+        accuracy = accuracy,
+        batteryLevel = batteryLevel,
+        sameLocationCount = sameLocationCount,
+        timestampMillis = timestamp,
     )
 }

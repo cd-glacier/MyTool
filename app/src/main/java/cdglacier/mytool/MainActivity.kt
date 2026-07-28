@@ -22,6 +22,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import cdglacier.mytool.navigation.CopyObsidianJournalRoute as CopyObsidianJournalNav
 import cdglacier.mytool.navigation.HabitTrackingRoute as HabitTrackingNav
+import cdglacier.mytool.navigation.HealthConnectRoute as HealthConnectNav
 import cdglacier.mytool.navigation.HomeRoute as HomeNav
 import cdglacier.mytool.navigation.HouseholdRoute as HouseholdNav
 import cdglacier.mytool.navigation.HouseholdPointsRoute as HouseholdPointsNav
@@ -32,6 +33,7 @@ import cdglacier.mytool.navigation.RecipeRoute as RecipeNav
 import cdglacier.mytool.navigation.SettingsRoute as SettingsNav
 import cdglacier.mytool.ui.screen.copyjournal.CopyObsidianJournalRoute
 import cdglacier.mytool.ui.screen.habit.HabitTrackingRoute
+import cdglacier.mytool.ui.screen.healthconnect.HealthConnectRoute
 import cdglacier.mytool.ui.screen.home.HomeRoute
 import cdglacier.mytool.ui.screen.household.HouseholdRoute
 import cdglacier.mytool.ui.screen.householdpoints.HouseholdPointsRoute
@@ -91,6 +93,7 @@ class MainActivity : ComponentActivity() {
                                     onNavigateToMoney = { backStack.add(MoneyNav) },
                                     onNavigateToRecipe = { backStack.add(RecipeNav()) },
                                     onNavigateToHousehold = { backStack.add(HouseholdNav) },
+                                    onNavigateToHealthConnect = { backStack.add(HealthConnectNav) },
                                     onNavigateToSettings = { backStack.add(SettingsNav) },
                                 )
                             }
@@ -120,6 +123,9 @@ class MainActivity : ComponentActivity() {
                             }
                             entry<PositionTrackingNav> {
                                 PositionTrackingRoute(onBack = { backStack.removeLastOrNull() })
+                            }
+                            entry<HealthConnectNav> {
+                                HealthConnectRoute(onBack = { backStack.removeLastOrNull() })
                             }
                             entry<HouseholdNav> {
                                 HouseholdRoute(

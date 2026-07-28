@@ -29,7 +29,7 @@ class AutoCopyJournalWorker(
         val format = obsidianRepository.filenameFormat.first()
         val today = LocalDate.now()
 
-        if (entryPoint.checkJournalTargetUseCase()(journalDirUri, today, format)) {
+        if (entryPoint.isJournalCopiedUseCase()(journalDirUri, today, format)) {
             return Result.success()
         }
 

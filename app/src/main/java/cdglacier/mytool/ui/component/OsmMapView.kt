@@ -28,6 +28,7 @@ data class LocationPointUiModel(
     val accuracy: Float,
     val batteryLevel: Int,
     val sameLocationCount: Int,
+    val timestampMillis: Long = 0L,
 )
 
 @Composable

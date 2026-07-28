@@ -6,7 +6,6 @@ import javax.inject.Inject
 
 class CopyJournalUseCase @Inject constructor(
     private val journalRepository: JournalRepository,
-    private val getYesterdayHealthDataUseCase: GetYesterdayHealthDataUseCase,
 ) {
     suspend operator fun invoke(
         journalDirUri: String,
@@ -16,8 +15,7 @@ class CopyJournalUseCase @Inject constructor(
     ): Result<Unit> = runCatching {
         val source = journalRepository.readContent(journalDirUri, sourceDate, filenameFormat)
             ?: error("コピー元ファイルが見つかりません")
-        val healthData = runCatching { getYesterdayHealthDataUseCase(targetDate) }.getOrNull()
-        val transformed = JournalTransformer.transform(source, healthData)
+        val transformed = JournalTransformer.transform(source)
         journalRepository.writeContent(journalDirUri, targetDate, filenameFormat, transformed)
             .getOrThrow()
     }

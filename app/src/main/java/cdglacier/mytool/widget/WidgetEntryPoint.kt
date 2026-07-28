@@ -6,6 +6,7 @@ import cdglacier.mytool.data.repository.ObsidianRepository
 import cdglacier.mytool.data.repository.WidgetConfigRepository
 import cdglacier.mytool.domain.usecase.CheckJournalTargetUseCase
 import cdglacier.mytool.domain.usecase.CopyJournalUseCase
+import cdglacier.mytool.domain.usecase.IsJournalCopiedUseCase
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
@@ -18,5 +19,6 @@ interface WidgetEntryPoint {
     fun googleCalendarRepository(): GoogleCalendarRepository
     fun copyJournalUseCase(): CopyJournalUseCase
     fun checkJournalTargetUseCase(): CheckJournalTargetUseCase
+    fun isJournalCopiedUseCase(): IsJournalCopiedUseCase
     fun obsidianRepository(): ObsidianRepository
 }
