@@ -5,13 +5,18 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -22,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -30,39 +36,43 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cdglacier.mytool.data.repository.HealthPermissions
+import cdglacier.mytool.domain.model.HealthCategory
+import cdglacier.mytool.domain.model.HealthMetric
 import cdglacier.mytool.ui.component.GlacierButton
 import cdglacier.mytool.ui.component.GlacierSectionCard
 import cdglacier.mytool.ui.component.GlacierTopBar
 import cdglacier.mytool.ui.theme.GlacierAmber
 import cdglacier.mytool.ui.theme.GlacierBg
+import cdglacier.mytool.ui.theme.GlacierCyan
 import cdglacier.mytool.ui.theme.GlacierMuted
 import cdglacier.mytool.ui.theme.GlacierOnSurface
 import cdglacier.mytool.ui.theme.GlacierSurface
+import cdglacier.mytool.ui.theme.GlacierSurfaceLow
 import cdglacier.mytool.ui.theme.GlacierTeal
-import java.time.Duration
-import java.time.format.DateTimeFormatter
+import cdglacier.mytool.ui.theme.SpaceGroteskFamily
 
 @Composable
 fun HealthConnectRoute(
     onBack: () -> Unit,
+    onNavigateChart: (String) -> Unit = {},
     viewModel: HealthConnectViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val healthPermissionLauncher = rememberLauncherForActivityResult(
+    val permissionLauncher = rememberLauncherForActivityResult(
         HealthPermissions.createRequestPermissionResultContract()
     ) { _ ->
-        viewModel.refresh()
+        viewModel.refreshPermissions()
     }
 
     LifecycleResumeEffect(Unit) {
-        viewModel.refresh()
+        viewModel.refreshPermissions()
         onPauseOrDispose { }
     }
     LaunchedEffect(uiState.snackbarMessage) {
-        uiState.snackbarMessage?.let { message ->
-            snackbarHostState.showSnackbar(message)
+        uiState.snackbarMessage?.let {
+            snackbarHostState.showSnackbar(it)
             viewModel.onSnackbarShown()
         }
     }
@@ -70,12 +80,14 @@ fun HealthConnectRoute(
     HealthConnectScreen(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
-        onRequestPermission = {
-            healthPermissionLauncher.launch(viewModel.healthRequiredPermissions)
-        },
-        onDateChange = viewModel::onDateChange,
-        onWriteToJournal = viewModel::onWriteToJournal,
         onBack = onBack,
+        onDateChange = viewModel::onDateChange,
+        onViewModeChange = viewModel::onViewModeChange,
+        onRequestPermission = {
+            permissionLauncher.launch(viewModel.healthRequiredPermissions)
+        },
+        onSyncNow = viewModel::onSyncNow,
+        onNavigateChart = onNavigateChart,
     )
 }
 
@@ -83,10 +95,12 @@ fun HealthConnectRoute(
 fun HealthConnectScreen(
     uiState: HealthConnectUiState,
     snackbarHostState: SnackbarHostState,
-    onRequestPermission: () -> Unit,
-    onDateChange: (Long) -> Unit,
-    onWriteToJournal: () -> Unit,
     onBack: () -> Unit,
+    onDateChange: (Long) -> Unit,
+    onViewModeChange: (HealthViewMode) -> Unit,
+    onRequestPermission: () -> Unit,
+    onSyncNow: () -> Unit,
+    onNavigateChart: (String) -> Unit,
 ) {
     Scaffold(
         topBar = { GlacierTopBar(title = "HEALTH_CONNECT", onBack = onBack) },
@@ -98,136 +112,87 @@ fun HealthConnectScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(start = 16.dp, end = 16.dp, top = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            DateNavRow(
-                dateText = uiState.date.format(DateTimeFormatter.ISO_LOCAL_DATE),
+            if (!uiState.isPagesDirConfigured) {
+                WarningCard("PAGES_DIR が未設定です。Settings から設定してください。")
+            }
+            when {
+                !uiState.healthConnectAvailable -> WarningCard("HealthConnect が利用できません")
+                !uiState.permissionsGranted -> PermissionRequestCard(onRequestPermission)
+            }
+
+            ViewModeSelector(mode = uiState.viewMode, onChange = onViewModeChange)
+            AnchorHeader(
+                label = when (uiState.viewMode) {
+                    HealthViewMode.DAY -> uiState.anchorDate.toString()
+                    HealthViewMode.WEEK -> uiState.weekLabel
+                },
                 onPrev = { onDateChange(-1) },
                 onNext = { onDateChange(1) },
             )
 
-            GlacierSectionCard(title = "DATA") {
-                when {
-                    !uiState.healthConnectAvailable -> StatusText(
-                        text = "! HEALTH_CONNECT UNAVAILABLE",
-                        color = GlacierAmber,
-                    )
-                    !uiState.permissionsGranted -> Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        StatusText(
-                            text = "! PERMISSION_DENIED",
-                            color = GlacierAmber,
-                        )
-                        GlacierButton(
-                            label = "REQUEST_PERMISSION",
-                            onClick = onRequestPermission,
-                        )
-                    }
-                    else -> Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        DataRow(
-                            label = "SLEEP",
-                            value = when {
-                                uiState.sleep != null -> formatSleep(uiState.sleep)
-                                uiState.isLoading -> "..."
-                                else -> "--"
-                            },
-                        )
-                        DataRow(
-                            label = "STEPS",
-                            value = when {
-                                uiState.steps != null -> "${uiState.steps}"
-                                uiState.isLoading -> "..."
-                                else -> "--"
-                            },
-                        )
-                    }
-                }
+            SummaryCard(uiState = uiState)
+
+            for (category in HealthCategory.values()) {
+                CategorySection(
+                    category = category,
+                    uiState = uiState,
+                    onNavigateChart = onNavigateChart,
+                )
             }
 
-            GlacierSectionCard(title = "EXPORT") {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        text = if (uiState.journalDirUri == null)
-                            "! SETTINGS で Journal フォルダを設定してください"
-                        else
-                            "選択中の日付の Health を JOURNAL に出力します",
-                        color = if (uiState.journalDirUri == null) GlacierAmber else GlacierMuted,
-                        fontFamily = FontFamily.Monospace,
-                        fontSize = 11.sp,
-                    )
-                    GlacierButton(
-                        label = "JOURNALへ出力",
-                        onClick = onWriteToJournal,
-                        enabled = uiState.canWrite,
-                        loading = uiState.isWriting,
-                        loadingLabel = "EXPORTING...",
-                    )
-                }
+            HistoryGraphSection(uiState = uiState)
+
+            SyncButton(loading = uiState.isSyncing, onClick = onSyncNow)
+        }
+    }
+}
+
+@Composable
+private fun ViewModeSelector(mode: HealthViewMode, onChange: (HealthViewMode) -> Unit) {
+    Row(modifier = Modifier.fillMaxWidth().background(GlacierSurface)) {
+        HealthViewMode.values().forEach { m ->
+            val selected = m == mode
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .background(if (selected) GlacierAmber else GlacierSurface)
+                    .clickable { onChange(m) }
+                    .padding(vertical = 10.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = m.name,
+                    color = if (selected) GlacierBg else GlacierMuted,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
+                )
             }
         }
     }
 }
 
 @Composable
-private fun StatusText(text: String, color: androidx.compose.ui.graphics.Color) {
-    Text(
-        text = text,
-        color = color,
-        fontFamily = FontFamily.Monospace,
-        fontSize = 12.sp,
-    )
-}
-
-@Composable
-private fun DataRow(label: String, value: String) {
+private fun AnchorHeader(label: String, onPrev: () -> Unit, onNext: () -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        ArrowButton("<", onPrev)
+        Spacer(modifier = Modifier.width(12.dp))
         Text(
-            text = "$label:",
-            color = GlacierMuted,
-            fontFamily = FontFamily.Monospace,
-            fontSize = 12.sp,
-            modifier = Modifier.padding(end = 8.dp),
-        )
-        Text(
-            text = value,
-            color = GlacierTeal,
-            fontFamily = FontFamily.Monospace,
-            fontWeight = FontWeight.Bold,
-            fontSize = 14.sp,
-        )
-    }
-}
-
-@Composable
-private fun DateNavRow(
-    dateText: String,
-    onPrev: () -> Unit,
-    onNext: () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(GlacierSurface)
-            .padding(horizontal = 14.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        ArrowButton(label = "<", onClick = onPrev)
-        Column(
+            text = label,
+            color = GlacierCyan,
+            fontFamily = SpaceGroteskFamily,
+            fontWeight = FontWeight.Black,
+            fontSize = 18.sp,
             modifier = Modifier.weight(1f),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(
-                text = dateText,
-                color = GlacierOnSurface,
-                fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp,
-            )
-        }
-        ArrowButton(label = ">", onClick = onNext)
+        )
+        ArrowButton(">", onNext)
     }
 }
 
@@ -235,23 +200,192 @@ private fun DateNavRow(
 private fun ArrowButton(label: String, onClick: () -> Unit) {
     Box(
         modifier = Modifier
-            .size(32.dp)
-            .background(GlacierBg)
+            .width(32.dp)
+            .height(32.dp)
+            .background(GlacierSurface)
             .clickable { onClick() },
         contentAlignment = Alignment.Center,
     ) {
+        Text(label, color = GlacierAmber, fontFamily = FontFamily.Monospace, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+private fun SummaryCard(uiState: HealthConnectUiState) {
+    GlacierSectionCard(title = "SUMMARY") {
+        when (uiState.viewMode) {
+            HealthViewMode.DAY -> {
+                SummaryRow("STEPS", uiState.currentDay.steps?.toString() ?: "--")
+                SummaryRow("SLEEP", uiState.currentDay.sleepMinutes?.let { formatSleep(it) } ?: "--")
+                SummaryRow("HR_AVG", uiState.currentDay.heartRateAvg?.let { "$it bpm" } ?: "--")
+                SummaryRow("ACT_KCAL", uiState.currentDay.activeCalories?.let { "%.0f kcal".format(it) } ?: "--")
+            }
+            HealthViewMode.WEEK -> {
+                val week = uiState.currentWeek
+                SummaryRow("STEPS_AVG", avgLong(week.mapNotNull { it.steps })?.toString() ?: "--")
+                SummaryRow("SLEEP_AVG", avgLong(week.mapNotNull { it.sleepMinutes })?.let { formatSleep(it) } ?: "--")
+                SummaryRow("HR_AVG", avgLong(week.mapNotNull { it.heartRateAvg })?.let { "$it bpm" } ?: "--")
+                SummaryRow("ACT_KCAL_SUM", week.mapNotNull { it.activeCalories }.sum().takeIf { it > 0 }?.let { "%.0f kcal".format(it) } ?: "--")
+            }
+        }
+    }
+}
+
+@Composable
+private fun SummaryRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, color = GlacierMuted, fontFamily = FontFamily.Monospace, fontSize = 12.sp, modifier = Modifier.weight(1f))
+        Text(value, color = GlacierTeal, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+    }
+}
+
+@Composable
+private fun CategorySection(
+    category: HealthCategory,
+    uiState: HealthConnectUiState,
+    onNavigateChart: (String) -> Unit,
+) {
+    GlacierSectionCard(title = category.label) {
+        category.metrics.forEach { metric ->
+            MetricRow(
+                metric = metric,
+                uiState = uiState,
+                onClick = { onNavigateChart(metric.key) },
+            )
+        }
+    }
+}
+
+@Composable
+private fun MetricRow(
+    metric: HealthMetric,
+    uiState: HealthConnectUiState,
+    onClick: () -> Unit,
+) {
+    val value = when (uiState.viewMode) {
+        HealthViewMode.DAY -> metric.valueOf(uiState.currentDay)
+        HealthViewMode.WEEK -> uiState.currentWeek.mapNotNull { metric.valueOf(it) }.let {
+            if (it.isEmpty()) null else it.average()
+        }
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Text(
-            text = label,
-            color = GlacierAmber,
+            text = metric.label,
+            color = GlacierOnSurface,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 12.sp,
+            modifier = Modifier.weight(1f),
+        )
+        Text(
+            text = if (value == null) "--" else "${formatValue(value)} ${metric.unit}",
+            color = if (value == null) GlacierMuted else GlacierCyan,
             fontFamily = FontFamily.Monospace,
             fontWeight = FontWeight.Bold,
-            fontSize = 16.sp,
+            fontSize = 12.sp,
         )
     }
 }
 
-private fun formatSleep(duration: Duration): String {
-    val hours = duration.toHours()
-    val minutes = duration.toMinutes() % 60
-    return "${hours}h${minutes}m"
+@Composable
+private fun HistoryGraphSection(uiState: HealthConnectUiState) {
+    GlacierSectionCard(title = "STEPS_30D") {
+        val today = uiState.anchorDate
+        val days = (0L until 30L).map { today.minusDays(29 - it) }
+        val values = days.map { d -> uiState.book.days[d]?.steps ?: 0L }
+        val max = (values.max().takeIf { it > 0 } ?: 1L)
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth().height(140.dp)) {
+            val barWidth = maxWidth / 30
+            Row(
+                modifier = Modifier.fillMaxSize(),
+                horizontalArrangement = Arrangement.spacedBy(1.dp),
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                values.forEach { v ->
+                    val ratio = (v.toFloat() / max.toFloat()).coerceIn(0f, 1f)
+                    Box(
+                        modifier = Modifier
+                            .width(barWidth)
+                            .height((120 * ratio).dp.coerceAtLeast(1.dp))
+                            .background(GlacierCyan),
+                    )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = "${days.first()} ~ ${days.last()}   MAX=$max",
+            color = GlacierMuted,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 10.sp,
+        )
+    }
 }
+
+@Composable
+private fun PermissionRequestCard(onRequest: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxWidth().background(GlacierSurfaceLow).padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            "! PERMISSION_DENIED",
+            color = GlacierAmber,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 12.sp,
+        )
+        GlacierButton(label = "REQUEST_PERMISSION", onClick = onRequest)
+    }
+}
+
+@Composable
+private fun WarningCard(text: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth().background(GlacierSurfaceLow).padding(12.dp),
+    ) {
+        Text(text, color = ERROR_RED, fontFamily = FontFamily.Monospace, fontSize = 12.sp)
+    }
+}
+
+@Composable
+private fun SyncButton(loading: Boolean, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(GlacierAmber)
+            .clickable(enabled = !loading) { onClick() }
+            .padding(vertical = 14.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = if (loading) "SYNCING..." else "SYNC_NOW >",
+            color = GlacierBg,
+            fontFamily = SpaceGroteskFamily,
+            fontWeight = FontWeight.Black,
+            fontSize = 14.sp,
+            letterSpacing = 2.sp,
+        )
+    }
+}
+
+private val ERROR_RED = Color(0xFFE57373)
+
+private fun avgLong(values: List<Long>): Long? =
+    if (values.isEmpty()) null else values.sum() / values.size
+
+private fun formatSleep(minutes: Long): String {
+    val h = minutes / 60
+    val m = minutes % 60
+    return "${h}h${m}m"
+}
+
+private fun formatValue(v: Double): String =
+    if (v == v.toLong().toDouble()) v.toLong().toString() else "%.1f".format(v)

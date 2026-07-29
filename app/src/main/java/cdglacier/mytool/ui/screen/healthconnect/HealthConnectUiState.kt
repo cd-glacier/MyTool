@@ -1,24 +1,38 @@
 package cdglacier.mytool.ui.screen.healthconnect
 
-import android.net.Uri
-import java.time.Duration
+import cdglacier.mytool.domain.model.DailyHealth
+import cdglacier.mytool.domain.model.HealthBook
 import java.time.LocalDate
 
+enum class HealthViewMode { DAY, WEEK }
+
 data class HealthConnectUiState(
-    val date: LocalDate = LocalDate.now().minusDays(1),
-    val steps: Long? = null,
-    val sleep: Duration? = null,
-    val isLoading: Boolean = false,
-    val isWriting: Boolean = false,
+    val isLoading: Boolean = true,
+    val isSyncing: Boolean = false,
     val healthConnectAvailable: Boolean = false,
     val permissionsGranted: Boolean = false,
-    val journalDirUri: Uri? = null,
-    val filenameFormat: String = "yyyy-MM-dd",
+    val isPagesDirConfigured: Boolean = false,
+    val book: HealthBook = HealthBook(),
+    val viewMode: HealthViewMode = HealthViewMode.DAY,
+    val anchorDate: LocalDate = LocalDate.now().minusDays(1),
     val snackbarMessage: String? = null,
 ) {
-    val hasAnyData: Boolean
-        get() = sleep != null || (steps != null && steps > 0)
+    val currentDay: DailyHealth get() = book.dayOrEmpty(anchorDate)
 
-    val canWrite: Boolean
-        get() = hasAnyData && journalDirUri != null && !isWriting
+    val currentWeek: List<DailyHealth>
+        get() = weekDates(anchorDate).map { book.dayOrEmpty(it) }
+
+    val weekLabel: String
+        get() {
+            val dates = weekDates(anchorDate)
+            return "${dates.first()} ~ ${dates.last()}"
+        }
+
+    companion object {
+        fun weekDates(anchor: LocalDate): List<LocalDate> {
+            val mondayOffset = ((anchor.dayOfWeek.value + 6) % 7).toLong()
+            val monday = anchor.minusDays(mondayOffset)
+            return (0L..6L).map { monday.plusDays(it) }
+        }
+    }
 }
