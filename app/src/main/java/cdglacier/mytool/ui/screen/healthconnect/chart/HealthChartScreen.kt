@@ -34,6 +34,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cdglacier.mytool.ui.component.GlacierSectionCard
 import cdglacier.mytool.ui.component.GlacierTopBar
+import cdglacier.mytool.ui.screen.healthconnect.formatHealthValue
 import cdglacier.mytool.ui.theme.GlacierAmber
 import cdglacier.mytool.ui.theme.GlacierBg
 import cdglacier.mytool.ui.theme.GlacierCyan
@@ -127,7 +128,7 @@ private fun StatRow(label: String, value: Double, unit: String) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(label, color = GlacierMuted, fontFamily = FontFamily.Monospace, fontSize = 12.sp, modifier = Modifier.weight(1f))
-        Text("${formatValue(value)} $unit", color = GlacierCyan, fontFamily = FontFamily.Monospace, fontSize = 13.sp)
+        Text("${formatHealthValue(value)} $unit", color = GlacierCyan, fontFamily = FontFamily.Monospace, fontSize = 13.sp)
     }
 }
 
@@ -143,8 +144,8 @@ private fun BarChart(points: List<HealthChartPoint>, unit: String, mode: HealthC
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
-            AxisLabel("${formatValue(visibleMax)} $unit")
-            AxisLabel("${formatValue(visibleMax / 2)} $unit")
+            AxisLabel("${formatHealthValue(visibleMax)} $unit")
+            AxisLabel("${formatHealthValue(visibleMax / 2)} $unit")
             AxisLabel("0")
         }
         Spacer(modifier = Modifier.width(6.dp))
@@ -202,5 +203,3 @@ private fun AxisLabel(text: String) {
     Text(text = text, color = GlacierOnSurface, fontFamily = FontFamily.Monospace, fontSize = 9.sp)
 }
 
-private fun formatValue(v: Double): String =
-    if (v.isNaN()) "-" else if (v == v.toLong().toDouble()) v.toLong().toString() else "%.1f".format(v)

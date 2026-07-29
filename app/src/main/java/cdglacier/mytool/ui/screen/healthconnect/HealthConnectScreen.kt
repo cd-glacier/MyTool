@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -58,7 +57,6 @@ fun HealthConnectRoute(
     viewModel: HealthConnectViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val snackbarHostState = remember { SnackbarHostState() }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         HealthPermissions.createRequestPermissionResultContract()
@@ -70,16 +68,9 @@ fun HealthConnectRoute(
         viewModel.refreshPermissions()
         onPauseOrDispose { }
     }
-    LaunchedEffect(uiState.snackbarMessage) {
-        uiState.snackbarMessage?.let {
-            snackbarHostState.showSnackbar(it)
-            viewModel.onSnackbarShown()
-        }
-    }
 
     HealthConnectScreen(
         uiState = uiState,
-        snackbarHostState = snackbarHostState,
         onBack = onBack,
         onDateChange = viewModel::onDateChange,
         onViewModeChange = viewModel::onViewModeChange,
@@ -87,6 +78,7 @@ fun HealthConnectRoute(
             permissionLauncher.launch(viewModel.healthRequiredPermissions)
         },
         onSyncNow = viewModel::onSyncNow,
+        onSnackbarShown = viewModel::onSnackbarShown,
         onNavigateChart = onNavigateChart,
     )
 }
@@ -94,14 +86,21 @@ fun HealthConnectRoute(
 @Composable
 fun HealthConnectScreen(
     uiState: HealthConnectUiState,
-    snackbarHostState: SnackbarHostState,
     onBack: () -> Unit,
     onDateChange: (Long) -> Unit,
     onViewModeChange: (HealthViewMode) -> Unit,
     onRequestPermission: () -> Unit,
     onSyncNow: () -> Unit,
+    onSnackbarShown: () -> Unit,
     onNavigateChart: (String) -> Unit,
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(uiState.snackbarMessage) {
+        uiState.snackbarMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            onSnackbarShown()
+        }
+    }
     Scaffold(
         topBar = { GlacierTopBar(title = "HEALTH_CONNECT", onBack = onBack) },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -143,8 +142,6 @@ fun HealthConnectScreen(
                     onNavigateChart = onNavigateChart,
                 )
             }
-
-            HistoryGraphSection(uiState = uiState)
 
             SyncButton(loading = uiState.isSyncing, onClick = onSyncNow)
         }
@@ -216,14 +213,14 @@ private fun SummaryCard(uiState: HealthConnectUiState) {
         when (uiState.viewMode) {
             HealthViewMode.DAY -> {
                 SummaryRow("STEPS", uiState.currentDay.steps?.toString() ?: "--")
-                SummaryRow("SLEEP", uiState.currentDay.sleepMinutes?.let { formatSleep(it) } ?: "--")
+                SummaryRow("SLEEP", uiState.currentDay.sleepMinutes?.let(::formatSleepMinutes) ?: "--")
                 SummaryRow("HR_AVG", uiState.currentDay.heartRateAvg?.let { "$it bpm" } ?: "--")
                 SummaryRow("ACT_KCAL", uiState.currentDay.activeCalories?.let { "%.0f kcal".format(it) } ?: "--")
             }
             HealthViewMode.WEEK -> {
                 val week = uiState.currentWeek
                 SummaryRow("STEPS_AVG", avgLong(week.mapNotNull { it.steps })?.toString() ?: "--")
-                SummaryRow("SLEEP_AVG", avgLong(week.mapNotNull { it.sleepMinutes })?.let { formatSleep(it) } ?: "--")
+                SummaryRow("SLEEP_AVG", avgLong(week.mapNotNull { it.sleepMinutes })?.let(::formatSleepMinutes) ?: "--")
                 SummaryRow("HR_AVG", avgLong(week.mapNotNull { it.heartRateAvg })?.let { "$it bpm" } ?: "--")
                 SummaryRow("ACT_KCAL_SUM", week.mapNotNull { it.activeCalories }.sum().takeIf { it > 0 }?.let { "%.0f kcal".format(it) } ?: "--")
             }
@@ -286,46 +283,11 @@ private fun MetricRow(
             modifier = Modifier.weight(1f),
         )
         Text(
-            text = if (value == null) "--" else "${formatValue(value)} ${metric.unit}",
+            text = if (value == null) "--" else "${formatHealthValue(value)} ${metric.unit}",
             color = if (value == null) GlacierMuted else GlacierCyan,
             fontFamily = FontFamily.Monospace,
             fontWeight = FontWeight.Bold,
             fontSize = 12.sp,
-        )
-    }
-}
-
-@Composable
-private fun HistoryGraphSection(uiState: HealthConnectUiState) {
-    GlacierSectionCard(title = "STEPS_30D") {
-        val today = uiState.anchorDate
-        val days = (0L until 30L).map { today.minusDays(29 - it) }
-        val values = days.map { d -> uiState.book.days[d]?.steps ?: 0L }
-        val max = (values.max().takeIf { it > 0 } ?: 1L)
-        BoxWithConstraints(modifier = Modifier.fillMaxWidth().height(140.dp)) {
-            val barWidth = maxWidth / 30
-            Row(
-                modifier = Modifier.fillMaxSize(),
-                horizontalArrangement = Arrangement.spacedBy(1.dp),
-                verticalAlignment = Alignment.Bottom,
-            ) {
-                values.forEach { v ->
-                    val ratio = (v.toFloat() / max.toFloat()).coerceIn(0f, 1f)
-                    Box(
-                        modifier = Modifier
-                            .width(barWidth)
-                            .height((120 * ratio).dp.coerceAtLeast(1.dp))
-                            .background(GlacierCyan),
-                    )
-                }
-            }
-        }
-        Spacer(modifier = Modifier.height(6.dp))
-        Text(
-            text = "${days.first()} ~ ${days.last()}   MAX=$max",
-            color = GlacierMuted,
-            fontFamily = FontFamily.Monospace,
-            fontSize = 10.sp,
         )
     }
 }
@@ -380,12 +342,3 @@ private val ERROR_RED = Color(0xFFE57373)
 
 private fun avgLong(values: List<Long>): Long? =
     if (values.isEmpty()) null else values.sum() / values.size
-
-private fun formatSleep(minutes: Long): String {
-    val h = minutes / 60
-    val m = minutes % 60
-    return "${h}h${m}m"
-}
-
-private fun formatValue(v: Double): String =
-    if (v == v.toLong().toDouble()) v.toLong().toString() else "%.1f".format(v)

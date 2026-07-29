@@ -1,16 +1,8 @@
 package cdglacier.mytool.data.repository
 
-import android.content.Context
-import android.net.Uri
-import androidx.documentfile.provider.DocumentFile
 import cdglacier.mytool.domain.model.MoneyBook
-import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -23,8 +15,7 @@ interface MoneyRepository {
 
 @Singleton
 class MoneyRepositoryImpl @Inject constructor(
-    @ApplicationContext private val context: Context,
-    private val obsidianRepository: ObsidianRepository,
+    private val store: PagesFileStore,
 ) : MoneyRepository {
 
     companion object {
@@ -32,32 +23,14 @@ class MoneyRepositoryImpl @Inject constructor(
     }
 
     override fun observeBook(): Flow<MoneyBook> = flow {
-        obsidianRepository.pagesDirUri
-            .collect { emit(load()) }
-    }.flowOn(Dispatchers.IO)
-
-    override suspend fun load(): MoneyBook = withContext(Dispatchers.IO) {
-        val file = resolveFile(create = false) ?: return@withContext MoneyBook()
-        val text = context.contentResolver.openInputStream(file.uri)
-            ?.use { it.bufferedReader().readText() }
-            ?: return@withContext MoneyBook()
-        MoneyMarkdown.parse(text)
+        store.observeChanges().collect { emit(load()) }
     }
 
-    override suspend fun save(book: MoneyBook): Result<Unit> = withContext(Dispatchers.IO) {
-        runCatching {
-            val file = resolveFile(create = true) ?: error("Money.md を作成できません。PAGES_DIR を設定してください。")
-            val text = MoneyMarkdown.serialize(book)
-            context.contentResolver.openOutputStream(file.uri, "wt")
-                ?.use { it.write(text.toByteArray()) }
-                ?: error("Money.md に書き込めません")
-        }
+    override suspend fun load(): MoneyBook {
+        val text = store.readText(MONEY_FILENAME) ?: return MoneyBook()
+        return MoneyMarkdown.parse(text)
     }
 
-    private suspend fun resolveFile(create: Boolean): DocumentFile? {
-        val pagesDirUri = obsidianRepository.pagesDirUri.first() ?: return null
-        val pagesDir = DocumentFile.fromTreeUri(context, pagesDirUri) ?: return null
-        return pagesDir.findFile(MONEY_FILENAME)
-            ?: (if (create) pagesDir.createFile("text/markdown", MONEY_FILENAME) else null)
-    }
+    override suspend fun save(book: MoneyBook): Result<Unit> =
+        store.writeText(MONEY_FILENAME, MoneyMarkdown.serialize(book))
 }
