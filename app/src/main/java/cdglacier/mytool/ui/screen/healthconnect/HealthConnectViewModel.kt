@@ -57,7 +57,21 @@ class HealthConnectViewModel @Inject constructor(
         viewModelScope.launch {
             healthRepository.refreshPermissions()
             _uiState.update { it.copy(healthConnectAvailable = healthRepository.isAvailable) }
+            autoSync()
         }
+    }
+
+    private suspend fun autoSync() {
+        val state = _uiState.value
+        if (state.isSyncing) return
+        if (!state.healthConnectAvailable || !healthRepository.permissionsGranted.value) return
+        _uiState.update { it.copy(isSyncing = true) }
+        val targets = when (state.viewMode) {
+            HealthViewMode.DAY -> listOf(state.anchorDate)
+            HealthViewMode.WEEK -> weekDates(state.anchorDate)
+        }
+        for (date in targets) syncHealthDayUseCase(date, overwrite = false)
+        _uiState.update { it.copy(isSyncing = false) }
     }
 
     fun onDateChange(delta: Long) {

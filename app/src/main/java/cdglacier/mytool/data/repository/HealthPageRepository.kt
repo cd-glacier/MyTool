@@ -3,7 +3,10 @@ package cdglacier.mytool.data.repository
 import cdglacier.mytool.domain.model.DailyHealth
 import cdglacier.mytool.domain.model.HealthBook
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.merge
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -23,8 +26,10 @@ class HealthPageRepositoryImpl @Inject constructor(
         const val HEALTH_FILENAME = "Health.md"
     }
 
+    private val refreshTrigger = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
     override fun observeBook(): Flow<HealthBook> = flow {
-        store.observeChanges().collect { emit(load()) }
+        merge(store.observeChanges(), refreshTrigger.asSharedFlow()).collect { emit(load()) }
     }
 
     override suspend fun load(): HealthBook {
@@ -32,8 +37,11 @@ class HealthPageRepositoryImpl @Inject constructor(
         return HealthMarkdown.parse(text)
     }
 
-    override suspend fun save(book: HealthBook): Result<Unit> =
-        store.writeText(HEALTH_FILENAME, HealthMarkdown.serialize(book))
+    override suspend fun save(book: HealthBook): Result<Unit> {
+        val result = store.writeText(HEALTH_FILENAME, HealthMarkdown.serialize(book))
+        if (result.isSuccess) refreshTrigger.tryEmit(Unit)
+        return result
+    }
 
     override suspend fun upsertDay(day: DailyHealth): Result<Unit> =
         save(load().with(day))
