@@ -61,23 +61,11 @@ class HealthConnectViewModel @Inject constructor(
         }
     }
 
-    private suspend fun autoSync() {
-        val state = _uiState.value
-        if (state.isSyncing) return
-        if (!state.healthConnectAvailable || !healthRepository.permissionsGranted.value) return
-        _uiState.update { it.copy(isSyncing = true) }
-        val targets = when (state.viewMode) {
-            HealthViewMode.DAY -> listOf(state.anchorDate)
-            HealthViewMode.WEEK -> weekDates(state.anchorDate)
-        }
-        for (date in targets) syncHealthDayUseCase(date, overwrite = false)
-        _uiState.update { it.copy(isSyncing = false) }
-    }
-
     fun onDateChange(delta: Long) {
         val step = if (_uiState.value.viewMode == HealthViewMode.WEEK) delta * 7 else delta
         _uiState.update { it.copy(anchorDate = it.anchorDate.plusDays(step)) }
         recomputeDerived()
+        viewModelScope.launch { autoSync() }
     }
 
     fun onViewModeChange(mode: HealthViewMode) {
@@ -85,24 +73,24 @@ class HealthConnectViewModel @Inject constructor(
         recomputeDerived()
     }
 
-    fun onSyncNow() {
+    fun onBackfill(days: Int) {
         val state = _uiState.value
-        if (state.isSyncing) return
+        if (state.isSyncing || state.backfillProgress != null) return
+        if (!state.healthConnectAvailable || !state.permissionsGranted) return
         viewModelScope.launch {
-            _uiState.update { it.copy(isSyncing = true) }
-            val targets = when (state.viewMode) {
-                HealthViewMode.DAY -> listOf(state.anchorDate)
-                HealthViewMode.WEEK -> weekDates(state.anchorDate)
-            }
+            val today = LocalDate.now()
+            val targets = (1..days).map { today.minusDays(it.toLong()) }
+            _uiState.update { it.copy(backfillProgress = BackfillProgress(0, targets.size)) }
             val failures = mutableListOf<Throwable>()
-            for (date in targets) {
-                val r = syncHealthDayUseCase(date, overwrite = true)
+            targets.forEachIndexed { i, date ->
+                val r = syncHealthDayUseCase(date, overwrite = false)
                 r.exceptionOrNull()?.let { failures += it }
+                _uiState.update { it.copy(backfillProgress = BackfillProgress(i + 1, targets.size)) }
             }
             _uiState.update {
                 it.copy(
-                    isSyncing = false,
-                    snackbarMessage = if (failures.isEmpty()) "SYNCED"
+                    backfillProgress = null,
+                    snackbarMessage = if (failures.isEmpty()) "BACKFILLED ${targets.size}d"
                     else "ERROR: ${failures.first().message}",
                 )
             }
@@ -111,6 +99,19 @@ class HealthConnectViewModel @Inject constructor(
 
     fun onSnackbarShown() {
         _uiState.update { it.copy(snackbarMessage = null) }
+    }
+
+    private suspend fun autoSync() {
+        val state = _uiState.value
+        if (state.isSyncing || state.backfillProgress != null) return
+        if (!state.healthConnectAvailable || !healthRepository.permissionsGranted.value) return
+        _uiState.update { it.copy(isSyncing = true) }
+        val targets = when (state.viewMode) {
+            HealthViewMode.DAY -> listOf(state.anchorDate)
+            HealthViewMode.WEEK -> weekDates(state.anchorDate)
+        }
+        for (date in targets) syncHealthDayUseCase(date, overwrite = false)
+        _uiState.update { it.copy(isSyncing = false) }
     }
 
     private fun recomputeDerived() {

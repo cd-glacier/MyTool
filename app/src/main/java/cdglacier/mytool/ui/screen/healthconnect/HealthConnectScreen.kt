@@ -77,7 +77,7 @@ fun HealthConnectRoute(
         onRequestPermission = {
             permissionLauncher.launch(viewModel.healthRequiredPermissions)
         },
-        onSyncNow = viewModel::onSyncNow,
+        onBackfill = viewModel::onBackfill,
         onSnackbarShown = viewModel::onSnackbarShown,
         onNavigateChart = onNavigateChart,
     )
@@ -90,7 +90,7 @@ fun HealthConnectScreen(
     onDateChange: (Long) -> Unit,
     onViewModeChange: (HealthViewMode) -> Unit,
     onRequestPermission: () -> Unit,
-    onSyncNow: () -> Unit,
+    onBackfill: (Int) -> Unit,
     onSnackbarShown: () -> Unit,
     onNavigateChart: (String) -> Unit,
 ) {
@@ -143,7 +143,11 @@ fun HealthConnectScreen(
                 )
             }
 
-            SyncButton(loading = uiState.isSyncing, onClick = onSyncNow)
+            BackfillCard(
+                progress = uiState.backfillProgress,
+                enabled = uiState.permissionsGranted && uiState.healthConnectAvailable,
+                onBackfill = onBackfill,
+            )
         }
     }
 }
@@ -318,23 +322,45 @@ private fun WarningCard(text: String) {
 }
 
 @Composable
-private fun SyncButton(loading: Boolean, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(GlacierAmber)
-            .clickable(enabled = !loading) { onClick() }
-            .padding(vertical = 14.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = if (loading) "SYNCING..." else "SYNC_NOW >",
-            color = GlacierBg,
-            fontFamily = SpaceGroteskFamily,
-            fontWeight = FontWeight.Black,
-            fontSize = 14.sp,
-            letterSpacing = 2.sp,
-        )
+private fun BackfillCard(
+    progress: BackfillProgress?,
+    enabled: Boolean,
+    onBackfill: (Int) -> Unit,
+) {
+    GlacierSectionCard(title = "BACKFILL") {
+        if (progress != null) {
+            Text(
+                text = "SYNCING ${progress.done}/${progress.total}...",
+                color = GlacierAmber,
+                fontFamily = FontFamily.Monospace,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(vertical = 8.dp),
+            )
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                listOf(7, 30, 90).forEach { d ->
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .background(if (enabled) GlacierAmber else GlacierSurfaceLow)
+                            .clickable(enabled = enabled) { onBackfill(d) }
+                            .padding(vertical = 12.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = "${d}D",
+                            color = if (enabled) GlacierBg else GlacierMuted,
+                            fontFamily = SpaceGroteskFamily,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 13.sp,
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

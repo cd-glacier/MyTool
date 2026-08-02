@@ -16,5 +16,8 @@ data class HealthConnectUiState(
     val currentDay: DailyHealth = DailyHealth(LocalDate.now().minusDays(1)),
     val currentWeek: List<DailyHealth> = emptyList(),
     val weekLabel: String = "",
+    val backfillProgress: BackfillProgress? = null,
     val snackbarMessage: String? = null,
 )
+
+data class BackfillProgress(val done: Int, val total: Int)
