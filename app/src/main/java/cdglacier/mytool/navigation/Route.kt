@@ -22,6 +22,9 @@ data object PositionTrackingRoute : NavKey
 data object HealthConnectRoute : NavKey
 
 @Serializable
+data class HealthChartRoute(val metric: String) : NavKey
+
+@Serializable
 data object HouseholdRoute : NavKey
 
 @Serializable

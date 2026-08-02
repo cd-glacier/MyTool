@@ -3,6 +3,7 @@ package cdglacier.mytool
 import android.app.Application
 import cdglacier.mytool.data.repository.ObsidianRepository
 import cdglacier.mytool.worker.AutoCopyJournalWorker
+import cdglacier.mytool.worker.HealthSyncWorker
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -28,5 +29,6 @@ class MyToolApplication : Application() {
                 AutoCopyJournalWorker.cancel(this@MyToolApplication)
             }
         }
+        HealthSyncWorker.schedule(this)
     }
 }

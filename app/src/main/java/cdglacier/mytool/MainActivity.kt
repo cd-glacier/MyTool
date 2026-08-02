@@ -22,6 +22,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import cdglacier.mytool.navigation.CopyObsidianJournalRoute as CopyObsidianJournalNav
 import cdglacier.mytool.navigation.HabitTrackingRoute as HabitTrackingNav
+import cdglacier.mytool.navigation.HealthChartRoute as HealthChartNav
 import cdglacier.mytool.navigation.HealthConnectRoute as HealthConnectNav
 import cdglacier.mytool.navigation.HomeRoute as HomeNav
 import cdglacier.mytool.navigation.HouseholdRoute as HouseholdNav
@@ -34,6 +35,7 @@ import cdglacier.mytool.navigation.SettingsRoute as SettingsNav
 import cdglacier.mytool.ui.screen.copyjournal.CopyObsidianJournalRoute
 import cdglacier.mytool.ui.screen.habit.HabitTrackingRoute
 import cdglacier.mytool.ui.screen.healthconnect.HealthConnectRoute
+import cdglacier.mytool.ui.screen.healthconnect.chart.HealthChartRoute
 import cdglacier.mytool.ui.screen.home.HomeRoute
 import cdglacier.mytool.ui.screen.household.HouseholdRoute
 import cdglacier.mytool.ui.screen.householdpoints.HouseholdPointsRoute
@@ -125,7 +127,16 @@ class MainActivity : ComponentActivity() {
                                 PositionTrackingRoute(onBack = { backStack.removeLastOrNull() })
                             }
                             entry<HealthConnectNav> {
-                                HealthConnectRoute(onBack = { backStack.removeLastOrNull() })
+                                HealthConnectRoute(
+                                    onBack = { backStack.removeLastOrNull() },
+                                    onNavigateChart = { metric -> backStack.add(HealthChartNav(metric)) },
+                                )
+                            }
+                            entry<HealthChartNav> { route ->
+                                HealthChartRoute(
+                                    metricKey = route.metric,
+                                    onBack = { backStack.removeLastOrNull() },
+                                )
                             }
                             entry<HouseholdNav> {
                                 HouseholdRoute(
