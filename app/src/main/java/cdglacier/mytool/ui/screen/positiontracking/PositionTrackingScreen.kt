@@ -193,6 +193,7 @@ fun PositionTrackingScreen(
                     OsmMapView(
                         points = uiState.points,
                         modifier = Modifier.fillMaxSize(),
+                        cameraKey = uiState.date,
                     )
                 }
             }

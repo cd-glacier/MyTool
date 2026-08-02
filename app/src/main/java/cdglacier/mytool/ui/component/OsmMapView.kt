@@ -35,6 +35,7 @@ data class LocationPointUiModel(
 fun OsmMapView(
     points: List<LocationPointUiModel>,
     modifier: Modifier = Modifier,
+    cameraKey: Any? = null,
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -69,8 +70,8 @@ fun OsmMapView(
         }
     }
 
-    val pointsKey = points.hashCode()
-    val appliedCameraKey = remember { mutableStateOf<Int?>(null) }
+    val appliedCameraKey = remember { mutableStateOf<Any?>(null) }
+    val hasAppliedInitial = remember { mutableStateOf(false) }
 
     AndroidView(
         modifier = modifier.clipToBounds(),
@@ -98,10 +99,16 @@ fun OsmMapView(
                         title = "END acc=${endPoint.accuracy.toInt()}m bat=${endPoint.batteryLevel}%"
                     })
                 }
-                // points が変わった時だけカメラを軌跡にフィット。
-                // View が未measure な可能性に備えて post で次レイアウト後に実行。
-                if (appliedCameraKey.value != pointsKey) {
-                    appliedCameraKey.value = pointsKey
+                // cameraKey が変わった時、または初回の点表示時のみカメラを軌跡にフィット。
+                // 同一 cameraKey のまま点が追加されただけの場合はユーザーの操作を尊重して動かさない。
+                val shouldFit = if (cameraKey != null) {
+                    appliedCameraKey.value != cameraKey
+                } else {
+                    !hasAppliedInitial.value
+                }
+                if (shouldFit) {
+                    appliedCameraKey.value = cameraKey
+                    hasAppliedInitial.value = true
                     map.post {
                         if (geo.size == 1) {
                             map.controller.setZoom(16.0)
