@@ -53,6 +53,7 @@ fun PositionTrackingRoute(
 
     LifecycleResumeEffect(Unit) {
         viewModel.refreshPermissions()
+        viewModel.autoExportIfNeeded()
         onPauseOrDispose { }
     }
     LaunchedEffect(uiState.snackbarMessage) {
