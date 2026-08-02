@@ -63,7 +63,7 @@ class HealthChartViewModel @Inject constructor(
         val days = (0L until 90L).map { today.minusDays(89 - it) }
         return days.map { d ->
             val v = book.days[d]?.let(metric::valueOf)
-            HealthChartPoint(label = d.toString().takeLast(5), value = v) // MM-dd
+            HealthChartPoint(label = "%02d\n%02d".format(d.monthValue, d.dayOfMonth), value = v)
         }
     }
 
@@ -74,7 +74,7 @@ class HealthChartViewModel @Inject constructor(
         return weekStarts.map { monday ->
             val vs = (0L..6L).mapNotNull { book.days[monday.plusDays(it)]?.let(metric::valueOf) }
             val avg = if (vs.isEmpty()) null else vs.average()
-            HealthChartPoint(label = monday.toString().takeLast(5), value = avg)
+            HealthChartPoint(label = "%02d\n%02d".format(monday.monthValue, monday.dayOfMonth), value = avg)
         }
     }
 }

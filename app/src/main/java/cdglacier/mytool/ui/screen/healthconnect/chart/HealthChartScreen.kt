@@ -192,7 +192,9 @@ private fun BarCell(point: HealthChartPoint, visibleMax: Double, cellWidth: Dp) 
             text = point.label,
             color = GlacierMuted,
             fontFamily = FontFamily.Monospace,
-            fontSize = 8.sp,
+            fontSize = 9.sp,
+            lineHeight = 10.sp,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             modifier = Modifier.padding(top = 2.dp),
         )
     }
