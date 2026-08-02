@@ -30,7 +30,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import cdglacier.mytool.ui.component.GlacierButton
 import cdglacier.mytool.ui.component.GlacierSectionCard
 import cdglacier.mytool.ui.component.GlacierSwitch
 import cdglacier.mytool.ui.component.GlacierTopBar
@@ -67,7 +66,6 @@ fun PositionTrackingRoute(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
         onToggleTracking = viewModel::onToggleTracking,
-        onExportToJournal = viewModel::onExportToJournal,
         onDateChange = viewModel::onDateChange,
         onBack = onBack,
     )
@@ -78,7 +76,6 @@ fun PositionTrackingScreen(
     uiState: PositionTrackingUiState,
     snackbarHostState: SnackbarHostState,
     onToggleTracking: (Boolean) -> Unit,
-    onExportToJournal: () -> Unit,
     onDateChange: (Long) -> Unit,
     onBack: () -> Unit,
 ) {
@@ -148,24 +145,47 @@ fun PositionTrackingScreen(
                 }
             }
 
-            GlacierSectionCard(title = "EXPORT") {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            GlacierSectionCard(title = "AUTO_SYNC") {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    val syncOn = uiState.journalDirUri != null
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "STATUS: ",
+                            color = GlacierMuted,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 12.sp,
+                        )
+                        Text(
+                            text = when {
+                                !syncOn -> "OFF"
+                                uiState.isExporting -> "SYNCING..."
+                                else -> "ON"
+                            },
+                            color = if (syncOn) GlacierTeal else GlacierMuted,
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp,
+                        )
+                    }
+                    val lastLabel = uiState.lastExportedAt?.let {
+                        java.time.Instant.ofEpochMilli(it)
+                            .atZone(java.time.ZoneId.systemDefault())
+                            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                    } ?: "--"
                     Text(
-                        text = if (uiState.journalDirUri == null)
-                            "! SETTINGS で Journal フォルダを設定してください"
-                        else
-                            "選択中の日付の位置情報を JOURNAL に出力します",
-                        color = if (uiState.journalDirUri == null) GlacierAmber else GlacierMuted,
+                        text = "LAST_SYNC: $lastLabel",
+                        color = GlacierMuted,
                         fontFamily = FontFamily.Monospace,
                         fontSize = 11.sp,
                     )
-                    GlacierButton(
-                        label = "JOURNALへ出力",
-                        onClick = onExportToJournal,
-                        enabled = uiState.canExport,
-                        loading = uiState.isExporting,
-                        loadingLabel = "EXPORTING...",
-                    )
+                    if (!syncOn) {
+                        Text(
+                            text = "! SETTINGS で Journal フォルダを設定してください",
+                            color = GlacierAmber,
+                            fontFamily = FontFamily.Monospace,
+                            fontSize = 11.sp,
+                        )
+                    }
                 }
             }
 

@@ -15,13 +15,11 @@ data class PositionTrackingUiState(
     val journalDirUri: Uri? = null,
     val filenameFormat: String = "yyyy-MM-dd",
     val isExporting: Boolean = false,
+    val lastExportedAt: Long? = null,
     val snackbarMessage: String? = null,
 ) {
     val permissionsReady: Boolean
         get() = foregroundLocationGranted && backgroundLocationGranted
-
-    val canExport: Boolean
-        get() = journalDirUri != null && !isExporting
 
     val precisionLabel: String
         get() = when {
