@@ -8,7 +8,7 @@ import cdglacier.mytool.data.repository.JournalLocationRepository
 import cdglacier.mytool.data.repository.LocationPermissionRepository
 import cdglacier.mytool.data.repository.ObsidianRepository
 import cdglacier.mytool.data.repository.TrackingStateRepository
-import cdglacier.mytool.domain.usecase.ExportPositionTrackingToJournalUseCase
+import cdglacier.mytool.domain.usecase.AutoExportPositionTrackingIfNeededUseCase
 import cdglacier.mytool.domain.usecase.ObserveLocationRecordsByDateUseCase
 import cdglacier.mytool.domain.usecase.ScanJournalLocationsUseCase
 import cdglacier.mytool.domain.usecase.ToggleLocationTrackingUseCase
@@ -30,7 +30,7 @@ import javax.inject.Inject
 class PositionTrackingViewModel @Inject constructor(
     private val toggleLocationTrackingUseCase: ToggleLocationTrackingUseCase,
     private val observeLocationRecordsByDateUseCase: ObserveLocationRecordsByDateUseCase,
-    private val exportPositionTrackingToJournalUseCase: ExportPositionTrackingToJournalUseCase,
+    private val autoExportPositionTrackingIfNeededUseCase: AutoExportPositionTrackingIfNeededUseCase,
     private val scanJournalLocationsUseCase: ScanJournalLocationsUseCase,
     private val trackingStateRepository: TrackingStateRepository,
     private val locationPermissionRepository: LocationPermissionRepository,
@@ -92,6 +92,34 @@ class PositionTrackingViewModel @Inject constructor(
 
     fun refreshPermissions() = locationPermissionRepository.refresh()
 
+    fun autoExportIfNeeded() {
+        val state = _uiState.value
+        val dirUri = state.journalDirUri ?: return
+        if (state.isExporting) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isExporting = true) }
+            val result = autoExportPositionTrackingIfNeededUseCase(
+                journalDirUri = dirUri.toString(),
+                date = state.date,
+                filenameFormat = state.filenameFormat,
+            )
+            val exportedCount = result.getOrNull()
+            val now = if (exportedCount != null) System.currentTimeMillis() else null
+            _uiState.update {
+                it.copy(
+                    isExporting = false,
+                    lastExportedAt = now ?: it.lastExportedAt,
+                    snackbarMessage = result.fold(
+                        onSuccess = { count ->
+                            if (count != null) "JOURNALに自動出力しました ($count 件)" else null
+                        },
+                        onFailure = { e -> "自動出力エラー: ${e.message}" },
+                    ),
+                )
+            }
+        }
+    }
+
     fun onToggleTracking(enabled: Boolean) {
         if (enabled && !_uiState.value.permissionsReady) return
         viewModelScope.launch { toggleLocationTrackingUseCase(enabled) }
@@ -102,29 +130,7 @@ class PositionTrackingViewModel @Inject constructor(
         isFollowingToday = newDate == LocalDate.now()
         _uiState.update { it.copy(date = newDate, points = emptyList()) }
         observeRecords(newDate)
-    }
-
-    fun onExportToJournal() {
-        val state = _uiState.value
-        val dirUri = state.journalDirUri ?: return
-        if (state.isExporting) return
-        viewModelScope.launch {
-            _uiState.update { it.copy(isExporting = true) }
-            val result = exportPositionTrackingToJournalUseCase(
-                journalDirUri = dirUri.toString(),
-                date = state.date,
-                filenameFormat = state.filenameFormat,
-            )
-            _uiState.update {
-                it.copy(
-                    isExporting = false,
-                    snackbarMessage = result.fold(
-                        onSuccess = { count -> "JOURNALに出力しました ($count 件)" },
-                        onFailure = { e -> "エラー: ${e.message}" },
-                    ),
-                )
-            }
-        }
+        autoExportIfNeeded()
     }
 
     fun onSnackbarShown() {
