@@ -32,8 +32,22 @@ class HabitTrackingViewModel @Inject constructor(
         viewModelScope.launch {
             val uri = obsidianRepository.journalDirUri.first()?.toString()
             val format = obsidianRepository.filenameFormat.first()
-            loadHabits(uri, format, showLoading = !hasLoadedOnce)
+            loadHabits(uri, format, _uiState.value.date, showLoading = !hasLoadedOnce)
             hasLoadedOnce = true
+        }
+    }
+
+    fun onDateChange(delta: Long) {
+        val today = LocalDate.now()
+        val next = _uiState.value.date.plusDays(delta).let {
+            if (it.isAfter(today)) today else it
+        }
+        if (next == _uiState.value.date) return
+        _uiState.update { it.copy(date = next) }
+        viewModelScope.launch {
+            val uri = obsidianRepository.journalDirUri.first()?.toString()
+            val format = obsidianRepository.filenameFormat.first()
+            loadHabits(uri, format, next, showLoading = false)
         }
     }
 
@@ -54,7 +68,7 @@ class HabitTrackingViewModel @Inject constructor(
             val result = toggleHabitUseCase(uri, format, date, habit)
             if (result.isFailure) {
                 _uiState.update { it.copy(errorMessage = result.exceptionOrNull()?.message) }
-                loadHabits(uri, format, showLoading = false)
+                loadHabits(uri, format, date, showLoading = false)
             }
         }
     }
@@ -66,6 +80,7 @@ class HabitTrackingViewModel @Inject constructor(
     private suspend fun loadHabits(
         journalDirUri: String?,
         filenameFormat: String,
+        date: LocalDate,
         showLoading: Boolean,
     ) {
         if (journalDirUri == null) {
@@ -81,7 +96,6 @@ class HabitTrackingViewModel @Inject constructor(
         if (showLoading) {
             _uiState.update { it.copy(isLoading = true, journalConfigured = true) }
         }
-        val date = LocalDate.now()
         val habits = runCatching {
             getTodayHabitsUseCase(journalDirUri, filenameFormat, date)
         }.getOrDefault(emptyList())
