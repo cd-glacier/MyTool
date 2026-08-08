@@ -47,7 +47,7 @@ class HabitTrackingViewModel @Inject constructor(
         viewModelScope.launch {
             val uri = obsidianRepository.journalDirUri.first()?.toString()
             val format = obsidianRepository.filenameFormat.first()
-            loadHabits(uri, format, next, showLoading = false)
+            loadHabits(uri, format, next, showLoading = true)
         }
     }
 
