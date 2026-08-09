@@ -43,7 +43,7 @@ class HabitTrackingViewModel @Inject constructor(
             if (it.isAfter(today)) today else it
         }
         if (next == _uiState.value.date) return
-        _uiState.update { it.copy(date = next) }
+        _uiState.update { it.copy(date = next, habits = emptyList(), isLoading = true) }
         viewModelScope.launch {
             val uri = obsidianRepository.journalDirUri.first()?.toString()
             val format = obsidianRepository.filenameFormat.first()

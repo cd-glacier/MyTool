@@ -63,7 +63,15 @@ class HealthConnectViewModel @Inject constructor(
 
     fun onDateChange(delta: Long) {
         val step = if (_uiState.value.viewMode == HealthViewMode.WEEK) delta * 7 else delta
-        _uiState.update { it.copy(anchorDate = it.anchorDate.plusDays(step)) }
+        val canSync = _uiState.value.healthConnectAvailable &&
+            healthRepository.permissionsGranted.value &&
+            _uiState.value.backfillProgress == null
+        _uiState.update {
+            it.copy(
+                anchorDate = it.anchorDate.plusDays(step),
+                isSyncing = it.isSyncing || canSync,
+            )
+        }
         recomputeDerived()
         viewModelScope.launch { autoSync() }
     }
