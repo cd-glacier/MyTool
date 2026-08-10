@@ -49,6 +49,7 @@ import cdglacier.mytool.ui.theme.GlacierSurface
 import cdglacier.mytool.ui.theme.GlacierSurfaceLow
 import cdglacier.mytool.ui.theme.GlacierTeal
 import cdglacier.mytool.ui.theme.SpaceGroteskFamily
+import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -75,6 +76,7 @@ fun HabitTrackingRoute(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
         onHabitToggle = viewModel::onHabitToggle,
+        onDateChange = viewModel::onDateChange,
         onBack = onBack,
     )
 }
@@ -84,6 +86,7 @@ fun HabitTrackingScreen(
     uiState: HabitTrackingUiState,
     snackbarHostState: SnackbarHostState,
     onHabitToggle: (Habit) -> Unit,
+    onDateChange: (Long) -> Unit,
     onBack: () -> Unit,
 ) {
     Scaffold(
@@ -99,6 +102,13 @@ fun HabitTrackingScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 16.dp),
         ) {
+            DateNavigator(
+                date = uiState.date,
+                onPrev = { onDateChange(-1) },
+                onNext = { onDateChange(1) },
+                canGoNext = uiState.date.isBefore(LocalDate.now()),
+            )
+            Spacer(modifier = Modifier.height(12.dp))
             DateHeader(uiState)
             Spacer(modifier = Modifier.height(16.dp))
             when {
@@ -109,7 +119,7 @@ fun HabitTrackingScreen(
                 uiState.isLoading -> NoticeCard("LOADING", "...")
                 uiState.habits.isEmpty() -> NoticeCard(
                     "NO_HABITS",
-                    "今日のJournalに該当する習慣がありません。\n`# Habit` セクションを追加してください。",
+                    "選択日のJournalに該当する習慣がありません。\n`# Habit` セクションを追加してください。",
                 )
                 else -> HabitList(uiState.habits, onHabitToggle)
             }
@@ -155,10 +165,57 @@ private fun HabitTopBar(onBack: () -> Unit) {
 }
 
 @Composable
+private fun DateNavigator(
+    date: LocalDate,
+    onPrev: () -> Unit,
+    onNext: () -> Unit,
+    canGoNext: Boolean,
+) {
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        DateArrowButton(label = "<", enabled = true, onClick = onPrev)
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(
+            text = date.format(formatter),
+            color = GlacierTeal,
+            fontFamily = SpaceGroteskFamily,
+            fontWeight = FontWeight.Black,
+            fontSize = 22.sp,
+            modifier = Modifier.weight(1f),
+        )
+        DateArrowButton(label = ">", enabled = canGoNext, onClick = onNext)
+    }
+}
+
+@Composable
+private fun DateArrowButton(label: String, enabled: Boolean, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .width(32.dp)
+            .height(32.dp)
+            .background(GlacierSurface)
+            .clickable(enabled = enabled) { onClick() },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = label,
+            color = if (enabled) GlacierAmber else GlacierMuted,
+            fontFamily = FontFamily.Monospace,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+        )
+    }
+}
+
+@Composable
 private fun DateHeader(uiState: HabitTrackingUiState) {
     val displayFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd (E)")
     val total = uiState.habits.size
     val done = uiState.habits.count { it.isCompleted }
+    val isToday = uiState.date == LocalDate.now()
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -173,7 +230,7 @@ private fun DateHeader(uiState: HabitTrackingUiState) {
             .padding(start = 20.dp, end = 16.dp, top = 12.dp, bottom = 12.dp)
     ) {
         Text(
-            text = "TODAY",
+            text = if (isToday) "TODAY" else "DAY",
             color = GlacierMuted,
             fontFamily = SpaceGroteskFamily,
             fontWeight = FontWeight.Bold,

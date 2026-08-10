@@ -129,6 +129,7 @@ fun HealthConnectScreen(
                     HealthViewMode.DAY -> uiState.anchorDate.toString()
                     HealthViewMode.WEEK -> uiState.weekLabel
                 },
+                isSyncing = uiState.isSyncing,
                 onPrev = { onDateChange(-1) },
                 onNext = { onDateChange(1) },
             )
@@ -178,21 +179,35 @@ private fun ViewModeSelector(mode: HealthViewMode, onChange: (HealthViewMode) ->
 }
 
 @Composable
-private fun AnchorHeader(label: String, onPrev: () -> Unit, onNext: () -> Unit) {
+private fun AnchorHeader(
+    label: String,
+    isSyncing: Boolean,
+    onPrev: () -> Unit,
+    onNext: () -> Unit,
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         ArrowButton("<", onPrev)
         Spacer(modifier = Modifier.width(12.dp))
-        Text(
-            text = label,
-            color = GlacierCyan,
-            fontFamily = SpaceGroteskFamily,
-            fontWeight = FontWeight.Black,
-            fontSize = 18.sp,
-            modifier = Modifier.weight(1f),
-        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = label,
+                color = GlacierCyan,
+                fontFamily = SpaceGroteskFamily,
+                fontWeight = FontWeight.Black,
+                fontSize = 18.sp,
+            )
+            if (isSyncing) {
+                Text(
+                    text = "SYNCING...",
+                    color = GlacierAmber,
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 11.sp,
+                )
+            }
+        }
         ArrowButton(">", onNext)
     }
 }
