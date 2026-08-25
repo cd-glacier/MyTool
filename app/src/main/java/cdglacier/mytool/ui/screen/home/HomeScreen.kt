@@ -249,12 +249,6 @@ private fun ActivityBreakdown(
             fontSize = 12.sp,
         )
         Text(
-            text = "HOUSEHOLD: ${activity?.householdHusbandPoints ?: 0}pt",
-            color = GlacierOnSurface,
-            fontFamily = FontFamily.Monospace,
-            fontSize = 12.sp,
-        )
-        Text(
             text = "ACTIVITY: $activityPercent%",
             color = GlacierTeal,
             fontFamily = FontFamily.Monospace,
@@ -388,6 +382,7 @@ private fun ExecCommandsSection(
         number = "06.",
         label = "HOUSEHOLD",
         onClick = onNavigateToHousehold,
+        deprecated = true,
     )
     Spacer(modifier = Modifier.height(2.dp))
     CommandMenuItem(
@@ -408,9 +403,20 @@ private fun CommandMenuItem(
     number: String,
     label: String,
     onClick: () -> Unit,
+    deprecated: Boolean = false,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
+    val numberColor = when {
+        isPressed -> GlacierOnPrimary
+        deprecated -> GlacierMuted
+        else -> GlacierAmber
+    }
+    val labelColor = when {
+        isPressed -> GlacierOnPrimary
+        deprecated -> GlacierMuted
+        else -> GlacierOnSurface
+    }
 
     Box(
         modifier = Modifier
@@ -434,7 +440,7 @@ private fun CommandMenuItem(
         ) {
             Text(
                 text = number,
-                color = if (isPressed) GlacierOnPrimary else GlacierAmber,
+                color = numberColor,
                 fontFamily = SpaceGroteskFamily,
                 fontWeight = FontWeight.Black,
                 fontSize = 18.sp,
@@ -442,7 +448,7 @@ private fun CommandMenuItem(
             Spacer(modifier = Modifier.width(16.dp))
             Text(
                 text = label,
-                color = if (isPressed) GlacierOnPrimary else GlacierOnSurface,
+                color = labelColor,
                 fontFamily = SpaceGroteskFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
@@ -451,7 +457,7 @@ private fun CommandMenuItem(
             )
             Text(
                 text = ">",
-                color = if (isPressed) GlacierOnPrimary else GlacierAmber,
+                color = numberColor,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 16.sp,
             )
