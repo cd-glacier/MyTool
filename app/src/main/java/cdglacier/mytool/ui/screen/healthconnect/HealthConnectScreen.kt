@@ -302,7 +302,11 @@ private fun MetricRow(
             modifier = Modifier.weight(1f),
         )
         Text(
-            text = if (value == null) "--" else "${formatHealthValue(value)} ${metric.unit}",
+            text = when {
+                value == null -> "--"
+                metric == HealthMetric.SLEEP_MINUTES -> formatSleepMinutes(value.toLong())
+                else -> "${formatHealthValue(value)} ${metric.unit}"
+            },
             color = if (value == null) GlacierMuted else GlacierCyan,
             fontFamily = FontFamily.Monospace,
             fontWeight = FontWeight.Bold,

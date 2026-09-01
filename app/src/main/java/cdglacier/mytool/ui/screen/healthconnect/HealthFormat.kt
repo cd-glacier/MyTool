@@ -9,5 +9,5 @@ internal fun formatHealthValue(v: Double): String = when {
 internal fun formatSleepMinutes(minutes: Long): String {
     val h = minutes / 60
     val m = minutes % 60
-    return "${h}h${m}m"
+    return "${h} hour ${m} min"
 }
