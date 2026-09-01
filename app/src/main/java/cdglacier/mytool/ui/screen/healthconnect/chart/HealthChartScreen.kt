@@ -34,7 +34,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import cdglacier.mytool.ui.component.GlacierSectionCard
 import cdglacier.mytool.ui.component.GlacierTopBar
-import cdglacier.mytool.ui.screen.healthconnect.formatHealthValue
+import cdglacier.mytool.domain.model.HealthMetric
+import cdglacier.mytool.ui.screen.healthconnect.formatMetricValue
 import cdglacier.mytool.ui.theme.GlacierAmber
 import cdglacier.mytool.ui.theme.GlacierBg
 import cdglacier.mytool.ui.theme.GlacierCyan
@@ -83,13 +84,13 @@ fun HealthChartScreen(
                 }
             } else {
                 GlacierSectionCard(title = "CHART") {
-                    BarChart(points = uiState.points, unit = uiState.unit, mode = uiState.mode)
+                    BarChart(points = uiState.points, metric = uiState.metric, mode = uiState.mode)
                 }
                 GlacierSectionCard(title = "STATS") {
                     val values = uiState.points.mapNotNull { it.value }
-                    StatRow("MIN", values.min(), uiState.unit)
-                    StatRow("MAX", values.max(), uiState.unit)
-                    StatRow("AVG", values.average(), uiState.unit)
+                    StatRow("MIN", values.min(), uiState.metric)
+                    StatRow("MAX", values.max(), uiState.metric)
+                    StatRow("AVG", values.average(), uiState.metric)
                 }
             }
         }
@@ -122,18 +123,18 @@ private fun ModeSelector(mode: HealthChartMode, onChange: (HealthChartMode) -> U
 }
 
 @Composable
-private fun StatRow(label: String, value: Double, unit: String) {
+private fun StatRow(label: String, value: Double, metric: HealthMetric?) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 3.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(label, color = GlacierMuted, fontFamily = FontFamily.Monospace, fontSize = 12.sp, modifier = Modifier.weight(1f))
-        Text("${formatHealthValue(value)} $unit", color = GlacierCyan, fontFamily = FontFamily.Monospace, fontSize = 13.sp)
+        Text(formatMetricValue(value, metric), color = GlacierCyan, fontFamily = FontFamily.Monospace, fontSize = 13.sp)
     }
 }
 
 @Composable
-private fun BarChart(points: List<HealthChartPoint>, unit: String, mode: HealthChartMode) {
+private fun BarChart(points: List<HealthChartPoint>, metric: HealthMetric?, mode: HealthChartMode) {
     val visibleMax = points.mapNotNull { it.value }.max().coerceAtLeast(1.0)
     val cellWidth: Dp = 22.dp
     val chartHeight = 200.dp
@@ -144,8 +145,8 @@ private fun BarChart(points: List<HealthChartPoint>, unit: String, mode: HealthC
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
-            AxisLabel("${formatHealthValue(visibleMax)} $unit")
-            AxisLabel("${formatHealthValue(visibleMax / 2)} $unit")
+            AxisLabel(formatMetricValue(visibleMax, metric))
+            AxisLabel(formatMetricValue(visibleMax / 2, metric))
             AxisLabel("0")
         }
         Spacer(modifier = Modifier.width(6.dp))
