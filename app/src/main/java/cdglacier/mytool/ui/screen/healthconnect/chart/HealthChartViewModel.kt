@@ -55,7 +55,32 @@ class HealthChartViewModel @Inject constructor(
             HealthChartMode.DAY -> buildDailyPoints(metric)
             HealthChartMode.WEEK -> buildWeeklyPoints(metric)
         }
-        _uiState.update { it.copy(points = points) }
+        val rawMax = points.mapNotNull { it.value }.maxOrNull()?.coerceAtLeast(1.0) ?: 1.0
+        val axisStep = niceAxisStep(rawMax / 2, metric)
+        val axisMax = axisStep * 2
+        _uiState.update { it.copy(points = points, axisStep = axisStep, axisMax = axisMax) }
+    }
+
+    private fun niceAxisStep(rawStep: Double, metric: HealthMetric?): Double {
+        if (rawStep <= 0.0) return 1.0
+        if (metric == HealthMetric.SLEEP_MINUTES) {
+            val hourCandidates = doubleArrayOf(0.5, 1.0, 2.0, 3.0, 4.0, 6.0, 8.0, 12.0)
+            val hours = rawStep / 60.0
+            val pickHours = hourCandidates.firstOrNull { it >= hours }
+                ?: (kotlin.math.ceil(hours / 12.0) * 12.0)
+            return pickHours * 60.0
+        }
+        val exp = kotlin.math.floor(kotlin.math.log10(rawStep))
+        val pow = Math.pow(10.0, exp)
+        val f = rawStep / pow
+        val nf = when {
+            f <= 1.0 -> 1.0
+            f <= 2.0 -> 2.0
+            f <= 2.5 -> 2.5
+            f <= 5.0 -> 5.0
+            else -> 10.0
+        }
+        return nf * pow
     }
 
     private fun buildDailyPoints(metric: HealthMetric): List<HealthChartPoint> {

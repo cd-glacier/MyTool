@@ -13,6 +13,8 @@ data class HealthChartUiState(
     val metric: HealthMetric? = null,
     val mode: HealthChartMode = HealthChartMode.DAY,
     val points: List<HealthChartPoint> = emptyList(),
+    val axisStep: Double = 1.0,
+    val axisMax: Double = 2.0,
 ) {
     val title: String get() = metric?.label ?: "CHART"
     val unit: String get() = metric?.unit ?: ""
