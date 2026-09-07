@@ -84,7 +84,13 @@ fun HealthChartScreen(
                 }
             } else {
                 GlacierSectionCard(title = "CHART") {
-                    BarChart(points = uiState.points, metric = uiState.metric, mode = uiState.mode)
+                    BarChart(
+                        points = uiState.points,
+                        metric = uiState.metric,
+                        mode = uiState.mode,
+                        axisStep = uiState.axisStep,
+                        axisMax = uiState.axisMax,
+                    )
                 }
                 GlacierSectionCard(title = "STATS") {
                     val values = uiState.points.mapNotNull { it.value }
@@ -134,8 +140,13 @@ private fun StatRow(label: String, value: Double, metric: HealthMetric?) {
 }
 
 @Composable
-private fun BarChart(points: List<HealthChartPoint>, metric: HealthMetric?, mode: HealthChartMode) {
-    val visibleMax = points.mapNotNull { it.value }.max().coerceAtLeast(1.0)
+private fun BarChart(
+    points: List<HealthChartPoint>,
+    metric: HealthMetric?,
+    mode: HealthChartMode,
+    axisStep: Double,
+    axisMax: Double,
+) {
     val cellWidth: Dp = 22.dp
     val chartHeight = 200.dp
 
@@ -145,8 +156,8 @@ private fun BarChart(points: List<HealthChartPoint>, metric: HealthMetric?, mode
             horizontalAlignment = Alignment.End,
             verticalArrangement = Arrangement.SpaceBetween,
         ) {
-            AxisLabel(formatMetricValue(visibleMax, metric))
-            AxisLabel(formatMetricValue(visibleMax / 2, metric))
+            AxisLabel(formatMetricValue(axisMax, metric))
+            AxisLabel(formatMetricValue(axisStep, metric))
             AxisLabel("0")
         }
         Spacer(modifier = Modifier.width(6.dp))
@@ -159,11 +170,12 @@ private fun BarChart(points: List<HealthChartPoint>, metric: HealthMetric?, mode
         }
         LazyRow(state = listState, modifier = Modifier.fillMaxSize()) {
             items(points) { point ->
-                BarCell(point = point, visibleMax = visibleMax, cellWidth = cellWidth)
+                BarCell(point = point, visibleMax = axisMax, cellWidth = cellWidth)
             }
         }
     }
 }
+
 
 @Composable
 private fun BarCell(point: HealthChartPoint, visibleMax: Double, cellWidth: Dp) {
