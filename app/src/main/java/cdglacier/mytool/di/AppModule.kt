@@ -12,6 +12,8 @@ import cdglacier.mytool.data.repository.DailySummaryRepository
 import cdglacier.mytool.data.repository.DailySummaryRepositoryImpl
 import cdglacier.mytool.data.repository.HealthPageRepository
 import cdglacier.mytool.data.repository.HealthPageRepositoryImpl
+import cdglacier.mytool.data.repository.SleepPageRepository
+import cdglacier.mytool.data.repository.SleepPageRepositoryImpl
 import cdglacier.mytool.data.repository.HealthRepository
 import cdglacier.mytool.data.repository.HealthRepositoryImpl
 import cdglacier.mytool.data.repository.HouseholdRepository
@@ -117,4 +119,8 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindHealthPageRepository(impl: HealthPageRepositoryImpl): HealthPageRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSleepPageRepository(impl: SleepPageRepositoryImpl): SleepPageRepository
 }

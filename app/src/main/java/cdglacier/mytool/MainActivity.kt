@@ -32,10 +32,12 @@ import cdglacier.mytool.navigation.MoneyRoute as MoneyNav
 import cdglacier.mytool.navigation.PositionTrackingRoute as PositionTrackingNav
 import cdglacier.mytool.navigation.RecipeRoute as RecipeNav
 import cdglacier.mytool.navigation.SettingsRoute as SettingsNav
+import cdglacier.mytool.navigation.SleepStageChartRoute as SleepStageChartNav
 import cdglacier.mytool.ui.screen.copyjournal.CopyObsidianJournalRoute
 import cdglacier.mytool.ui.screen.habit.HabitTrackingRoute
 import cdglacier.mytool.ui.screen.healthconnect.HealthConnectRoute
 import cdglacier.mytool.ui.screen.healthconnect.chart.HealthChartRoute
+import cdglacier.mytool.ui.screen.healthconnect.sleepstage.SleepStageChartRoute
 import cdglacier.mytool.ui.screen.home.HomeRoute
 import cdglacier.mytool.ui.screen.household.HouseholdRoute
 import cdglacier.mytool.ui.screen.householdpoints.HouseholdPointsRoute
@@ -130,11 +132,18 @@ class MainActivity : ComponentActivity() {
                                 HealthConnectRoute(
                                     onBack = { backStack.removeLastOrNull() },
                                     onNavigateChart = { metric -> backStack.add(HealthChartNav(metric)) },
+                                    onNavigateSleepStage = { date -> backStack.add(SleepStageChartNav(date)) },
                                 )
                             }
                             entry<HealthChartNav> { route ->
                                 HealthChartRoute(
                                     metricKey = route.metric,
+                                    onBack = { backStack.removeLastOrNull() },
+                                )
+                            }
+                            entry<SleepStageChartNav> { route ->
+                                SleepStageChartRoute(
+                                    dateIso = route.date,
                                     onBack = { backStack.removeLastOrNull() },
                                 )
                             }

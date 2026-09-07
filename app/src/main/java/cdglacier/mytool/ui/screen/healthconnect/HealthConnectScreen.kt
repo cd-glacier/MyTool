@@ -54,6 +54,7 @@ import cdglacier.mytool.ui.theme.SpaceGroteskFamily
 fun HealthConnectRoute(
     onBack: () -> Unit,
     onNavigateChart: (String) -> Unit = {},
+    onNavigateSleepStage: (String) -> Unit = {},
     viewModel: HealthConnectViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -80,6 +81,7 @@ fun HealthConnectRoute(
         onBackfill = viewModel::onBackfill,
         onSnackbarShown = viewModel::onSnackbarShown,
         onNavigateChart = onNavigateChart,
+        onNavigateSleepStage = onNavigateSleepStage,
     )
 }
 
@@ -93,6 +95,7 @@ fun HealthConnectScreen(
     onBackfill: (Int) -> Unit,
     onSnackbarShown: () -> Unit,
     onNavigateChart: (String) -> Unit,
+    onNavigateSleepStage: (String) -> Unit,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(uiState.snackbarMessage) {
@@ -141,6 +144,7 @@ fun HealthConnectScreen(
                     category = category,
                     uiState = uiState,
                     onNavigateChart = onNavigateChart,
+                    onNavigateSleepStage = onNavigateSleepStage,
                 )
             }
 
@@ -263,13 +267,20 @@ private fun CategorySection(
     category: HealthCategory,
     uiState: HealthConnectUiState,
     onNavigateChart: (String) -> Unit,
+    onNavigateSleepStage: (String) -> Unit,
 ) {
     GlacierSectionCard(title = category.label) {
         category.metrics.forEach { metric ->
             MetricRow(
                 metric = metric,
                 uiState = uiState,
-                onClick = { onNavigateChart(metric.key) },
+                onClick = {
+                    if (metric == HealthMetric.SLEEP_MINUTES) {
+                        onNavigateSleepStage(uiState.anchorDate.toString())
+                    } else {
+                        onNavigateChart(metric.key)
+                    }
+                },
             )
         }
     }
