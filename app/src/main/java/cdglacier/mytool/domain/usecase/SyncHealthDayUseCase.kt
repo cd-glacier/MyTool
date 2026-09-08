@@ -21,17 +21,21 @@ class SyncHealthDayUseCase @Inject constructor(
         healthRepository.refreshPermissions()
         if (!healthRepository.permissionsGranted.value) error("HealthConnect の権限がありません")
 
-        val existing = healthPageRepository.load().days[date]
-        if (existing != null && existing.hasAny() && !overwrite) return@runCatching existing
-
-        val fetched = healthRepository.readDay(date)
-        if (!fetched.hasAny()) return@runCatching fetched
-        healthPageRepository.upsertDay(fetched).getOrThrow()
-
-        val sleepDay = healthRepository.readSleepDay(date)
-        if (sleepDay.hasAny()) {
-            sleepPageRepository.upsertDay(sleepDay).getOrThrow()
+        val existingHealth = healthPageRepository.load().days[date]
+        val healthResult = if (existingHealth != null && existingHealth.hasAny() && !overwrite) {
+            existingHealth
+        } else {
+            val fetched = healthRepository.readDay(date)
+            if (fetched.hasAny()) healthPageRepository.upsertDay(fetched).getOrThrow()
+            fetched
         }
-        fetched
+
+        val existingSleep = sleepPageRepository.load().days[date]
+        if (existingSleep == null || !existingSleep.hasAny() || overwrite) {
+            val sleepDay = healthRepository.readSleepDay(date)
+            if (sleepDay.hasAny()) sleepPageRepository.upsertDay(sleepDay).getOrThrow()
+        }
+
+        healthResult
     }
 }
