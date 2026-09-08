@@ -21,6 +21,10 @@ import androidx.health.connect.client.request.AggregateRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
 import cdglacier.mytool.domain.model.DailyHealth
+import cdglacier.mytool.domain.model.SleepDay
+import cdglacier.mytool.domain.model.SleepSession
+import cdglacier.mytool.domain.model.SleepStage
+import cdglacier.mytool.domain.model.SleepStageType
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -37,6 +41,7 @@ interface HealthRepository {
     val requiredPermissions: Set<String>
     suspend fun refreshPermissions()
     suspend fun readDay(date: LocalDate): DailyHealth
+    suspend fun readSleepDay(date: LocalDate): SleepDay
 }
 
 @Singleton
@@ -119,6 +124,65 @@ class HealthRepositoryImpl @Inject constructor(
             bodyTemperature = temp,
             respiratoryRate = respRate,
         )
+    }
+
+    override suspend fun readSleepDay(date: LocalDate): SleepDay {
+        val c = client ?: return SleepDay(date)
+        val zone = ZoneId.systemDefault()
+        // 前日昼〜翌日昼を対象に日跨ぎの就寝セッションを拾い、中央時刻が対象日に属するもののみ採用
+        val start = date.minusDays(1).atTime(12, 0).atZone(zone).toInstant()
+        val end = date.plusDays(1).atTime(12, 0).atZone(zone).toInstant()
+        val range = TimeRangeFilter.between(start, end)
+
+        val records = runCatching {
+            c.readRecords(ReadRecordsRequest(SleepSessionRecord::class, range)).records
+        }.getOrNull().orEmpty()
+
+        val sessions = records
+            .filter { record -> record.midpointDate(zone) == date }
+            .map { record ->
+                val stages = if (record.stages.isNotEmpty()) {
+                    record.stages.map { s ->
+                        SleepStage(
+                            type = s.stage.toSleepStageType(),
+                            start = s.startTime,
+                            end = s.endTime,
+                        )
+                    }
+                } else {
+                    listOf(
+                        SleepStage(
+                            type = SleepStageType.SLEEPING,
+                            start = record.startTime,
+                            end = record.endTime,
+                        ),
+                    )
+                }
+                SleepSession(
+                    start = record.startTime,
+                    end = record.endTime,
+                    stages = stages.sortedBy { it.start },
+                )
+            }
+            .sortedBy { it.start }
+
+        return SleepDay(date = date, sessions = sessions)
+    }
+
+    private fun SleepSessionRecord.midpointDate(zone: ZoneId): LocalDate {
+        val mid = startTime.plusMillis((endTime.toEpochMilli() - startTime.toEpochMilli()) / 2)
+        return mid.atZone(zone).toLocalDate()
+    }
+
+    private fun Int.toSleepStageType(): SleepStageType = when (this) {
+        SleepSessionRecord.STAGE_TYPE_AWAKE -> SleepStageType.AWAKE
+        SleepSessionRecord.STAGE_TYPE_AWAKE_IN_BED -> SleepStageType.AWAKE_IN_BED
+        SleepSessionRecord.STAGE_TYPE_OUT_OF_BED -> SleepStageType.OUT_OF_BED
+        SleepSessionRecord.STAGE_TYPE_LIGHT -> SleepStageType.LIGHT
+        SleepSessionRecord.STAGE_TYPE_DEEP -> SleepStageType.DEEP
+        SleepSessionRecord.STAGE_TYPE_REM -> SleepStageType.REM
+        SleepSessionRecord.STAGE_TYPE_SLEEPING -> SleepStageType.SLEEPING
+        else -> SleepStageType.UNKNOWN
     }
 
     private suspend fun aggregateLong(
