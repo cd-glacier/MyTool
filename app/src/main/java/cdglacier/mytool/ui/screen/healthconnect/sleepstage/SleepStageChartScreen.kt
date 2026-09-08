@@ -178,7 +178,7 @@ private fun StageTimeline(uiState: SleepStageChartUiState) {
         }
         val durationMin = Duration.between(start, end).toMinutes()
         Text(
-            text = "IN_BED ${formatHm(durationMin)} / SLEEP ${formatHm(uiState.totalMinutes - awakeMinutes(uiState))}",
+            text = "IN_BED ${formatHm(durationMin)} / SLEEP ${formatHm(uiState.totalMinutes - uiState.awakeMinutes)}",
             color = GlacierMuted, fontFamily = FontFamily.Monospace, fontSize = 10.sp,
         )
     }
@@ -187,7 +187,7 @@ private fun StageTimeline(uiState: SleepStageChartUiState) {
 @Composable
 private fun Legend() {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        SleepStageChartViewModel.STAGE_DISPLAY_ORDER.forEach { type ->
+        STAGE_DISPLAY_ORDER.forEach { type ->
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
@@ -208,7 +208,7 @@ private fun Legend() {
 
 @Composable
 private fun StageSummary(uiState: SleepStageChartUiState) {
-    SleepStageChartViewModel.STAGE_DISPLAY_ORDER.forEach { type ->
+    STAGE_DISPLAY_ORDER.forEach { type ->
         val minutes = uiState.stageTotals[type] ?: return@forEach
         if (minutes <= 0L) return@forEach
         Row(
@@ -238,10 +238,16 @@ private fun StageSummary(uiState: SleepStageChartUiState) {
     }
 }
 
-private fun awakeMinutes(uiState: SleepStageChartUiState): Long =
-    (uiState.stageTotals[SleepStageType.AWAKE] ?: 0L) +
-        (uiState.stageTotals[SleepStageType.AWAKE_IN_BED] ?: 0L) +
-        (uiState.stageTotals[SleepStageType.OUT_OF_BED] ?: 0L)
+private val STAGE_DISPLAY_ORDER: List<SleepStageType> = listOf(
+    SleepStageType.DEEP,
+    SleepStageType.REM,
+    SleepStageType.LIGHT,
+    SleepStageType.SLEEPING,
+    SleepStageType.AWAKE,
+    SleepStageType.AWAKE_IN_BED,
+    SleepStageType.OUT_OF_BED,
+    SleepStageType.UNKNOWN,
+)
 
 private fun formatHm(minutes: Long): String {
     val h = minutes / 60

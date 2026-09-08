@@ -51,7 +51,7 @@ class SleepStageChartViewModel @Inject constructor(
         val date = _uiState.value.date
         val day = book.days[date] ?: SleepDay(date)
         val bands = day.sessions.flatMap { s ->
-            s.stages.map { SleepStageBand(it.type, it.start, it.end) }
+            s.stages.map { SleepStageBandUiModel(it.type, it.start, it.end) }
         }.sortedBy { it.start }
 
         val windowStart = bands.minByOrNull { it.start }?.start
@@ -62,6 +62,7 @@ class SleepStageChartViewModel @Inject constructor(
         val totals = bands.groupBy { it.type }
             .mapValues { (_, list) -> list.sumOf { Duration.between(it.start, it.end).toMinutes() } }
         val totalMin = totals.values.sum()
+        val awakeMin = AWAKE_STAGE_TYPES.sumOf { totals[it] ?: 0L }
 
         _uiState.update {
             it.copy(
@@ -70,20 +71,16 @@ class SleepStageChartViewModel @Inject constructor(
                 windowEnd = windowEnd,
                 stageTotals = totals,
                 totalMinutes = totalMin,
+                awakeMinutes = awakeMin,
             )
         }
     }
 
-    companion object {
-        val STAGE_DISPLAY_ORDER: List<SleepStageType> = listOf(
-            SleepStageType.DEEP,
-            SleepStageType.REM,
-            SleepStageType.LIGHT,
-            SleepStageType.SLEEPING,
+    private companion object {
+        val AWAKE_STAGE_TYPES = listOf(
             SleepStageType.AWAKE,
             SleepStageType.AWAKE_IN_BED,
             SleepStageType.OUT_OF_BED,
-            SleepStageType.UNKNOWN,
         )
     }
 }
