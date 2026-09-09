@@ -40,6 +40,12 @@ data object MoneyRoute : NavKey
 data class RecipeRoute(val prefilledUrl: String? = null) : NavKey
 
 @Serializable
+data object QrStockerRoute : NavKey
+
+@Serializable
+data class QrStockerDetailRoute(val title: String) : NavKey
+
+@Serializable
 data class MoneyChartRoute(
     val section: String,
     val group: String? = null,
