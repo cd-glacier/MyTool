@@ -78,10 +78,10 @@ fun QrStockerDetailScreen(
                         bitmap = uiState.bitmap.asImageBitmap(),
                         contentDescription = uiState.entry.title,
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .fillMaxWidth(0.5f)
                             .aspectRatio(1f)
                             .background(Color.White)
-                            .padding(16.dp),
+                            .padding(8.dp),
                     )
                     Spacer(Modifier.height(16.dp))
                     MetaRow(label = "TITLE", value = uiState.entry.title)
