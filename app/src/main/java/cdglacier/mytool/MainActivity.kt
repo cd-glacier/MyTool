@@ -30,6 +30,8 @@ import cdglacier.mytool.navigation.HouseholdPointsRoute as HouseholdPointsNav
 import cdglacier.mytool.navigation.MoneyChartRoute as MoneyChartNav
 import cdglacier.mytool.navigation.MoneyRoute as MoneyNav
 import cdglacier.mytool.navigation.PositionTrackingRoute as PositionTrackingNav
+import cdglacier.mytool.navigation.QrStockerDetailRoute as QrStockerDetailNav
+import cdglacier.mytool.navigation.QrStockerRoute as QrStockerNav
 import cdglacier.mytool.navigation.RecipeRoute as RecipeNav
 import cdglacier.mytool.navigation.SettingsRoute as SettingsNav
 import cdglacier.mytool.navigation.SleepStageChartRoute as SleepStageChartNav
@@ -44,6 +46,8 @@ import cdglacier.mytool.ui.screen.householdpoints.HouseholdPointsRoute
 import cdglacier.mytool.ui.screen.money.MoneyRoute
 import cdglacier.mytool.ui.screen.money.chart.MoneyChartRoute
 import cdglacier.mytool.ui.screen.positiontracking.PositionTrackingRoute
+import cdglacier.mytool.ui.screen.qrstocker.QrStockerRoute
+import cdglacier.mytool.ui.screen.qrstocker.detail.QrStockerDetailRoute
 import cdglacier.mytool.ui.screen.recipe.RecipeRoute
 import cdglacier.mytool.ui.screen.settings.SettingsRoute
 import cdglacier.mytool.ui.theme.MyToolTheme
@@ -98,6 +102,7 @@ class MainActivity : ComponentActivity() {
                                     onNavigateToRecipe = { backStack.add(RecipeNav()) },
                                     onNavigateToHousehold = { backStack.add(HouseholdNav) },
                                     onNavigateToHealthConnect = { backStack.add(HealthConnectNav) },
+                                    onNavigateToQrStocker = { backStack.add(QrStockerNav) },
                                     onNavigateToSettings = { backStack.add(SettingsNav) },
                                 )
                             }
@@ -155,6 +160,18 @@ class MainActivity : ComponentActivity() {
                             }
                             entry<HouseholdPointsNav> {
                                 HouseholdPointsRoute(onBack = { backStack.removeLastOrNull() })
+                            }
+                            entry<QrStockerNav> {
+                                QrStockerRoute(
+                                    onBack = { backStack.removeLastOrNull() },
+                                    onEntryClick = { title -> backStack.add(QrStockerDetailNav(title)) },
+                                )
+                            }
+                            entry<QrStockerDetailNav> { route ->
+                                QrStockerDetailRoute(
+                                    title = route.title,
+                                    onBack = { backStack.removeLastOrNull() },
+                                )
                             }
                             entry<RecipeNav> { route ->
                                 RecipeRoute(

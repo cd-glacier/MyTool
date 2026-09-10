@@ -63,6 +63,7 @@ fun HomeRoute(
     onNavigateToRecipe: () -> Unit,
     onNavigateToHousehold: () -> Unit,
     onNavigateToHealthConnect: () -> Unit,
+    onNavigateToQrStocker: () -> Unit,
     onNavigateToSettings: () -> Unit,
     viewModel: HomeViewModel = viewModel(),
 ) {
@@ -81,6 +82,7 @@ fun HomeRoute(
         onNavigateToRecipe = onNavigateToRecipe,
         onNavigateToHousehold = onNavigateToHousehold,
         onNavigateToHealthConnect = onNavigateToHealthConnect,
+        onNavigateToQrStocker = onNavigateToQrStocker,
         onNavigateToSettings = onNavigateToSettings,
     )
 }
@@ -96,6 +98,7 @@ fun HomeScreen(
     onNavigateToRecipe: () -> Unit,
     onNavigateToHousehold: () -> Unit,
     onNavigateToHealthConnect: () -> Unit,
+    onNavigateToQrStocker: () -> Unit,
     onNavigateToSettings: () -> Unit,
 ) {
     Scaffold(
@@ -120,6 +123,7 @@ fun HomeScreen(
                 onNavigateToRecipe = onNavigateToRecipe,
                 onNavigateToHousehold = onNavigateToHousehold,
                 onNavigateToHealthConnect = onNavigateToHealthConnect,
+                onNavigateToQrStocker = onNavigateToQrStocker,
                 onNavigateToSettings = onNavigateToSettings,
             )
         }
@@ -325,6 +329,7 @@ private fun ExecCommandsSection(
     onNavigateToRecipe: () -> Unit,
     onNavigateToHousehold: () -> Unit,
     onNavigateToHealthConnect: () -> Unit,
+    onNavigateToQrStocker: () -> Unit,
     onNavigateToSettings: () -> Unit,
 ) {
     Row(
@@ -393,6 +398,12 @@ private fun ExecCommandsSection(
     Spacer(modifier = Modifier.height(2.dp))
     CommandMenuItem(
         number = "08.",
+        label = "QR_STOCKER",
+        onClick = onNavigateToQrStocker,
+    )
+    Spacer(modifier = Modifier.height(2.dp))
+    CommandMenuItem(
+        number = "09.",
         label = "SYS_SETTINGS",
         onClick = onNavigateToSettings,
     )
