@@ -34,6 +34,8 @@ import cdglacier.mytool.data.repository.ObsidianRepository
 import cdglacier.mytool.data.repository.ObsidianRepositoryImpl
 import cdglacier.mytool.data.repository.OgpRepository
 import cdglacier.mytool.data.repository.OgpRepositoryImpl
+import cdglacier.mytool.data.repository.QrImageRepository
+import cdglacier.mytool.data.repository.QrImageRepositoryImpl
 import cdglacier.mytool.data.repository.QrStockerRepository
 import cdglacier.mytool.data.repository.QrStockerRepositoryImpl
 import cdglacier.mytool.data.repository.RecipeRepository
@@ -129,4 +131,8 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindQrStockerRepository(impl: QrStockerRepositoryImpl): QrStockerRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindQrImageRepository(impl: QrImageRepositoryImpl): QrImageRepository
 }

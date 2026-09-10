@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cdglacier.mytool.data.repository.QrStockerRepository
+import cdglacier.mytool.domain.model.QrEcLevel
 import cdglacier.mytool.domain.model.QrEntry
 import cdglacier.mytool.domain.usecase.DecodeQrImageUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -91,7 +92,7 @@ class QrStockerViewModel @Inject constructor(
             val entry = QrEntry(
                 title = title,
                 content = pending.content,
-                ecLevel = cdglacier.mytool.domain.model.QrEcLevel.valueOf(pending.ecLevel),
+                ecLevel = QrEcLevel.valueOf(pending.ecLevel),
                 mode = pending.mode,
                 version = null,
                 createdAt = LocalDateTime.now(),

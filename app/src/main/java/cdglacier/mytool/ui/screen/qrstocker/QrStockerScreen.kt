@@ -50,11 +50,19 @@ fun QrStockerRoute(
     viewModel: QrStockerViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val pickImageLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri -> if (uri != null) viewModel.onImagePicked(uri) }
+
     QrStockerScreen(
         uiState = uiState,
         onBack = onBack,
         onEntryClick = onEntryClick,
-        onImagePicked = viewModel::onImagePicked,
+        onPickImage = {
+            pickImageLauncher.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+            )
+        },
         onTitleInputChange = viewModel::onTitleInputChange,
         onCancelPending = viewModel::onCancelPending,
         onConfirmPending = viewModel::onConfirmPending,
@@ -66,15 +74,11 @@ fun QrStockerScreen(
     uiState: QrStockerUiState,
     onBack: () -> Unit,
     onEntryClick: (String) -> Unit,
-    onImagePicked: (android.net.Uri) -> Unit,
+    onPickImage: () -> Unit,
     onTitleInputChange: (String) -> Unit,
     onCancelPending: () -> Unit,
     onConfirmPending: () -> Unit,
 ) {
-    val pickImageLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.PickVisualMedia()
-    ) { uri -> if (uri != null) onImagePicked(uri) }
-
     Scaffold(
         topBar = { GlacierTopBar(title = "QR_STOCKER", onBack = onBack) },
         containerColor = GlacierBg,
@@ -96,11 +100,7 @@ fun QrStockerScreen(
                         fontSize = 13.sp,
                         modifier = Modifier
                             .background(GlacierSurface)
-                            .clickable {
-                                pickImageLauncher.launch(
-                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                )
-                            }
+                            .clickable { onPickImage() }
                             .padding(horizontal = 12.dp, vertical = 8.dp),
                     )
                     if (uiState.error != null && uiState.pendingDecoded == null) {

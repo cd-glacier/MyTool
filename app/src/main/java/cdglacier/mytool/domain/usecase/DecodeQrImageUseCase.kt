@@ -1,8 +1,8 @@
 package cdglacier.mytool.domain.usecase
 
-import android.content.Context
-import android.graphics.BitmapFactory
 import android.net.Uri
+import cdglacier.mytool.data.repository.QrImageRepository
+import cdglacier.mytool.domain.model.DecodedQr
 import cdglacier.mytool.domain.model.QrEcLevel
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.DecodeHintType
@@ -11,28 +11,17 @@ import com.google.zxing.RGBLuminanceSource
 import com.google.zxing.ResultMetadataType
 import com.google.zxing.common.HybridBinarizer
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 import javax.inject.Inject
 
-data class DecodedQr(
-    val content: String,
-    val ecLevel: QrEcLevel,
-    val mode: String,
-    val version: Int?,
-    val decodedAt: LocalDateTime,
-)
-
 class DecodeQrImageUseCase @Inject constructor(
-    @ApplicationContext private val context: Context,
+    private val qrImageRepository: QrImageRepository,
 ) {
-    suspend operator fun invoke(imageUri: Uri): Result<DecodedQr> = withContext(Dispatchers.IO) {
+    suspend operator fun invoke(imageUri: Uri): Result<DecodedQr> = withContext(Dispatchers.Default) {
         runCatching {
-            val bitmap = context.contentResolver.openInputStream(imageUri)?.use {
-                BitmapFactory.decodeStream(it)
-            } ?: error("画像を読み込めません")
+            val bitmap = qrImageRepository.loadBitmap(imageUri) ?: error("画像を読み込めません")
 
             val pixels = IntArray(bitmap.width * bitmap.height)
             bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
