@@ -281,7 +281,6 @@ private fun SummaryCard(uiState: MoneyUiState) {
         SummaryRow("CARD(2M_AGO)", uiState.cardTotal)
         SummaryRow("BUDGET", uiState.budgetTotal)
         SummaryRow("SAVINGS", uiState.savingsTotal)
-        SummaryRow("EXTRA", uiState.extraTotal)
         SummaryRow("SERVICES", uiState.servicesMonthlyTotal)
         Spacer(modifier = Modifier.height(8.dp))
         SummaryRow(

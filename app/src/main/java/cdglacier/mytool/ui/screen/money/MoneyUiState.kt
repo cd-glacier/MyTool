@@ -35,7 +35,7 @@ data class MoneyUiState(
     val servicesMonthlyTotal: Long get() = book.servicesMonthlyTotal(displayedMonth)
 
     val difference: Long
-        get() = incomeTotal - cardTotal - budgetTotal - savingsTotal - extraTotal - servicesMonthlyTotal
+        get() = incomeTotal - cardTotal - budgetTotal - savingsTotal - servicesMonthlyTotal
 
     val lifeAccountTransfer: Long
         get() = budgetTotal + currentMonth.savingsToLifeAccount
