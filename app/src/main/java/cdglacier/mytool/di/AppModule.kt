@@ -10,6 +10,8 @@ import cdglacier.mytool.data.repository.GoogleCalendarRepository
 import cdglacier.mytool.data.repository.GoogleCalendarRepositoryImpl
 import cdglacier.mytool.data.repository.DailySummaryRepository
 import cdglacier.mytool.data.repository.DailySummaryRepositoryImpl
+import cdglacier.mytool.data.repository.DiaryRepository
+import cdglacier.mytool.data.repository.DiaryRepositoryImpl
 import cdglacier.mytool.data.repository.HealthPageRepository
 import cdglacier.mytool.data.repository.HealthPageRepositoryImpl
 import cdglacier.mytool.data.repository.SleepPageRepository
@@ -135,4 +137,8 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindQrImageRepository(impl: QrImageRepositoryImpl): QrImageRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindDiaryRepository(impl: DiaryRepositoryImpl): DiaryRepository
 }

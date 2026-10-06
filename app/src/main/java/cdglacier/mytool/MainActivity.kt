@@ -21,6 +21,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
 import cdglacier.mytool.navigation.CopyObsidianJournalRoute as CopyObsidianJournalNav
+import cdglacier.mytool.navigation.DiaryRoute as DiaryNav
 import cdglacier.mytool.navigation.HabitTrackingRoute as HabitTrackingNav
 import cdglacier.mytool.navigation.HealthChartRoute as HealthChartNav
 import cdglacier.mytool.navigation.HealthConnectRoute as HealthConnectNav
@@ -36,6 +37,7 @@ import cdglacier.mytool.navigation.RecipeRoute as RecipeNav
 import cdglacier.mytool.navigation.SettingsRoute as SettingsNav
 import cdglacier.mytool.navigation.SleepStageChartRoute as SleepStageChartNav
 import cdglacier.mytool.ui.screen.copyjournal.CopyObsidianJournalRoute
+import cdglacier.mytool.ui.screen.diary.DiaryRoute
 import cdglacier.mytool.ui.screen.habit.HabitTrackingRoute
 import cdglacier.mytool.ui.screen.healthconnect.HealthConnectRoute
 import cdglacier.mytool.ui.screen.healthconnect.chart.HealthChartRoute
@@ -103,6 +105,7 @@ class MainActivity : ComponentActivity() {
                                     onNavigateToHousehold = { backStack.add(HouseholdNav) },
                                     onNavigateToHealthConnect = { backStack.add(HealthConnectNav) },
                                     onNavigateToQrStocker = { backStack.add(QrStockerNav) },
+                                    onNavigateToDiary = { backStack.add(DiaryNav) },
                                     onNavigateToSettings = { backStack.add(SettingsNav) },
                                 )
                             }
@@ -178,6 +181,9 @@ class MainActivity : ComponentActivity() {
                                     onBack = { backStack.removeLastOrNull() },
                                     prefilledUrl = route.prefilledUrl,
                                 )
+                            }
+                            entry<DiaryNav> {
+                                DiaryRoute(onBack = { backStack.removeLastOrNull() })
                             }
                         }
                     )
