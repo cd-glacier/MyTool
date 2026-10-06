@@ -3,6 +3,7 @@ package cdglacier.mytool.di
 import android.content.Context
 import androidx.room.Room
 import cdglacier.mytool.data.db.DailySummaryDao
+import cdglacier.mytool.data.db.DiaryDao
 import cdglacier.mytool.data.db.JournalLocationDao
 import cdglacier.mytool.data.db.LocationRecordDao
 import cdglacier.mytool.data.db.MyToolDatabase
@@ -36,4 +37,7 @@ object DatabaseModule {
 
     @Provides
     fun provideJournalLocationDao(db: MyToolDatabase): JournalLocationDao = db.journalLocationDao()
+
+    @Provides
+    fun provideDiaryDao(db: MyToolDatabase): DiaryDao = db.diaryDao()
 }

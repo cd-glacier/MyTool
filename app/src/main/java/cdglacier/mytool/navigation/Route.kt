@@ -46,6 +46,9 @@ data object QrStockerRoute : NavKey
 data class QrStockerDetailRoute(val title: String) : NavKey
 
 @Serializable
+data object DiaryRoute : NavKey
+
+@Serializable
 data class MoneyChartRoute(
     val section: String,
     val group: String? = null,

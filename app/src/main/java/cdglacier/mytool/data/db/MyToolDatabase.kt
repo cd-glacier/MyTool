@@ -9,8 +9,9 @@ import androidx.room.RoomDatabase
         RecipeEntity::class,
         DailySummaryEntity::class,
         JournalLocationEntity::class,
+        DiaryEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = false,
 )
 abstract class MyToolDatabase : RoomDatabase() {
@@ -18,4 +19,5 @@ abstract class MyToolDatabase : RoomDatabase() {
     abstract fun recipeDao(): RecipeDao
     abstract fun dailySummaryDao(): DailySummaryDao
     abstract fun journalLocationDao(): JournalLocationDao
+    abstract fun diaryDao(): DiaryDao
 }

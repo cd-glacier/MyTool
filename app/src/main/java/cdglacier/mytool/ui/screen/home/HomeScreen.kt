@@ -64,6 +64,7 @@ fun HomeRoute(
     onNavigateToHousehold: () -> Unit,
     onNavigateToHealthConnect: () -> Unit,
     onNavigateToQrStocker: () -> Unit,
+    onNavigateToDiary: () -> Unit,
     onNavigateToSettings: () -> Unit,
     viewModel: HomeViewModel = viewModel(),
 ) {
@@ -83,6 +84,7 @@ fun HomeRoute(
         onNavigateToHousehold = onNavigateToHousehold,
         onNavigateToHealthConnect = onNavigateToHealthConnect,
         onNavigateToQrStocker = onNavigateToQrStocker,
+        onNavigateToDiary = onNavigateToDiary,
         onNavigateToSettings = onNavigateToSettings,
     )
 }
@@ -99,6 +101,7 @@ fun HomeScreen(
     onNavigateToHousehold: () -> Unit,
     onNavigateToHealthConnect: () -> Unit,
     onNavigateToQrStocker: () -> Unit,
+    onNavigateToDiary: () -> Unit,
     onNavigateToSettings: () -> Unit,
 ) {
     Scaffold(
@@ -124,6 +127,7 @@ fun HomeScreen(
                 onNavigateToHousehold = onNavigateToHousehold,
                 onNavigateToHealthConnect = onNavigateToHealthConnect,
                 onNavigateToQrStocker = onNavigateToQrStocker,
+                onNavigateToDiary = onNavigateToDiary,
                 onNavigateToSettings = onNavigateToSettings,
             )
         }
@@ -330,6 +334,7 @@ private fun ExecCommandsSection(
     onNavigateToHousehold: () -> Unit,
     onNavigateToHealthConnect: () -> Unit,
     onNavigateToQrStocker: () -> Unit,
+    onNavigateToDiary: () -> Unit,
     onNavigateToSettings: () -> Unit,
 ) {
     Row(
@@ -404,6 +409,12 @@ private fun ExecCommandsSection(
     Spacer(modifier = Modifier.height(2.dp))
     CommandMenuItem(
         number = "09.",
+        label = "DIARY",
+        onClick = onNavigateToDiary,
+    )
+    Spacer(modifier = Modifier.height(2.dp))
+    CommandMenuItem(
+        number = "10.",
         label = "SYS_SETTINGS",
         onClick = onNavigateToSettings,
     )
