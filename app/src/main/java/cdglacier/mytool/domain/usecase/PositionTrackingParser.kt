@@ -7,7 +7,6 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 object PositionTrackingParser {
-    private val SECTION_HEADING = Regex("""^#{1,6}\s+Position\s+Tracking\s*$""")
     private val ANY_HEADING = Regex("""^#{1,6}\s+.*$""")
     private val TIME_FMT: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
 
@@ -18,7 +17,7 @@ object PositionTrackingParser {
 
         var i = 0
         while (i < lines.size) {
-            if (SECTION_HEADING.matches(lines[i].trim())) {
+            if (JournalSection.POSITION_TRACKING.matchesHeading(lines[i])) {
                 i++
                 while (i < lines.size) {
                     val trimmed = lines[i].trim()

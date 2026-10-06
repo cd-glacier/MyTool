@@ -3,13 +3,6 @@ package cdglacier.mytool.domain.usecase
 object JournalTransformer {
     private val TODO_ITEM_DONE = Regex("""^-\s+\[x]\s+.+$""")
     private val TODO_ITEM_ANY = Regex("""^-\s+\[( |x)]\s+.+$""")
-    private val HABIT_HEADING = Regex("""^#\s+Habit\s*$""")
-    private val POSITION_HEADING = Regex("""^#\s+Position Tracking\s*$""")
-    private val RECIPE_HEADING = Regex("""^#\s+\[\[Recipe]]\s*$""")
-    private val HOUSEHOLD_HEADING = Regex("""^#\s+Household\s*$""")
-    private val HEALTH_HEADING = Regex("""^#\s+Health\s*$""")
-    private val TODO_HEADING = Regex("""^#\s+TODO\s*$""")
-    private val TOP_HEADING = Regex("""^#\s+.+$""")
     private val CHECKED_MARK = Regex("""\[x]""")
 
     fun transform(markdown: String): String {
@@ -19,17 +12,18 @@ object JournalTransformer {
         while (i < lines.size) {
             val line = lines[i]
             val trimmed = line.trim()
+            val section = JournalSection.fromHeadingLine(line)
 
-            if (POSITION_HEADING.matches(trimmed) || RECIPE_HEADING.matches(trimmed) ||
-                HOUSEHOLD_HEADING.matches(trimmed) || HEALTH_HEADING.matches(trimmed)
-            ) {
+            // セクションごと削除する対象
+            if (section != null && section in SECTIONS_TO_DROP) {
                 i++
-                while (i < lines.size && !TOP_HEADING.matches(lines[i].trim())) i++
+                while (i < lines.size && !JournalSection.isAnyTopHeading(lines[i])) i++
                 continue
             }
 
+            // TODO セクション（`---` で囲まれていない前提の旧形式に対応）
             if (trimmed == "---" &&
-                i + 1 < lines.size && TODO_HEADING.matches(lines[i + 1].trim())
+                i + 1 < lines.size && JournalSection.TODO.matchesHeading(lines[i + 1])
             ) {
                 val openIdx = i
                 val headIdx = i + 1
@@ -45,7 +39,7 @@ object JournalTransformer {
                 val hasAnyItem = kept.any { TODO_ITEM_ANY.matches(it.trim()) }
                 if (hasAnyItem) {
                     out.add(lines[openIdx])
-                    out.add(lines[headIdx])
+                    out.add(JournalSection.TODO.heading)
                     out.addAll(kept)
                     if (hasClose) out.add(lines[j])
                 }
@@ -53,10 +47,11 @@ object JournalTransformer {
                 continue
             }
 
-            if (HABIT_HEADING.matches(trimmed)) {
-                out.add(line)
+            // HabitTracking: チェック解除して引き継ぎ
+            if (section == JournalSection.HABIT_TRACKING) {
+                out.add(JournalSection.HABIT_TRACKING.heading)
                 i++
-                while (i < lines.size && !TOP_HEADING.matches(lines[i].trim())) {
+                while (i < lines.size && !JournalSection.isAnyTopHeading(lines[i])) {
                     val l = lines[i]
                     if (TODO_ITEM_DONE.matches(l.trim())) {
                         out.add(l.replaceFirst(CHECKED_MARK, "[ ]"))
@@ -74,4 +69,12 @@ object JournalTransformer {
 
         return out.joinToString("\n")
     }
+
+    private val SECTIONS_TO_DROP = setOf(
+        JournalSection.RECIPE,
+        JournalSection.DIARY,
+        JournalSection.POSITION_TRACKING,
+        JournalSection.HOUSEHOLD,
+        JournalSection.HEALTH,
+    )
 }

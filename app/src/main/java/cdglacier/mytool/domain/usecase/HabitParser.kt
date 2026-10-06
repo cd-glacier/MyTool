@@ -5,7 +5,6 @@ import cdglacier.mytool.domain.model.HabitFrequency
 import java.time.DayOfWeek
 
 object HabitParser {
-    private val HABIT_HEADING = Regex("""^#\s+Habit\s*$""")
     private val SUB_HEADING = Regex("""^##\s+(.+?)\s*$""")
     private val ANY_HEADING = Regex("""^#{1,6}\s+.*$""")
     private val ITEM = Regex("""^-\s+\[( |x)]\s+(.+)$""")
@@ -26,7 +25,7 @@ object HabitParser {
 
         var i = 0
         while (i < lines.size) {
-            if (HABIT_HEADING.matches(lines[i].trim())) {
+            if (JournalSection.HABIT_TRACKING.matchesHeading(lines[i])) {
                 i++
                 var currentFrequency: HabitFrequency? = null
                 while (i < lines.size) {
@@ -76,9 +75,10 @@ object HabitParser {
         var currentFrequency: HabitFrequency? = null
         for (i in lines.indices) {
             val trimmed = lines[i].trim()
-            if (HABIT_HEADING.matches(trimmed)) {
+            if (JournalSection.HABIT_TRACKING.matchesHeading(lines[i])) {
                 inHabit = true
                 currentFrequency = null
+                lines[i] = JournalSection.HABIT_TRACKING.heading
                 continue
             }
             if (!inHabit) continue

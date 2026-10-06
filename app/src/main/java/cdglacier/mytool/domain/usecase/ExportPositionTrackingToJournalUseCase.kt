@@ -22,20 +22,18 @@ class ExportPositionTrackingToJournalUseCase @Inject constructor(
         val records = locationRecordRepository.observeByDate(date).first()
         if (records.isEmpty()) error("対象日の位置情報がありません")
 
-        val section = buildSection(records)
+        val body = buildSectionBody(records)
         val current = journalRepository.readContent(journalDirUri, date, filenameFormat).orEmpty()
-        val updated = replaceOrAppendSection(current, section)
+        val updated = JournalSectionWriter.write(current, JournalSection.POSITION_TRACKING, body)
 
         journalRepository.writeContent(journalDirUri, date, filenameFormat, updated).getOrThrow()
         records.size
     }
 
-    private fun buildSection(records: List<LocationRecordEntity>): String {
+    private fun buildSectionBody(records: List<LocationRecordEntity>): String {
         val timeFmt = DateTimeFormatter.ofPattern("HH:mm:ss")
         val zone = ZoneId.systemDefault()
         val header = """
-            $SECTION_HEADING
-
             |時刻|緯度|経度|精度|Stay Count|電池残量|
             |:--:|:--:|:--:|:--:|:--:|:--:|
         """.trimIndent()
@@ -46,35 +44,6 @@ class ExportPositionTrackingToJournalUseCase @Inject constructor(
             val acc = "%.1f m".format(r.accuracy)
             "|$time|$lat|$lon|$acc|${r.sameLocationCount}|${r.batteryLevel}%|"
         }
-        return "$header\n$rows\n"
-    }
-
-    private fun replaceOrAppendSection(content: String, section: String): String {
-        val lines = content.lines()
-        val startIdx = lines.indexOfFirst { it.trimEnd() == SECTION_HEADING }
-        if (startIdx < 0) {
-            val sep = if (content.isEmpty() || content.endsWith("\n\n")) "" else if (content.endsWith("\n")) "\n" else "\n\n"
-            return content + sep + section
-        }
-        val endIdx = (startIdx + 1 until lines.size)
-            .firstOrNull { lines[it].startsWith("# ") }
-            ?: lines.size
-        val before = lines.subList(0, startIdx).joinToString("\n")
-        val after = lines.subList(endIdx, lines.size).joinToString("\n")
-        return buildString {
-            if (before.isNotEmpty()) {
-                append(before)
-                if (!before.endsWith("\n")) append("\n")
-            }
-            append(section)
-            if (after.isNotEmpty()) {
-                if (!section.endsWith("\n")) append("\n")
-                append(after)
-            }
-        }
-    }
-
-    companion object {
-        private const val SECTION_HEADING = "# Position Tracking"
+        return "$header\n$rows"
     }
 }
