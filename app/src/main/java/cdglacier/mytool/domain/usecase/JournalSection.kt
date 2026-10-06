@@ -7,7 +7,7 @@ enum class JournalSection(
     val order: Int,
 ) {
     TODO("# TODO", emptyList(), WriteStrategy.CLEANUP_ONLY, 1),
-    HABIT_TRACKING("# HabitTracking", listOf("# Habit"), WriteStrategy.REPLACE, 2),
+    HABIT_TRACKING("# HabitTracking", listOf("# Habit"), WriteStrategy.CLEANUP_ONLY, 2),
     RECIPE("# Recipe", listOf("# [[Recipe]]"), WriteStrategy.APPEND, 3),
     DIARY("# Diary", listOf("# [[Diary]]"), WriteStrategy.APPEND, 4),
     POSITION_TRACKING("# PositionTracking", listOf("# Position Tracking"), WriteStrategy.REPLACE, 5),

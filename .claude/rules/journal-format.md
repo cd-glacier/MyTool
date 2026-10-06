@@ -72,10 +72,11 @@ UseCase がセクションを挿入する際は、この順序に従って適切
 2. **順序保証**: §2 の順序に反する位置へは挿入しない。既存セクションを読み取り、
    自セクションの正しいスロットに挿入する。
 3. **更新戦略**: 各セクションは「追記型」か「置換型」のいずれかを宣言する。
-   - 追記型: `recipe`, `diary`（本文に行を追加）
-   - 置換型: `habit_tracking`, `position_tracking`, `household`, `health`
+   - 追記型 (APPEND): `recipe`, `diary`（本文に行を追加）
+   - 置換型 (REPLACE): `position_tracking`, `household`, `health`
      （セクション本文を全置換して再生成）
-   - `todo` は MyTool からの書き込み対象外（cleanup のみ）
+   - cleanup のみ (CLEANUP_ONLY): `todo`, `habit_tracking`
+     （MyTool は Writer 経由で書き込まず、ユーザが手で記述する／`toggle` で部分編集するのみ）
 4. **冪等性**: 同じ入力で複数回呼ばれても、ジャーナルの中身は 1 回呼んだときと等価に
    なること。
 5. **フリー領域の非破壊**: 管理ブロックの外側は一切変更しない。
