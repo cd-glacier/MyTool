@@ -119,7 +119,7 @@ fun HabitTrackingScreen(
                 uiState.isLoading -> NoticeCard("LOADING", "...")
                 uiState.habits.isEmpty() -> NoticeCard(
                     "NO_HABITS",
-                    "選択日のJournalに該当する習慣がありません。\n`# Habit` セクションを追加してください。",
+                    "選択日のJournalに該当する習慣がありません。\n`# HabitTracking` セクションを追加してください。",
                 )
                 else -> HabitList(uiState.habits, onHabitToggle)
             }

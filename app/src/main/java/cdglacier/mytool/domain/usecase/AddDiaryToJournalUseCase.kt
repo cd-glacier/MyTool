@@ -10,9 +10,6 @@ class AddDiaryToJournalUseCase @Inject constructor(
     private val journalRepository: JournalRepository,
     private val diaryRepository: DiaryRepository,
 ) {
-    private val diaryHeading = Regex("""^#{1,6}\s+\[\[Diary]]\s*$""")
-    private val anyHeading = Regex("""^#{1,6}\s+.*$""")
-
     suspend operator fun invoke(
         journalDirUri: String,
         date: LocalDate,
@@ -21,8 +18,8 @@ class AddDiaryToJournalUseCase @Inject constructor(
         content: String,
     ): Result<Unit> = runCatching {
         val original = journalRepository.readContent(journalDirUri, date, filenameFormat) ?: ""
-        val entryBlock = buildEntryBlock(timestamp, content)
-        val updated = insertOrAppend(original, entryBlock)
+        val entryBlock = buildEntryBlock(timestamp, content).joinToString("\n")
+        val updated = JournalSectionWriter.write(original, JournalSection.DIARY, entryBlock)
         journalRepository.writeContent(journalDirUri, date, filenameFormat, updated).getOrThrow()
         val existing = diaryRepository.getByDate(date)
             .map { Diary(timestamp = it.timestamp, content = it.content) }
@@ -34,24 +31,5 @@ class AddDiaryToJournalUseCase @Inject constructor(
         val head = "- $timestamp ${lines.firstOrNull().orEmpty()}"
         val tail = lines.drop(1).map { "  $it" }
         return listOf(head) + tail
-    }
-
-    private fun insertOrAppend(content: String, entryLines: List<String>): String {
-        val lines = content.lines().toMutableList()
-        val headingIndex = lines.indexOfFirst { diaryHeading.matches(it.trim()) }
-        if (headingIndex < 0) {
-            val prefix = if (content.isEmpty()) "" else if (content.endsWith("\n")) "\n" else "\n\n"
-            return content + prefix + "# [[Diary]]\n" + entryLines.joinToString("\n") + "\n"
-        }
-        var insertAt = lines.size
-        for (i in (headingIndex + 1) until lines.size) {
-            if (anyHeading.matches(lines[i].trim())) {
-                insertAt = i
-                break
-            }
-        }
-        while (insertAt > headingIndex + 1 && lines[insertAt - 1].isBlank()) insertAt--
-        lines.addAll(insertAt, entryLines)
-        return lines.joinToString("\n")
     }
 }
