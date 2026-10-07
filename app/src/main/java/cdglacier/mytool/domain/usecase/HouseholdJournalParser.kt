@@ -12,7 +12,7 @@ object HouseholdJournalParser {
         val start = lines.indexOfFirst { JournalSection.HOUSEHOLD.matchesHeading(it) }
         if (start < 0) return emptyList()
         val end = (start + 1 until lines.size)
-            .firstOrNull { JournalSection.isAnyTopHeading(lines[it]) }
+            .firstOrNull { lines[it].trim() == "---" || JournalSection.isAnyTopHeading(lines[it]) }
             ?: lines.size
 
         val result = mutableListOf<HouseholdEntry>()

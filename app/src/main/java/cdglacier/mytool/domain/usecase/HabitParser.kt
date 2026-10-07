@@ -31,6 +31,7 @@ object HabitParser {
                 while (i < lines.size) {
                     val raw = lines[i]
                     val trimmed = raw.trim()
+                    if (trimmed == "---") break
                     if (trimmed.startsWith("# ") && !trimmed.startsWith("##")) break
                     val sub = SUB_HEADING.matchEntire(trimmed)
                     if (sub != null) {
@@ -82,6 +83,10 @@ object HabitParser {
                 continue
             }
             if (!inHabit) continue
+            if (trimmed == "---") {
+                inHabit = false
+                continue
+            }
             if (trimmed.startsWith("# ") && !trimmed.startsWith("##")) {
                 inHabit = false
                 continue

@@ -21,7 +21,7 @@ object PositionTrackingParser {
                 i++
                 while (i < lines.size) {
                     val trimmed = lines[i].trim()
-                    if (ANY_HEADING.matches(trimmed)) break
+                    if (trimmed == "---" || ANY_HEADING.matches(trimmed)) break
                     parseRow(trimmed)?.let { row ->
                         val time = runCatching { LocalTime.parse(row.time, TIME_FMT) }.getOrNull()
                         if (time != null) {
