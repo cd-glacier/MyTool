@@ -14,10 +14,6 @@ class IsJournalCopiedUseCase @Inject constructor(
     ): Boolean {
         val content = journalRepository.readContent(journalDirUri, targetDate, filenameFormat)
             ?: return false
-        return HABIT_HEADING.containsMatchIn(content)
-    }
-
-    private companion object {
-        val HABIT_HEADING = Regex("""(?m)^#\s+Habit\s*$""")
+        return content.lines().any { JournalSection.HABIT_TRACKING.matchesHeading(it) }
     }
 }
