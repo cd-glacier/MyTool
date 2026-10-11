@@ -10,9 +10,6 @@ class AddRecipeToJournalUseCase @Inject constructor(
     private val journalRepository: JournalRepository,
     private val recipeRepository: RecipeRepository,
 ) {
-    private val recipeHeading = Regex("""^#{1,6}\s+\[\[Recipe]]\s*$""")
-    private val anyHeading = Regex("""^#{1,6}\s+.*$""")
-
     suspend operator fun invoke(
         journalDirUri: String,
         date: LocalDate,
@@ -22,32 +19,12 @@ class AddRecipeToJournalUseCase @Inject constructor(
     ): Result<Unit> = runCatching {
         val original = journalRepository.readContent(journalDirUri, date, filenameFormat) ?: ""
         val item = "- [${title.trim()}]($url)"
-        val updated = insertOrAppend(original, item)
+        val updated = JournalSectionWriter.write(original, JournalSection.RECIPE, item)
         journalRepository.writeContent(journalDirUri, date, filenameFormat, updated).getOrThrow()
         val existing = recipeRepository.getByDate(date)
             .map { Recipe(title = it.title, url = it.url) }
         if (existing.none { it.url == url }) {
             recipeRepository.replaceForDate(date, existing + Recipe(title = title.trim(), url = url))
         }
-    }
-
-    private fun insertOrAppend(content: String, item: String): String {
-        val lines = content.lines().toMutableList()
-        val headingIndex = lines.indexOfFirst { recipeHeading.matches(it.trim()) }
-        if (headingIndex < 0) {
-            val needsBlank = content.isNotEmpty() && !content.endsWith("\n\n")
-            val prefix = if (content.isEmpty()) "" else if (content.endsWith("\n")) "\n" else "\n\n"
-            return content + prefix + "# [[Recipe]]\n" + item + "\n"
-        }
-        var insertAt = lines.size
-        for (i in (headingIndex + 1) until lines.size) {
-            if (anyHeading.matches(lines[i].trim())) {
-                insertAt = i
-                break
-            }
-        }
-        while (insertAt > headingIndex + 1 && lines[insertAt - 1].isBlank()) insertAt--
-        lines.add(insertAt, item)
-        return lines.joinToString("\n")
     }
 }

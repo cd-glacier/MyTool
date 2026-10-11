@@ -3,8 +3,6 @@ package cdglacier.mytool.domain.usecase
 import cdglacier.mytool.domain.model.Diary
 
 object DiaryParser {
-    private val DIARY_HEADING = Regex("""^#{1,6}\s+\[\[Diary]]\s*$""")
-    private val ANY_HEADING = Regex("""^#{1,6}\s+.*$""")
     private val ENTRY = Regex("""^-\s+(\d{2}:\d{2})\s+(.*)$""")
     private val CONTINUATION = Regex("""^ {2}(.*)$""")
 
@@ -14,12 +12,12 @@ object DiaryParser {
 
         var i = 0
         while (i < lines.size) {
-            if (DIARY_HEADING.matches(lines[i].trim())) {
+            if (JournalSection.DIARY.matchesHeading(lines[i])) {
                 i++
                 var current: Pair<String, StringBuilder>? = null
                 while (i < lines.size) {
                     val raw = lines[i]
-                    if (ANY_HEADING.matches(raw.trim())) break
+                    if (raw.trim() == "---" || JournalSection.isAnyTopHeading(raw)) break
                     val entry = ENTRY.matchEntire(raw)
                     if (entry != null) {
                         current?.let { result.add(Diary(it.first, it.second.toString())) }

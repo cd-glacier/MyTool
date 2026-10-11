@@ -1,5 +1,6 @@
 package cdglacier.mytool.widget
 
+import cdglacier.mytool.domain.usecase.JournalSection
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -7,38 +8,26 @@ data class TodoItem(val text: String, val isDone: Boolean)
 
 object TodoParser {
     private val TODO_ITEM_REGEX = Regex("""^-\s+\[( |x)]\s+(.+)$""")
+    private val WIKI_LINK_REGEX = Regex("""\[\[([^\]]+)]]""")
 
     fun parse(markdown: String): List<TodoItem> {
         val lines = markdown.lines()
-        val result = mutableListOf<TodoItem>()
+        val headIdx = lines.indexOfFirst { JournalSection.TODO.matchesHeading(it) }
+        if (headIdx < 0) return emptyList()
 
-        var i = 0
+        val result = mutableListOf<TodoItem>()
+        var i = headIdx + 1
         while (i < lines.size) {
-            // Look for "---" separator
-            if (lines[i].trim() == "---") {
-                // Check if next non-empty line is "# TODO"
-                val nextIdx = i + 1
-                if (nextIdx < lines.size && lines[nextIdx].trim() == "# TODO") {
-                    // We're in a TODO block, parse until next "---"
-                    i = nextIdx + 1
-                    while (i < lines.size && lines[i].trim() != "---") {
-                        val match = TODO_ITEM_REGEX.matchEntire(lines[i].trim())
-                        if (match != null) {
-                            val isDone = match.groupValues[1] == "x"
-                            val rawText = match.groupValues[2]
-                            val text = rawText.replace(Regex("""\[\[([^\]]+)]]"""), "$1")
-                            result.add(TodoItem(text, isDone))
-                        }
-                        i++
-                    }
-                    // Skip the closing "---"
-                    if (i < lines.size) i++
-                    continue
-                }
+            val trimmed = lines[i].trim()
+            if (trimmed == "---" || JournalSection.isAnyTopHeading(lines[i])) break
+            val match = TODO_ITEM_REGEX.matchEntire(trimmed)
+            if (match != null) {
+                val isDone = match.groupValues[1] == "x"
+                val text = WIKI_LINK_REGEX.replace(match.groupValues[2], "$1")
+                result.add(TodoItem(text, isDone))
             }
             i++
         }
-
         return result
     }
 }
