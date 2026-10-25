@@ -12,6 +12,8 @@ import cdglacier.mytool.domain.model.MonthlyMoney
 import cdglacier.mytool.domain.model.SavingsItem
 import cdglacier.mytool.domain.usecase.MoneyCalculator
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,6 +21,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.YearMonth
 import javax.inject.Inject
+
+private const val AUTO_SAVE_DEBOUNCE_MS = 800L
 
 @HiltViewModel
 class MoneyViewModel @Inject constructor(
@@ -28,6 +32,8 @@ class MoneyViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(MoneyUiState())
     val uiState: StateFlow<MoneyUiState> = _uiState.asStateFlow()
+
+    private var autoSaveJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -101,15 +107,18 @@ class MoneyViewModel @Inject constructor(
                 archived = archived,
             ))
         }
+        scheduleAutoSave()
     }
 
     fun addService(service: AnnualService) {
         _uiState.update { it.copy(book = it.book.copy(services = it.book.services + service)) }
+        scheduleAutoSave()
     }
     fun updateService(index: Int, service: AnnualService) {
         _uiState.update {
             it.copy(book = it.book.copy(services = it.book.services.replaceAt(index, service)))
         }
+        scheduleAutoSave()
     }
     fun removeService(index: Int) {
         _uiState.update {
@@ -118,6 +127,7 @@ class MoneyViewModel @Inject constructor(
             }
             it.copy(book = it.book.copy(services = updated))
         }
+        scheduleAutoSave()
     }
 
     private inline fun updateList(transform: (MonthlyMoney) -> MonthlyMoney) {
@@ -125,6 +135,7 @@ class MoneyViewModel @Inject constructor(
             val newMonth = transform(state.currentMonth)
             state.copy(book = state.book.copy(months = state.book.months + (state.displayedMonth to newMonth)))
         }
+        scheduleAutoSave()
     }
 
     private inline fun archiveAt(category: MoneyCategory, index: Int, selector: (MonthlyMoney) -> List<MoneyItem>) {
@@ -145,10 +156,13 @@ class MoneyViewModel @Inject constructor(
                 archived = archived,
             ))
         }
+        scheduleAutoSave()
     }
 
-    fun save() {
-        viewModelScope.launch {
+    private fun scheduleAutoSave() {
+        autoSaveJob?.cancel()
+        autoSaveJob = viewModelScope.launch {
+            delay(AUTO_SAVE_DEBOUNCE_MS)
             val book = _uiState.value.book
             val result = moneyRepository.save(book)
             result.exceptionOrNull()?.let { e ->
