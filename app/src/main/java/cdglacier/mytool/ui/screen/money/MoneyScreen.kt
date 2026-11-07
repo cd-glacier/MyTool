@@ -49,7 +49,6 @@ import cdglacier.mytool.ui.theme.GlacierBg
 import cdglacier.mytool.ui.theme.GlacierCyan
 import cdglacier.mytool.ui.theme.GlacierIce
 import cdglacier.mytool.ui.theme.GlacierMuted
-import cdglacier.mytool.ui.theme.GlacierOnPrimary
 import cdglacier.mytool.ui.theme.GlacierOnSurface
 import cdglacier.mytool.ui.theme.GlacierSurface
 import cdglacier.mytool.ui.theme.GlacierSurfaceLow
@@ -73,7 +72,6 @@ fun MoneyRoute(
         onBack = onBack,
         onPrevMonth = viewModel::onPrevMonth,
         onNextMonth = viewModel::onNextMonth,
-        onSave = viewModel::save,
         onClearError = viewModel::clearError,
         onNavigateChart = onNavigateChart,
         onAddIncome = viewModel::addIncome,
@@ -103,7 +101,6 @@ fun MoneyScreen(
     onBack: () -> Unit,
     onPrevMonth: () -> Unit,
     onNextMonth: () -> Unit,
-    onSave: () -> Unit,
     onClearError: () -> Unit,
     onNavigateChart: (String, String?) -> Unit,
     onAddIncome: (String) -> Unit,
@@ -234,8 +231,6 @@ fun MoneyScreen(
             )
 
             HistoryGraphSection(uiState = uiState)
-
-            SaveButton(onSave = onSave)
         }
     }
 }
@@ -781,27 +776,6 @@ private fun WarningCard(text: String, onClick: (() -> Unit)? = null) {
             .padding(12.dp),
     ) {
         Text(text, color = ERROR_RED, fontFamily = FontFamily.Monospace, fontSize = 12.sp)
-    }
-}
-
-@Composable
-private fun SaveButton(onSave: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(GlacierAmber)
-            .clickable { onSave() }
-            .padding(vertical = 14.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = "SAVE >",
-            color = GlacierOnPrimary,
-            fontFamily = SpaceGroteskFamily,
-            fontWeight = FontWeight.Black,
-            fontSize = 14.sp,
-            letterSpacing = 2.sp,
-        )
     }
 }
 
