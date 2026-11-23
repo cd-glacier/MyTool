@@ -14,6 +14,7 @@ import javax.inject.Singleton
 interface LocationPermissionRepository {
     val fineLocationGranted: StateFlow<Boolean>
     val backgroundLocationGranted: StateFlow<Boolean>
+    val activityRecognitionGranted: StateFlow<Boolean>
     fun refresh()
 }
 
@@ -24,13 +25,16 @@ class LocationPermissionRepositoryImpl @Inject constructor(
 
     private val _fine = MutableStateFlow(check(Manifest.permission.ACCESS_FINE_LOCATION))
     private val _bg = MutableStateFlow(check(Manifest.permission.ACCESS_BACKGROUND_LOCATION))
+    private val _ar = MutableStateFlow(check(Manifest.permission.ACTIVITY_RECOGNITION))
 
     override val fineLocationGranted: StateFlow<Boolean> = _fine.asStateFlow()
     override val backgroundLocationGranted: StateFlow<Boolean> = _bg.asStateFlow()
+    override val activityRecognitionGranted: StateFlow<Boolean> = _ar.asStateFlow()
 
     override fun refresh() {
         _fine.value = check(Manifest.permission.ACCESS_FINE_LOCATION)
         _bg.value = check(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+        _ar.value = check(Manifest.permission.ACTIVITY_RECOGNITION)
     }
 
     private fun check(permission: String): Boolean =

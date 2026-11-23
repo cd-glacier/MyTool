@@ -66,6 +66,11 @@ class PositionTrackingViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
+            locationPermissionRepository.activityRecognitionGranted.collect { granted ->
+                _uiState.update { it.copy(activityRecognitionGranted = granted) }
+            }
+        }
+        viewModelScope.launch {
             obsidianRepository.journalDirUri.collect { uri ->
                 _uiState.update { it.copy(journalDirUri = uri) }
             }
