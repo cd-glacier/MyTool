@@ -14,8 +14,14 @@ Obsidian ジャーナルと Google カレンダーの情報を、アプリを開
 
 今日のジャーナル `# TODO` セクションのチェックリストを表示し、タップでトグルする。
 
-- 設定アクティビティ: `JournalTodoWidgetConfigActivity`（表示件数などを選べる想定）
-- 受信: `JournalTodoWidgetReceiver`
+- 設定アクティビティ: `JournalTodoWidgetConfigActivity`
+  - ウィジェット単位で `filenameFormat`（既定 `WidgetConfigRepository.DEFAULT_FILENAME_FORMAT`）と
+    `backgroundOpacity`（0–100%）を保存する。
+  - `vaultDirUri` / `journalDirUri` は Settings 画面で設定済みの値を参照する
+    （未設定なら NoticeCard で警告し `SAVE` を無効化）。
+  - SAVE 時: `WidgetConfigRepository.set*()` → `updateWidgetContent(glanceId)` で即時描画 →
+    `WidgetUpdateWorker.schedulePeriodicUpdate()` で定期更新も確保 → `setResult(OK)` で finish。
+- 受信: `JournalTodoWidgetReceiver`（有効化/更新ブロードキャストで同じスケジュールを張り直す）
 - 更新: `JournalTodoWidget` + `WidgetUpdateWorker` / `BaseWidgetUpdateWorker`
 - TODO 行のパース: `widget/TodoParser.kt`
 - 書き戻し: `JournalRepository` を介して該当行の `[ ]` / `[x]` をトグル
@@ -26,16 +32,20 @@ Obsidian ジャーナルと Google カレンダーの情報を、アプリを開
 
 今日の Google カレンダーの予定を表示する。
 
-- 設定アクティビティ: `GoogleCalendarWidgetConfigActivity`（表示するカレンダー選択等）
+- 設定アクティビティ: `GoogleCalendarWidgetConfigActivity`
+  - `READ_CALENDAR` 権限を要求し、`GoogleCalendarRepository` から利用可能な
+    `CalendarAccount` 一覧を取得して表示。
+  - ユーザは表示したいカレンダーを複数選択 → `WidgetConfigRepository.selectedCalendarIds(widgetId)` に保存。
+  - SAVE 時: 設定を保存 → `updateWidgetContent(glanceId)` → `CalendarWidgetUpdateWorker.schedulePeriodicUpdate()` → finish。
 - 受信: `GoogleCalendarWidgetReceiver`
 - 更新: `GoogleCalendarWidget` + `CalendarWidgetUpdateWorker`
-- 取得: `GoogleCalendarRepository` + `GetTodayCalendarEventsUseCase`
+- 取得: `GoogleCalendarRepository` + `GetTodayCalendarEventsUseCase`（選択カレンダー ID で絞り込み）
 
 ## 更新スケジューリング
 
 | ファイル | 役割 |
 |---|---|
-| `widget/WidgetUpdateScheduler.kt` | WorkManager に定期更新をスケジュールするエントリポイント |
+| `widget/WidgetUpdateScheduler.kt` | WorkManager に 15 分周期の Unique Periodic Work を登録（`KEEP` ポリシー） |
 | `widget/BaseWidgetUpdateWorker.kt` | 共通のワーカー基底 |
 | `widget/WidgetUpdateWorker.kt` | JournalTodoWidget の更新 |
 | `widget/CalendarWidgetUpdateWorker.kt` | GoogleCalendarWidget の更新 |

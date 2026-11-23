@@ -53,6 +53,48 @@ Obsidian Vault の pages フォルダ配下に Markdown として保存する。
 - `HealthPageRepository.observeBook()` の `HealthBook` を購読し、
   表示用に `currentDay` / `currentWeek` を都度再計算（`recomputeDerived`）。
 
+## ページ Markdown フォーマット
+
+書き込み先は Vault の pages フォルダ配下、2 ファイル。
+
+### `Health.md`（日次サマリ）
+
+`HealthMarkdown.serialize()` が生成。1 テーブルで 1 行 = 1 日、列 = 指標。
+日付は降順で並び、未取得指標は空セル。
+
+```markdown
+# Health
+
+## Daily
+| Date | Steps | Dist_m | ActMin | ActKcal | TotalKcal | HrAvg | HrMin | HrMax | RestHr | SleepMin | Sys | Dia | Glucose | SpO2 | Temp | RespRate |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 2026-11-09 | 8432 | 6123.45 | 42 | 212.3 | 1987.12 | 78 | 54 | 142 | 58 | 412 |  |  |  | 97.2 |  |  |
+| 2026-11-08 | 10210 | 7812 | 51 | 258 | 2040 | 81 | 56 | 150 | 59 | 395 |  |  |  |  |  |  |
+```
+
+- 数値は整数なら整数文字列、小数なら `%.2f`。
+- パース時はヘッダ名で列マッピングを復元するため、列順入れ替えや既存列の削除があっても耐える。
+- `## Daily` セクション以外は無視される。
+
+### `SleepStages.md`（睡眠ステージ詳細）
+
+`SleepMarkdown.serialize()` が生成。1 行 = 1 ステージ。`Date / SessionStart / SessionEnd / Stage / StageStart / StageEnd`。
+時刻は ISO-8601 Instant。
+
+```markdown
+# Sleep Stages
+
+## Stages
+| Date | SessionStart | SessionEnd | Stage | StageStart | StageEnd |
+|---|---|---|---|---|---|
+| 2026-11-09 | 2026-11-08T23:14:00Z | 2026-11-09T06:48:00Z | deep | 2026-11-08T23:30:00Z | 2026-11-09T00:12:00Z |
+| 2026-11-09 | 2026-11-08T23:14:00Z | 2026-11-09T06:48:00Z | light | 2026-11-09T00:12:00Z | 2026-11-09T01:05:00Z |
+| 2026-11-09 | 2026-11-08T23:14:00Z | 2026-11-09T06:48:00Z | rem | 2026-11-09T01:05:00Z | 2026-11-09T02:10:00Z |
+```
+
+- 読み込み時は `(SessionStart, SessionEnd)` でグルーピングしてセッション単位に復元する。
+- `Stage` は `SleepStageType.key`（例: `deep`, `light`, `rem`, `awake` など）。
+
 ## 実装上の注意
 
 - HealthConnect が未対応の端末では `healthConnectAvailable = false` として機能を無効化。

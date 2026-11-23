@@ -20,17 +20,43 @@
 | UI | `ui/screen/home/HomeScreen.kt` | 画面 Composable（グラフ＋機能カード群） |
 | UI | `ui/screen/home/HomeViewModel.kt` | サマリ購読・同期・選択日管理 |
 | UI | `ui/screen/home/HomeUiState.kt` | `dailyActivities`, `todayCompletionRate`, `selectedDate`, `isLoading` |
-| Domain | `domain/usecase/SyncDailySummariesUseCase.kt` | 日次サマリを同期しキャッシュへ |
-| Domain | `domain/usecase/GetActivityRatesUseCase.kt` | サマリから UI 用 `DailyActivity` へ変換 |
-| Data | `data/repository/DailySummaryRepository.kt` | 日次サマリの永続化・Flow 公開 |
+| Domain | `domain/model/DailySummary.kt` | `date`, `habitRate`, `distanceMeters`, `householdHusbandPoints` |
+| Domain | `domain/usecase/SyncDailySummariesUseCase.kt` | 日次サマリを再計算し Room に upsert |
+| Domain | `domain/usecase/GetActivityRatesUseCase.kt` | サマリから `DailyActivity` へ変換・活動度合算 |
+| Data | `data/repository/DailySummaryRepository.kt` | Room キャッシュ（`summaries: Flow`） |
 
 ## データフロー
 
 1. `init` で `DailySummaryRepository.summaries` を購読し、`GetActivityRatesUseCase` を通して UiState を更新。
-2. `refresh()`（復帰時）で今日から過去 400 日分を `SyncDailySummariesUseCase` に再同期させる。
+2. `refresh()`（復帰時）で今日から過去 400 日分を `SyncDailySummariesUseCase` に同期させる。
 3. `onSelectDate` で選択日を変更。未来日は無視する。
+
+### `SyncDailySummariesUseCase` の計算内容
+
+各対象日について、以下を集計して `DailySummary` を作り Room に upsert する。
+
+- **`habitRate`**: その日のジャーナルを `HabitParser` でパースし、曜日が一致する習慣だけを対象に
+  `完了数 / 対象数` を算出。ジャーナル無し／対象なしは `null`。
+- **`distanceMeters`**: `LocationRecordRepository` の生座標を日付でグループ化し、
+  連続点間を `Location.distanceBetween` で合算した距離（m）。
+- **`householdHusbandPoints`**: `HouseholdJournalParser` でパースし、`Assignee.HUSBAND` の行を
+  `points × count + adjustment` で合算（配点は `GetHouseholdPointsUseCase` から）。
+
+対象日の既定の選び方: Room に未登録の日付のみ。ただし当日は常に再計算（`forceAll` で全件強制）。
+
+### `DailyActivity`（グラフ用）
+
+`GetActivityRatesUseCase` が `activityRate` を合成する:
+
+```
+activityRate = habitRate × 1/3 + distanceRatio × 2/3
+distanceRatio = min(1, distanceMeters / 400,000m)   // 400km = 大阪〜東京
+```
+
+いずれも `0` なら `activityRate = null`（表示上は「活動なし」扱い）。
 
 ## 実装上の注意
 
 - 初回ロード時のみ `isLoading = true` を立てる。以降の再同期は裏で静かに実行する。
-- サマリの中身（習慣達成率など）は `DailySummaryRepository` 側の責務で、ホームは表示に徹する。
+- Journal ディレクトリ未設定時は同期をスキップ（戻り値 0）。
+- 距離は端末標準 `Location.distanceBetween`。精度の低い点のフィルタは入れていない。
