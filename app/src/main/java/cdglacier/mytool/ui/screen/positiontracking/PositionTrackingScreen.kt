@@ -1,8 +1,5 @@
 package cdglacier.mytool.ui.screen.positiontracking
 
-import android.Manifest
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -52,21 +49,6 @@ fun PositionTrackingRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { viewModel.refreshPermissions() }
-
-    LaunchedEffect(Unit) {
-        if (!uiState.activityRecognitionGranted) {
-            permissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACTIVITY_RECOGNITION,
-                    Manifest.permission.POST_NOTIFICATIONS,
-                )
-            )
-        }
-    }
 
     LifecycleResumeEffect(Unit) {
         viewModel.refreshPermissions()
@@ -149,15 +131,6 @@ fun PositionTrackingScreen(
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = "! SYS_SETTINGS で位置情報権限を許可してください",
-                                color = GlacierAmber,
-                                fontFamily = FontFamily.Monospace,
-                                fontSize = 11.sp,
-                            )
-                        }
-                        if (!uiState.activityRecognitionGranted) {
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "! ACTIVITY_RECOGNITION未許可: モード自動切替が無効",
                                 color = GlacierAmber,
                                 fontFamily = FontFamily.Monospace,
                                 fontSize = 11.sp,

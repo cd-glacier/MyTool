@@ -67,6 +67,16 @@ class SettingsViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
+            locationPermissionRepository.activityRecognitionGranted.collect { granted ->
+                _uiState.update { it.copy(activityRecognitionGranted = granted) }
+            }
+        }
+        viewModelScope.launch {
+            locationPermissionRepository.postNotificationsGranted.collect { granted ->
+                _uiState.update { it.copy(postNotificationsGranted = granted) }
+            }
+        }
+        viewModelScope.launch {
             aiRepository.availability.collect { availability ->
                 _uiState.update { it.copy(aiAvailability = availability) }
             }

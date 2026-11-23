@@ -12,7 +12,6 @@ data class PositionTrackingUiState(
     val trackingMode: TrackingMode = TrackingMode.STATIONARY,
     val foregroundLocationGranted: Boolean = false,
     val backgroundLocationGranted: Boolean = false,
-    val activityRecognitionGranted: Boolean = false,
     val journalDirUri: Uri? = null,
     val filenameFormat: String = "yyyy-MM-dd",
     val isExporting: Boolean = false,

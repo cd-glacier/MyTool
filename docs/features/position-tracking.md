@@ -71,7 +71,7 @@ MOVING → STATIONARY（以下いずれかで切替）:
 
 ### ActivityRecognition
 
-- `ACTIVITY_RECOGNITION` 権限を利用。`ActivityRecognitionClient` へ PendingIntent 登録。
+- `ACTIVITY_RECOGNITION` 権限を利用（要求導線は Settings 画面に集約）。`ActivityRecognitionClient` へ PendingIntent 登録。
 - 購読はトラッキング ON の間のみ。`start()` で登録、`stop()` で解除。
 - 既存の距離ベース判定と **OR 条件で共存**（どちらが先に発火してもモード切替する）。
 - confidence の閾値は 75 以上を採用。

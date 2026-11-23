@@ -15,6 +15,7 @@ interface LocationPermissionRepository {
     val fineLocationGranted: StateFlow<Boolean>
     val backgroundLocationGranted: StateFlow<Boolean>
     val activityRecognitionGranted: StateFlow<Boolean>
+    val postNotificationsGranted: StateFlow<Boolean>
     fun refresh()
 }
 
@@ -26,15 +27,18 @@ class LocationPermissionRepositoryImpl @Inject constructor(
     private val _fine = MutableStateFlow(check(Manifest.permission.ACCESS_FINE_LOCATION))
     private val _bg = MutableStateFlow(check(Manifest.permission.ACCESS_BACKGROUND_LOCATION))
     private val _ar = MutableStateFlow(check(Manifest.permission.ACTIVITY_RECOGNITION))
+    private val _notif = MutableStateFlow(check(Manifest.permission.POST_NOTIFICATIONS))
 
     override val fineLocationGranted: StateFlow<Boolean> = _fine.asStateFlow()
     override val backgroundLocationGranted: StateFlow<Boolean> = _bg.asStateFlow()
     override val activityRecognitionGranted: StateFlow<Boolean> = _ar.asStateFlow()
+    override val postNotificationsGranted: StateFlow<Boolean> = _notif.asStateFlow()
 
     override fun refresh() {
         _fine.value = check(Manifest.permission.ACCESS_FINE_LOCATION)
         _bg.value = check(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
         _ar.value = check(Manifest.permission.ACTIVITY_RECOGNITION)
+        _notif.value = check(Manifest.permission.POST_NOTIFICATIONS)
     }
 
     private fun check(permission: String): Boolean =

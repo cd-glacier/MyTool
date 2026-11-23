@@ -10,7 +10,7 @@ Obsidian Vault の参照先、ファイル名フォーマット、権限、AI �
 
 - URI ピッカー: Vault ルート / Journal ディレクトリ / Pages ディレクトリ の選択。
 - `filenameFormat` 編集（既定 `yyyy-MM-dd'.md'`）。
-- パーミッション状態表示と再チェック: Calendar, 位置（Fine / Background）, HealthConnect。
+- パーミッション状態表示と再チェック: Calendar, 位置（Fine / Background）, ActivityRecognition, 通知, HealthConnect。
 - AI モデル可用性の表示・ダウンロード導線。
 - 画面復帰時に `refreshPermissions()` を呼ぶ想定。
 
