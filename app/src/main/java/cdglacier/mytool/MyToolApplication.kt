@@ -2,6 +2,7 @@ package cdglacier.mytool
 
 import android.app.Application
 import cdglacier.mytool.data.repository.ObsidianRepository
+import cdglacier.mytool.tracking.LocationTrackingForegroundService
 import cdglacier.mytool.worker.AutoCopyJournalWorker
 import cdglacier.mytool.worker.HealthSyncWorker
 import dagger.hilt.android.HiltAndroidApp
@@ -30,5 +31,6 @@ class MyToolApplication : Application() {
             }
         }
         HealthSyncWorker.schedule(this)
+        LocationTrackingForegroundService.ensureNotificationChannel(this)
     }
 }

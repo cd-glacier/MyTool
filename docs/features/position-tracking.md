@@ -38,12 +38,55 @@
 | Data | `data/repository/TrackingStateRepository.kt` | トラッキング ON/OFF、モード |
 | Data | `data/repository/LocationPermissionRepository.kt` | 位置権限状態 |
 
+## トラッキングモード
+
+| モード | Priority | 取得間隔 | 取得方式 |
+|---|---|---|---|
+| `STATIONARY` (省電力) | `PRIORITY_BALANCED_POWER_ACCURACY` | 60 秒 | PendingIntent + BroadcastReceiver |
+| `MOVING` (高精度) | `PRIORITY_HIGH_ACCURACY` (GPS) | 60 秒 | **ForegroundService** + LocationCallback |
+
+高精度モード時は `LocationTrackingForegroundService` を起動し、`FOREGROUND_SERVICE_LOCATION`
+タイプで常駐させる。これにより OS による高精度取得の抑制を避け、安定した 60 秒間隔での
+GPS 取得を実現する。省電力モードは従来通り PendingIntent 方式で動かし、常駐通知は出さない。
+
+### 通知
+
+高精度モード常駐通知:
+
+- チャンネル: `location_tracking`（LOW importance、音なし）
+- 文言: 「位置情報を記録中（高精度）」
+- タップ時: PositionTracking 画面へ遷移（`MainActivity` 経由）
+
+## モード切替
+
+STATIONARY → MOVING（以下いずれかで切替）:
+
+- 直前地点との距離が `MOVE_THRESHOLD_METERS`（100m）を超えた
+- ActivityRecognition が `IN_VEHICLE` / `ON_BICYCLE` / `RUNNING` / `WALKING` を高確度で検出した
+
+MOVING → STATIONARY（以下いずれかで切替）:
+
+- 最終移動から `STATIONARY_TIMEOUT_MS`（5 分）以上経過した
+- ActivityRecognition が `STILL` を高確度で検出した
+
+### ActivityRecognition
+
+- `ACTIVITY_RECOGNITION` 権限を利用。`ActivityRecognitionClient` へ PendingIntent 登録。
+- 購読はトラッキング ON の間のみ。`start()` で登録、`stop()` で解除。
+- 既存の距離ベース判定と **OR 条件で共存**（どちらが先に発火してもモード切替する）。
+- confidence の閾値は 75 以上を採用。
+
 ## データフロー
 
 ### トラッキング
 
-- `ToggleLocationTrackingUseCase(enabled)` が ForegroundService を起動／停止し、
-  取得した座標を `LocationRecordRepository` に保存する（詳細はサービス側の実装）。
+- `ToggleLocationTrackingUseCase(enabled)` が `LocationTrackingManager.start/stop` を呼ぶ。
+- `start` 時:
+  - `FusedLocationProviderClient` に PendingIntent で現在モードの更新をリクエスト
+  - MOVING なら `LocationTrackingForegroundService` を起動
+  - `ActivityRecognitionClient` に PendingIntent で遷移検知を登録
+- 位置更新は `LocationUpdateReceiver`（STATIONARY）または Service 内 `LocationCallback`（MOVING）で受信し `LocationRecordRepository` に保存。
+- モード切替は `LocationUpdateReceiver` / `ActivityTransitionReceiver` から `LocationTrackingManager.switchMode()` を呼んで行う。
 
 ### 表示（observeRecords）
 

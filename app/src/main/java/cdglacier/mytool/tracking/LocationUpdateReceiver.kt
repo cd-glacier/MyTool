@@ -3,11 +3,7 @@ package cdglacier.mytool.tracking
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.location.Location
-import android.os.BatteryManager
-import cdglacier.mytool.data.db.LocationRecordEntity
 import cdglacier.mytool.data.repository.LocationRecordRepository
-import cdglacier.mytool.data.repository.TrackingMode
 import cdglacier.mytool.data.repository.TrackingStateRepository
 import com.google.android.gms.location.LocationResult
 import dagger.hilt.EntryPoint
@@ -17,11 +13,7 @@ import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
 
 class LocationUpdateReceiver : BroadcastReceiver() {
 
@@ -38,80 +30,22 @@ class LocationUpdateReceiver : BroadcastReceiver() {
         val result = LocationResult.extractResult(intent) ?: return
         val location = result.lastLocation ?: return
 
-        val deps = EntryPointAccessors.fromApplication(context.applicationContext, Deps::class.java)
+        val appContext = context.applicationContext
+        val deps = EntryPointAccessors.fromApplication(appContext, Deps::class.java)
         val pending = goAsync()
         scope.launch {
             try {
-                handleLocation(context.applicationContext, location, deps)
+                handleLocationUpdate(
+                    context = appContext,
+                    location = location,
+                    locationRecordRepository = deps.locationRecordRepository(),
+                    trackingStateRepository = deps.trackingStateRepository(),
+                    trackingManager = deps.trackingManager(),
+                )
             } finally {
                 pending.finish()
             }
         }
-    }
-
-    private suspend fun handleLocation(
-        context: Context,
-        location: Location,
-        deps: Deps,
-    ) {
-        val repo = deps.locationRecordRepository()
-        val stateRepo = deps.trackingStateRepository()
-        val manager = deps.trackingManager()
-
-        val now = System.currentTimeMillis()
-        val today = LocalDate.ofInstant(Instant.ofEpochMilli(now), ZoneId.systemDefault())
-        val latest = repo.getLatestOfDate(today)
-        val distanceToLatest = latest?.let { distanceMeters(it.latitude, it.longitude, location.latitude, location.longitude) }
-
-        if (latest != null && distanceToLatest != null && distanceToLatest <= LocationTrackingManager.SAME_LOCATION_THRESHOLD_METERS) {
-            // 同位置: カウンタ++、timestamp更新、バッテリーは据え置き
-            repo.update(
-                latest.copy(
-                    timestamp = now,
-                    sameLocationCount = latest.sameLocationCount + 1,
-                )
-            )
-        } else {
-            // 新規地点
-            repo.insert(
-                LocationRecordEntity(
-                    timestamp = now,
-                    latitude = location.latitude,
-                    longitude = location.longitude,
-                    accuracy = location.accuracy,
-                    batteryLevel = readBatteryLevel(context),
-                    sameLocationCount = 0,
-                )
-            )
-            stateRepo.setLastSignificantMoveAt(now)
-        }
-
-        // モード切替判定
-        val currentMode = stateRepo.mode.first()
-        when (currentMode) {
-            TrackingMode.STATIONARY -> {
-                if (distanceToLatest != null && distanceToLatest >= LocationTrackingManager.MOVE_THRESHOLD_METERS) {
-                    manager.switchMode(TrackingMode.MOVING)
-                }
-            }
-            TrackingMode.MOVING -> {
-                val lastMoveAt = stateRepo.getLastSignificantMoveAt()
-                if (now - lastMoveAt >= LocationTrackingManager.STATIONARY_TIMEOUT_MS) {
-                    manager.switchMode(TrackingMode.STATIONARY)
-                }
-            }
-        }
-    }
-
-    private fun readBatteryLevel(context: Context): Int {
-        val bm = context.getSystemService(Context.BATTERY_SERVICE) as? BatteryManager ?: return -1
-        return bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
-    }
-
-    private fun distanceMeters(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
-        val result = FloatArray(1)
-        Location.distanceBetween(lat1, lon1, lat2, lon2, result)
-        return result[0].toDouble()
     }
 
     companion object {

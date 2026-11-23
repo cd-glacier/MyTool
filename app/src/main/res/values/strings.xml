@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">MyTool</string>
+    <string name="location_tracking_channel_name">位置情報トラッキング</string>
+    <string name="location_tracking_channel_description">高精度モードで位置情報を記録中であることを通知します</string>
+    <string name="location_tracking_notification_title">位置情報を記録中（高精度）</string>
+    <string name="location_tracking_notification_text">GPS で 60 秒間隔の位置を記録しています</string>
 </resources>
