@@ -11,6 +11,8 @@ data class SettingsUiState(
     val calendarPermissionGranted: Boolean = false,
     val fineLocationGranted: Boolean = false,
     val backgroundLocationGranted: Boolean = false,
+    val activityRecognitionGranted: Boolean = false,
+    val postNotificationsGranted: Boolean = false,
     val aiAvailability: AiAvailability = AiAvailability.UNKNOWN,
     val healthConnectAvailable: Boolean = false,
     val healthPermissionsGranted: Boolean = false,

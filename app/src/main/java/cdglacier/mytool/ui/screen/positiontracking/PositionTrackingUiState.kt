@@ -31,7 +31,7 @@ data class PositionTrackingUiState(
     val precisionDetail: String
         get() = when {
             !trackingEnabled -> "記録は停止しています"
-            trackingMode == TrackingMode.MOVING -> "GPS高精度 / 5秒間隔"
-            else -> "省電力 / 30秒間隔"
+            trackingMode == TrackingMode.MOVING -> "GPS高精度 / 60秒間隔 (FG)"
+            else -> "省電力 / 60秒間隔"
         }
 }

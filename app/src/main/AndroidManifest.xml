@@ -9,6 +9,10 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Health Connect -->
     <uses-permission android:name="android.permission.health.READ_STEPS" />
@@ -80,6 +84,17 @@
         <receiver
             android:name=".tracking.LocationUpdateReceiver"
             android:exported="false" />
+
+        <!-- Activity Recognition Receiver -->
+        <receiver
+            android:name=".tracking.ActivityRecognitionReceiver"
+            android:exported="false" />
+
+        <!-- Location Tracking Foreground Service (高精度モード常駐) -->
+        <service
+            android:name=".tracking.LocationTrackingForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="location" />
 
         <!-- Boot Receiver: 再起動時にトラッキングを自動再開 -->
         <receiver

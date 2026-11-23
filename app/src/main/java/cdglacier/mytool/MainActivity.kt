@@ -52,6 +52,7 @@ import cdglacier.mytool.ui.screen.qrstocker.QrStockerRoute
 import cdglacier.mytool.ui.screen.qrstocker.detail.QrStockerDetailRoute
 import cdglacier.mytool.ui.screen.recipe.RecipeRoute
 import cdglacier.mytool.ui.screen.settings.SettingsRoute
+import cdglacier.mytool.tracking.LocationTrackingForegroundService
 import cdglacier.mytool.ui.theme.MyToolTheme
 import cdglacier.mytool.widget.CalendarWidgetUpdateWorker
 import dagger.hilt.android.AndroidEntryPoint
@@ -60,6 +61,7 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private var pendingSharedUrl by mutableStateOf<String?>(null)
+    private var pendingOpenPositionTracking by mutableStateOf(false)
 
     override fun onResume() {
         super.onResume()
@@ -70,6 +72,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         pendingSharedUrl = extractSharedUrl(intent)
+        pendingOpenPositionTracking = isOpenPositionTrackingIntent(intent)
         setContent {
             MyToolTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
@@ -78,6 +81,13 @@ class MainActivity : ComponentActivity() {
                         val url = pendingSharedUrl ?: return@LaunchedEffect
                         backStack.add(RecipeNav(prefilledUrl = url))
                         pendingSharedUrl = null
+                    }
+                    LaunchedEffect(pendingOpenPositionTracking) {
+                        if (!pendingOpenPositionTracking) return@LaunchedEffect
+                        if (backStack.lastOrNull() !is PositionTrackingNav) {
+                            backStack.add(PositionTrackingNav)
+                        }
+                        pendingOpenPositionTracking = false
                     }
                     NavDisplay(
                         backStack = backStack,
@@ -196,7 +206,11 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         extractSharedUrl(intent)?.let { pendingSharedUrl = it }
+        if (isOpenPositionTrackingIntent(intent)) pendingOpenPositionTracking = true
     }
+
+    private fun isOpenPositionTrackingIntent(intent: Intent?): Boolean =
+        intent?.action == LocationTrackingForegroundService.ACTION_OPEN_POSITION_TRACKING
 
     private fun extractSharedUrl(intent: Intent?): String? {
         if (intent?.action != Intent.ACTION_SEND) return null

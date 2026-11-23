@@ -116,6 +116,18 @@ fun SettingsRoute(
         viewModel.refreshPermissions()
     }
 
+    val activityRecognitionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { _ ->
+        viewModel.refreshPermissions()
+    }
+
+    val postNotificationsLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { _ ->
+        viewModel.refreshPermissions()
+    }
+
     val healthPermissionLauncher = rememberLauncherForActivityResult(
         HealthPermissions.createRequestPermissionResultContract()
     ) { _ ->
@@ -154,6 +166,12 @@ fun SettingsRoute(
         onRequestHealthPermission = {
             healthPermissionLauncher.launch(viewModel.healthRequiredPermissions)
         },
+        onRequestActivityRecognitionPermission = {
+            activityRecognitionLauncher.launch(Manifest.permission.ACTIVITY_RECOGNITION)
+        },
+        onRequestPostNotificationsPermission = {
+            postNotificationsLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        },
         onBack = onBack,
     )
 }
@@ -170,6 +188,8 @@ fun SettingsScreen(
     onRequestLocationPermission: () -> Unit,
     onRequestBackgroundLocationPermission: () -> Unit,
     onRequestHealthPermission: () -> Unit,
+    onRequestActivityRecognitionPermission: () -> Unit,
+    onRequestPostNotificationsPermission: () -> Unit,
     onBack: () -> Unit,
 ) {
     Scaffold(
@@ -251,6 +271,22 @@ fun SettingsScreen(
                     value = if (bg) "[GRANTED]" else "[DENIED]",
                     valueColor = if (bg) GlacierTeal else GlacierAmber,
                     onClick = if (bg) null else onRequestBackgroundLocationPermission,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                val ar = uiState.activityRecognitionGranted
+                SettingRow(
+                    label = "ACTIVITY_RECOGNITION",
+                    value = if (ar) "[GRANTED]" else "[DENIED]",
+                    valueColor = if (ar) GlacierTeal else GlacierAmber,
+                    onClick = if (ar) null else onRequestActivityRecognitionPermission,
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                val notif = uiState.postNotificationsGranted
+                SettingRow(
+                    label = "POST_NOTIFICATIONS",
+                    value = if (notif) "[GRANTED]" else "[DENIED]",
+                    valueColor = if (notif) GlacierTeal else GlacierAmber,
+                    onClick = if (notif) null else onRequestPostNotificationsPermission,
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 val health = uiState.healthPermissionsGranted
